@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Underneath — Know what's really in your food</title>
+<meta name="description" content="Underneath scans any food and scores it by how processed it really is. Join the waitlist and be first to know when we launch." />
+
+<meta property="og:title" content="Underneath — Know what's really in your food" />
+<meta property="og:description" content="Scan any food, see what's really inside, and find cleaner swaps. Join the waitlist." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="icon.png" />
+<meta name="twitter:card" content="summary" />
+
+<link rel="icon" href="icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #faf5ec;
+    --ink: #211d17;
+    --muted: #6f675a;
+    --orange: #f58a3c;
+    --orange-dark: #e0752a;
+    --card: #ffffff;
+    --line: #e9e0d0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+  }
+  .logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(33, 29, 23, 0.12);
+    margin: 0 auto 28px;
+    display: block;
+  }
+  h1 {
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+  .sub {
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-bottom: 34px;
+  }
+  form { display: flex; flex-direction: column; gap: 12px; }
+  input[type="email"] {
+    width: 100%;
+    padding: 16px 18px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="email"]:focus { border-color: var(--orange); }
+  button {
+    width: 100%;
+    padding: 16px 18px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #fff;
+    background: var(--orange);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  button:hover { background: var(--orange-dark); }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .msg {
+    margin-top: 18px;
+    font-size: 15px;
+    line-height: 1.4;
+    min-height: 20px;
+  }
+  .msg.ok { color: #2f7d4f; }
+  .msg.err { color: #c0492b; }
+  .points {
+    list-style: none;
+    margin: 40px auto 0;
+    max-width: 380px;
+    text-align: left;
+    display: grid;
+    gap: 14px;
+  }
+  .points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .points .dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    margin-top: 7px;
+  }
+  footer {
+    text-align: center;
+    padding: 28px 24px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: underline; }
+  @media (max-width: 420px) {
+    h1 { font-size: 28px; }
+    .sub { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card">
+      <img class="logo" src="icon.png" alt="Underneath" />
+      <h1>Know what's really in your food</h1>
+      <p class="sub">
+        Underneath scans any product and scores it by how processed it really
+        is. Not the marketing on the front. What's actually inside.
+      </p>
+
+      <form id="waitlist-form" novalidate>
+        <input
+          id="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="you@email.com"
+          aria-label="Email address"
+          required
+        />
+        <button id="submit" type="submit">Join the waitlist</button>
+      </form>
+      <p id="msg" class="msg" role="status" aria-live="polite"></p>
+
+      <ul class="points">
+        <li><span class="dot"></span>Scan a barcode, get an honest processing-first score in seconds.</li>
+        <li><span class="dot"></span>See the additives and ultra-processed ingredients hiding behind clean labels.</li>
+        <li><span class="dot"></span>Find cleaner swaps for the stuff you buy every week.</li>
+      </ul>
+    </main>
+  </div>
+
+  <footer>
+    We will only email you once, when the app is ready. No spam.<br />
+    <a href="https://thanosrokkas.github.io/underneath-privacy/">Privacy</a>
+  </footer>
+
+  <script>
+    var SUPABASE_URL = "https://ufqqilewsnujxroesgqa.supabase.co";
+    var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcXFpbGV3c251anhyb2VzZ3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0Njk5NTYsImV4cCI6MjA5ODA0NTk1Nn0.TYmTsPd1PKn3vhwndZ-YC3QXF20nq0zrPe43kUy1VHQ";
+    var ENDPOINT = SUPABASE_URL + "/functions/v1/waitlist-signup";
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    var form = document.getElementById("waitlist-form");
+    var input = document.getElementById("email");
+    var button = document.getElementById("submit");
+    var msg = document.getElementById("msg");
+
+    function setMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = "msg" + (kind ? " " + kind : "");
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = input.value.trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) {
+        setMsg("Please enter a valid email address.", "err");
+        return;
+      }
+      button.disabled = true;
+      setMsg("Joining...", "");
+
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+        },
+        body: JSON.stringify({ email: email, source: "landing" }),
+      })
+        .then(function (res) {
+          if (res.ok) {
+            form.style.display = "none";
+            setMsg("You're on the list. We'll email you the moment Underneath is ready.", "ok");
+          } else if (res.status === 429) {
+            setMsg("Too many attempts. Please try again a bit later.", "err");
+            button.disabled = false;
+          } else {
+            setMsg("Something went wrong. Please try again.", "err");
+            button.disabled = false;
+          }
+        })
+        .catch(function () {
+          setMsg("Network error. Please try again.", "err");
+          button.disabled = false;
+        });
+    });
+  </script>
+</body>
+</html>
