@@ -294,7 +294,9 @@
   // ── Config ──
   const SUPABASE_URL = "https://ufqqilewsnujxroesgqa.supabase.co";
   const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcXFpbGV3c251anhyb2VzZ3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0Njk5NTYsImV4cCI6MjA5ODA0NTk1Nn0.TYmTsPd1PKn3vhwndZ-YC3QXF20nq0zrPe43kUy1VHQ";
-  const RCB_PUBLIC_KEY = "rcb_REPLACE_ME"; // RevenueCat Web Billing public key
+  // RevenueCat Web Billing public key. Currently the SANDBOX key (Stripe test
+  // mode, test card 4242 4242 4242 4242). Swap to the production rcb_ key before launch.
+  const RCB_PUBLIC_KEY = "rcb_sb_fTdROOAOghYgKhQLZlpMxSrrw";
   const OTP_START = SUPABASE_URL + "/functions/v1/auth-otp-start";
   const OTP_VERIFY = SUPABASE_URL + "/functions/v1/auth-otp-verify";
   const STATE_KEY = "underneath_funnel_v1";
