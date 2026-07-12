@@ -69,6 +69,12 @@
     box-shadow: 0 8px 30px rgba(33, 29, 23, 0.12);
     margin: 0 auto 24px; display: block;
   }
+  .hero-logo { height: 30px; width: auto; max-width: 264px; display: block; margin: 18px auto 34px; }
+  .bubble {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; flex: 0 0 auto;
+  }
+  .bubble svg, .chip svg { display: block; }
   h1 { font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 12px; }
   h1.center { text-align: center; }
   .sub { font-size: 16px; line-height: 1.5; color: var(--muted); margin-bottom: 22px; }
@@ -118,6 +124,10 @@
   .pill.green { background: var(--green-bg); color: var(--green); }
   .pill.red { background: var(--red-bg); color: var(--red); }
   .compare-card p { font-size: 12.5px; line-height: 1.5; color: var(--ink); }
+  .compare-img {
+    display: block; width: 100%; height: 70px; border-radius: 10px;
+    object-fit: cover; background: #eee7d9; margin: 2px 0 12px;
+  }
   .danger { color: var(--red); font-weight: 500; }
 
   /* Stat bars */
@@ -160,9 +170,10 @@
   /* Chips */
   .chips { display: flex; flex-wrap: wrap; gap: 9px; }
   .chip {
+    display: inline-flex; align-items: center; gap: 8px;
     font-family: inherit; font-size: 14px; font-weight: 500;
     background: var(--card); border: 1px solid var(--line); color: var(--ink);
-    padding: 11px 16px; border-radius: 999px; cursor: pointer;
+    padding: 9px 15px 9px 11px; border-radius: 999px; cursor: pointer;
     transition: all 0.12s ease;
   }
   .chip:hover { border-color: var(--orange); }
@@ -180,6 +191,7 @@
   .row-btn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
   .row-btn .sub-label { font-size: 12px; color: var(--muted); font-weight: 400; }
   .row-btn.on .sub-label { color: rgba(255,255,255,0.7); }
+  .row-left { display: flex; align-items: center; gap: 12px; }
 
   .warning {
     display: flex; gap: 10px; background: #fbf0da; border: 1px solid #efd9ad;
@@ -230,6 +242,31 @@
   .tl-body { padding-bottom: 18px; }
   .tl-body b { font-size: 15px; display: block; }
   .tl-body p { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+  /* Trial preview swap card */
+  .trial-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 16px; margin-top: 22px; }
+  .trial-card.better { border-color: var(--orange); }
+  .trial-head { display: flex; align-items: center; gap: 11px; }
+  .trial-thumb { width: 38px; height: 38px; border-radius: 11px; object-fit: cover; background: #eae3d4; flex: 0 0 auto; }
+  .trial-name { flex: 1; min-width: 0; }
+  .trial-name b { display: block; font-size: 14px; line-height: 1.25; }
+  .trial-name span { font-size: 11px; color: var(--muted); }
+  .trial-score { font-size: 22px; font-weight: 700; color: #C0392F; flex: 0 0 auto; }
+  .trial-score.good { color: #2E7D52; }
+  .trial-pills { display: flex; gap: 6px; margin-top: 14px; }
+  .trial-pill { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .trial-ings { margin-top: 14px; display: grid; gap: 9px; }
+  .trial-ing { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .trial-dot { width: 9px; height: 9px; border-radius: 5px; flex: 0 0 auto; }
+  .trial-reveal {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 16px; background: var(--ink); color: #fff; border: none; border-radius: 12px;
+    padding: 12px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .trial-jump {
+    background: #E6F4EC; border-radius: 12px; padding: 12px; margin-top: 14px;
+    text-align: center; font-size: 13px; font-weight: 600; color: #2E7D52;
+  }
 
   /* Plans */
   .plans { display: flex; gap: 10px; margin-top: 20px; }
@@ -304,28 +341,117 @@
 
   const db = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 
-  // ── Option lists (labels/keys verbatim from the app's data.ts) ──
+  // ── Icons (paths/colors verbatim from the app's OnboardingIcon.tsx) ──
+  const ICON_PATHS = {
+    box: ["M12 3l8 4v10l-8 4-8-4V7l8-4z", "M4 7l8 4 8-4", "M12 11v10"],
+    cube: ["M6 7h12v10H6z", "M6 11h12", "M11 7v10"],
+    shaker: ["M8.5 9h7l-1 11h-5l-1-11z", "M10 9V6.5a2 2 0 0 1 4 0V9", "M11 12.5h.01M13 15h.01M11 17h.01"],
+    flask: ["M9.5 3h5", "M10.5 3v5l-4 8.5a1.7 1.7 0 0 0 1.5 2.5h8a1.7 1.7 0 0 0 1.5-2.5L13.5 8V3", "M8 15.5h8"],
+    droplet: ["M12 3.5s5.5 6 5.5 10.5a5.5 5.5 0 0 1-11 0C6.5 9.5 12 3.5 12 3.5z"],
+    bag: ["M6.5 8h11l-1 11.5h-9L6.5 8z", "M9.5 8V6.2a2.5 2.5 0 0 1 5 0V8"],
+    lens: ["M11 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12z", "M15.5 15.5l4 4"],
+    calendar: ["M5 6.5h14v13H5z", "M5 10h14", "M8.5 4v4M15.5 4v4"],
+    calcheck: ["M5 6.5h14v13H5z", "M5 10h14", "M8.5 4v4M15.5 4v4", "M9.5 14.5l2 2 3.5-3.5"],
+    clock: ["M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z", "M12 8.5v4l2.6 1.6"],
+    moon: ["M19.5 14.5a7.5 7.5 0 1 1-8.5-10.5 6 6 0 0 0 8.5 10.5z"],
+    minus: ["M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z", "M8.5 12h7"],
+    layers: ["M12 4l8 4-8 4-8-4 8-4z", "M4 12l8 4 8-4", "M4 16l8 4 8-4"],
+    leaf: ["M5 19c0-7.5 5.5-13 14-13 0 8.5-5.5 13-14 13z", "M5.5 18.5c3.5-5.5 6.5-7.5 9.5-9"],
+    fish: ["M3.5 12c4-5 9.5-5 13.5 0-4 5-9.5 5-13.5 0z", "M17 12l3.5-2.5v5L17 12", "M8 11.4h.01"],
+    crescent: ["M16.5 4a8 8 0 1 0 0 16 6.2 6.2 0 0 1 0-16z"],
+    star: ["M12 4l2.2 5.5H20l-4.7 3.6 1.8 5.6L12 15.2l-5 3.5 1.8-5.6L4 9.5h5.8L12 4z"],
+    wheat: ["M12 4v16", "M12 8.5c-2-1.2-4.2-.8-4.2-.8s-.2 2.2 1 3.4 3.2.8 3.2.8", "M12 8.5c2-1.2 4.2-.8 4.2-.8s.2 2.2-1 3.4-3.2.8-3.2.8", "M12 13.5c-2-1.2-4.2-.8-4.2-.8s-.2 2.2 1 3.4 3.2.8 3.2.8", "M12 13.5c2-1.2 4.2-.8 4.2-.8s.2 2.2-1 3.4-3.2.8-3.2.8"],
+    dropoff: ["M12 3.5s5.5 6 5.5 10.5a5.5 5.5 0 0 1-9.5 3.8", "M5 4.5l14 15"],
+    egg: ["M12 3.5c3.8 0 6 5.6 6 9.5a6 6 0 0 1-12 0c0-3.9 2.2-9.5 6-9.5z"],
+    milk: ["M9.5 3.5h5v2.5l1.2 3.5v9a1 1 0 0 1-1 1h-5.4a1 1 0 0 1-1-1v-9l1.2-3.5V3.5z", "M8.3 10h7.4"],
+    bean: ["M10 4.5a3.5 3.5 0 0 0 0 7 3.8 3.8 0 0 1 0 7.5 6 6 0 0 1 0-14.5z"],
+    acorn: ["M6.5 9.5h11a5.5 5.5 0 0 1-11 0z", "M6.5 9.5a5.5 5.5 0 0 1 11 0", "M12 15v3"],
+    shell: ["M12 5a8.5 8.5 0 0 1 8.5 8.5h-17A8.5 8.5 0 0 1 12 5z", "M12 5v8.5M8 7l1.2 6.5M16 7l-1.2 6.5"],
+    seeds: ["M8 9.5a1.6 2.4 0 1 0 .01 0z", "M14 8a1.6 2.4 30 1 0 .01 0z", "M11 14a1.6 2.4 -20 1 0 .01 0z"],
+    viewfinder: ["M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2", "M8 12h8"],
+    gauge: ["M4.5 18a7.5 7.5 0 1 1 15 0", "M12 18l4-5.5"],
+    sliders: ["M5 8h9M17 8h2", "M5 16h2M10 16h9", "M15 6v4M8 14v4"],
+  };
+  const CAT_COLORS = {
+    droplet: "#D9A441", cube: "#D98D9E", shaker: "#7A93B8", flask: "#5BA39A",
+    box: "#C57B57", layers: "#C57B57", viewfinder: "#F58A3C",
+    calendar: "#818AA8", calcheck: "#818AA8", clock: "#818AA8", moon: "#818AA8",
+    bag: "#8FA37A", lens: "#6E97A8", leaf: "#8FA37A", fish: "#7A93B8",
+    crescent: "#9C86A8", star: "#9C86A8", wheat: "#D9A441", dropoff: "#D98D9E",
+    milk: "#D98D9E", egg: "#D9A441", bean: "#B0875E", acorn: "#C57B57",
+    shell: "#5BA39A", seeds: "#B0875E", minus: "#818AA8", gauge: "#F58A3C",
+    sliders: "#F58A3C",
+  };
+  function catColor(name) { return CAT_COLORS[name] || "#1A2238"; }
+  function iconSvg(name, size, color) {
+    const c = color || catColor(name);
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true">` +
+      (ICON_PATHS[name] || []).map((d) => `<path d="${d}" stroke="${c}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`).join("") +
+      "</svg>";
+  }
+  function hexToRgba(hex, a) {
+    const h = hex.replace("#", "");
+    return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`;
+  }
+  function bubbleHtml(name, size) {
+    const c = catColor(name);
+    return `<span class="bubble" style="width:${size}px;height:${size}px;background:${hexToRgba(c, 0.12)}">${iconSvg(name, Math.round(size * 0.56), c)}</span>`;
+  }
+
+  // ── Option lists (labels/keys/icons verbatim from the app's data.ts) ──
   const GOALS = [
-    "Avoid ultra-processed foods", "Cut hidden sugar", "Watch sodium",
-    "Avoid certain additives", "Understand seed oils", "Shop with confidence", "Just curious",
+    { label: "Avoid ultra-processed foods", icon: "box" },
+    { label: "Cut hidden sugar", icon: "cube" },
+    { label: "Watch sodium", icon: "shaker" },
+    { label: "Avoid certain additives", icon: "flask" },
+    { label: "Understand seed oils", icon: "droplet" },
+    { label: "Shop with confidence", icon: "bag" },
+    { label: "Just curious", icon: "lens" },
   ];
-  const HABITS = ["Daily", "A few times a week", "Occasionally", "Rarely"];
+  const HABITS = [
+    { label: "Daily", icon: "calendar" },
+    { label: "A few times a week", icon: "calcheck" },
+    { label: "Occasionally", icon: "clock" },
+    { label: "Rarely", icon: "moon" },
+  ];
   const ADDITIVES = [
-    { key: "Seed oils", sub: "sunflower \u00B7 canola \u00B7 soybean" },
-    { key: "Artificial additives", sub: "colorings \u00B7 preservatives" },
-    { key: "Added sugars", sub: "" },
-    { key: "High sodium", sub: "" },
-    { key: "All of the above", sub: "" },
+    { key: "Seed oils", sub: "sunflower \u00B7 canola \u00B7 soybean", icon: "droplet" },
+    { key: "Artificial additives", sub: "colorings \u00B7 preservatives", icon: "flask" },
+    { key: "Added sugars", sub: "", icon: "cube" },
+    { key: "High sodium", sub: "", icon: "shaker" },
+    { key: "All of the above", sub: "", icon: "layers" },
   ];
-  const DIETS = ["None", "Vegan", "Vegetarian", "Pescatarian", "Halal", "Kosher", "Gluten-Free", "Dairy-Free", "Palm-Oil-Free"];
-  const ALLERGIES = ["None", "Peanuts", "Tree Nuts", "Dairy", "Eggs", "Soy", "Fish", "Shellfish", "Sesame", "Gluten"];
+  const DIETS = [
+    { label: "None", icon: "minus" },
+    { label: "Vegan", icon: "leaf" },
+    { label: "Vegetarian", icon: "leaf" },
+    { label: "Pescatarian", icon: "fish" },
+    { label: "Halal", icon: "crescent" },
+    { label: "Kosher", icon: "star" },
+    { label: "Gluten-Free", icon: "wheat" },
+    { label: "Dairy-Free", icon: "dropoff" },
+    { label: "Palm-Oil-Free", icon: "droplet" },
+  ];
+  const ALLERGIES = [
+    { label: "None", icon: "minus" },
+    { label: "Peanuts", icon: "bean" },
+    { label: "Tree Nuts", icon: "acorn" },
+    { label: "Dairy", icon: "milk" },
+    { label: "Eggs", icon: "egg" },
+    { label: "Soy", icon: "bean" },
+    { label: "Fish", icon: "fish" },
+    { label: "Shellfish", icon: "shell" },
+    { label: "Sesame", icon: "seeds" },
+    { label: "Gluten", icon: "wheat" },
+  ];
 
   // ── State ──
   // Steps: 0 hero, 1 how, 2 bread, 3 stat, 4 cred, 5 goals, 6 habit,
-  // 7 additives, 8 diet, 9 allergies, 10 account, 11 code, 12 plan, 13 done
+  // 7 additives, 8 diet, 9 allergies, 10 account, 11 code, 12 trial preview, 13 plan, 14 done
   const PREF_STEPS = [5, 6, 7, 8, 9];
   let state = loadState();
   let authBusy = false;
+  let swapRevealed = false; // trial preview reveal, transient
   let resendTimer = null;
   let pendingPw = ""; // held in memory only for the resend link, never persisted
 
@@ -376,10 +502,16 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  function chipHtml(list, selected, cls) {
-    return '<div class="chips">' + list.map((l) =>
-      `<button type="button" class="chip ${selected[l] ? "on" : ""}" data-val="${esc(l)}">${esc(l)}</button>`
-    ).join("") + "</div>";
+  // iconStyle: "bubble" = tinted circle bubble (goals), "inline" = bare 16px icon
+  // that turns white when selected (diet/allergies) — mirrors the app.
+  function chipHtml(list, selected, iconStyle) {
+    return '<div class="chips">' + list.map((it) => {
+      const on = !!selected[it.label];
+      const ic = iconStyle === "bubble"
+        ? bubbleHtml(it.icon, 28)
+        : iconSvg(it.icon, 16, on ? "#fff" : undefined);
+      return `<button type="button" class="chip ${on ? "on" : ""}" data-val="${esc(it.label)}">${ic}<span>${esc(it.label)}</span></button>`;
+    }).join("") + "</div>";
   }
 
   function toggleMulti(map, val, exclusiveNone) {
@@ -399,10 +531,10 @@
   function render() {
     const s = state.step;
     // chrome
-    if (s >= 1 && s <= 12) {
+    if (s >= 1 && s <= 13) {
       chrome.style.display = "flex";
       backBtn.style.visibility = (s >= 1 && s <= 10) || s === 11 ? "visible" : "hidden";
-      const segs = PREF_STEPS.concat([10, 12]);
+      const segs = PREF_STEPS.concat([10, 12, 13]);
       progressEl.innerHTML = segs.map((st) => `<span class="${s > st ? "on" : ""}"></span>`).join("");
       progressEl.style.visibility = s >= 5 ? "visible" : "hidden";
     } else {
@@ -422,8 +554,9 @@
       case 9: return renderAllergies();
       case 10: return renderAccount();
       case 11: return renderCode();
-      case 12: return renderPlan();
-      case 13: return renderDone();
+      case 12: return renderTrialPreview();
+      case 13: return renderPlan();
+      case 14: return renderDone();
     }
   }
 
@@ -432,7 +565,7 @@
   // ── Steps ──
   function renderHero() {
     view.innerHTML = `
-      <img class="logo" src="icon.png" alt="Underneath" />
+      <img class="hero-logo" src="assets/logo.png" alt="Underneath" />
       <h1 class="center">Know what's<br/>underneath the label.</h1>
       <p class="sub center">Scan any label. Get a score you can actually interrogate.</p>
       <button class="cta" id="cta">Get started</button>
@@ -442,16 +575,16 @@
 
   function renderHow() {
     const steps = [
-      { icon: "&#128269;", bg: "#FDEFE3", t: "Scan", d: "Point at any ingredient list. No barcode hunting." },
-      { icon: "&#127919;", bg: "#FBEFD6", t: "Score", d: "Every product gets a score from 0 to 100, color coded by risk." },
-      { icon: "&#128202;", bg: "#E7F1EF", t: "Trace", d: "See exactly how the score was calculated, with every deduction sourced." },
+      { icon: "viewfinder", color: "#F47B45", bg: "#FDEFE3", t: "Scan", d: "Point at any ingredient list. No barcode hunting." },
+      { icon: "gauge", color: "#F5A623", bg: "#FBEFD6", t: "Score", d: "Every product gets a score from 0 to 100, color coded by risk." },
+      { icon: "sliders", color: "#5BA39A", bg: "#E7F1EF", t: "Trace", d: "See exactly how the score was calculated, with every deduction sourced." },
     ];
     view.innerHTML = `
       <h1>Three steps.<br/>No black box.</h1>
       ${steps.map((x, i) => `
         ${i > 0 ? '<div class="arrow">&#8595;</div>' : ""}
         <div class="step-card">
-          <div class="step-icon" style="background:${x.bg}">${x.icon}</div>
+          <div class="step-icon" style="background:${x.bg}">${iconSvg(x.icon, 22, x.color)}</div>
           <div><h3>${x.t}</h3><p>${x.d}</p></div>
         </div>`).join("")}
       <p class="italic-note">The only scanner that shows its work.</p>
@@ -466,10 +599,12 @@
       <div class="compare">
         <div class="compare-card">
           <span class="pill green">1960s</span>
+          <img class="compare-img" src="assets/bread-then.webp" alt="Bread in the 1960s" />
           <p>Flour, water, yeast, salt.</p>
         </div>
         <div class="compare-card">
           <span class="pill red">Today</span>
+          <img class="compare-img" src="assets/bread-now.jpg" alt="Bread today" />
           <p>Enriched flour, water, <span class="danger">high fructose corn syrup</span>, yeast,
           <span class="danger">soybean oil</span>, salt, <span class="danger">DATEM</span>,
           <span class="danger">sodium stearoyl lactylate</span>, <span class="danger">mono &amp; diglycerides</span>,
@@ -524,7 +659,7 @@
     view.innerHTML = `
       <h1>What do you want to get out of this?</h1>
       <p class="hint">Select all that apply.</p>
-      ${chipHtml(GOALS, state.goals)}
+      ${chipHtml(GOALS, state.goals, "bubble")}
       <button class="cta" id="cta" ${Object.keys(state.goals).length ? "" : "disabled"}>Continue</button>
     `;
     view.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
@@ -538,7 +673,10 @@
     view.innerHTML = `
       <h1>How often do you eat packaged or ultra-processed food?</h1>
       <div class="rows" style="margin-top:20px">
-        ${HABITS.map((h) => `<button type="button" class="row-btn ${state.habit === h ? "on" : ""}" data-val="${esc(h)}">${esc(h)}</button>`).join("")}
+        ${HABITS.map((h) => `
+          <button type="button" class="row-btn ${state.habit === h.label ? "on" : ""}" data-val="${esc(h.label)}">
+            <span class="row-left">${bubbleHtml(h.icon, 32)}<span>${esc(h.label)}</span></span>
+          </button>`).join("")}
       </div>
       <button class="cta" id="cta" ${state.habit ? "" : "disabled"}>Continue</button>
     `;
@@ -556,7 +694,7 @@
       <div class="rows">
         ${ADDITIVES.map((a) => `
           <button type="button" class="row-btn ${state.additives[a.key] ? "on" : ""}" data-val="${esc(a.key)}">
-            <span>${esc(a.key)}</span>
+            <span class="row-left">${bubbleHtml(a.icon, 28)}<span>${esc(a.key)}</span></span>
             ${a.sub ? `<span class="sub-label">${esc(a.sub)}</span>` : ""}
           </button>`).join("")}
       </div>
@@ -572,7 +710,7 @@
   function renderDiet() {
     view.innerHTML = `
       <h1>Any dietary preferences?</h1>
-      <div style="margin-top:20px">${chipHtml(DIETS, state.diet)}</div>
+      <div style="margin-top:20px">${chipHtml(DIETS, state.diet, "inline")}</div>
       <button class="cta" id="cta">Next</button>
     `;
     view.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
@@ -585,9 +723,9 @@
   function renderAllergies() {
     view.innerHTML = `
       <h1>Any allergies we should watch for?</h1>
-      <div style="margin-top:20px">${chipHtml(ALLERGIES, state.allergies)}</div>
+      <div style="margin-top:20px">${chipHtml(ALLERGIES, state.allergies, "inline")}</div>
       <div class="warning">
-        <span>&#9888;&#65039;</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#A86A14" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#A86A14"/></svg>
         <span>Underneath helps you spot ingredients. It is not a substitute for medical advice. Always check packaging and consult a professional for allergies.</span>
       </div>
       <button class="cta" id="cta">Next</button>
@@ -794,21 +932,74 @@
     go(12);
   }
 
+  // ── Trial preview: Pop-Tarts vs Nature's Path swap demo (app S14) ──
+  function renderTrialPreview() {
+    const check = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#3E9C6D" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#3E9C6D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const card = !swapRevealed ? `
+      <div class="trial-card">
+        <div class="trial-head">
+          <img class="trial-thumb" src="assets/poptarts.jpg" alt="Pop-Tarts Frosted Strawberry" />
+          <div class="trial-name"><b>Pop-Tarts Frosted Strawberry</b><span>Kellogg's</span></div>
+          <div class="trial-score">22</div>
+        </div>
+        <div class="trial-pills">
+          <span class="trial-pill" style="background:#FBE3E1;color:#C0392F">Ultra-processed</span>
+          <span class="trial-pill" style="background:#FBE3E1;color:#C0392F">4 flagged</span>
+        </div>
+        <div class="trial-ings">
+          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>High-fructose corn syrup</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>Red 40 (artificial color)</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>TBHQ (preservative)</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Soy lecithin</div>
+        </div>
+        <button type="button" class="trial-reveal" id="revealBtn">
+          Reveal a better alternative
+          <svg width="8" height="13" viewBox="0 0 9 15" fill="none" aria-hidden="true"><path d="M1.5 1.5l6 6-6 6" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>` : `
+      <div class="trial-card better">
+        <div class="trial-head">
+          <img class="trial-thumb" src="assets/naturespath.jpg" alt="Nature's Path Toaster Pastries" />
+          <div class="trial-name"><b>Toaster Pastries, Berry Strawberry</b><span>Nature's Path</span></div>
+          <div class="trial-score good">81</div>
+        </div>
+        <div class="trial-pills">
+          <span class="trial-pill" style="background:#E6F4EC;color:#2E7D52">Organic</span>
+          <span class="trial-pill" style="background:#E6F4EC;color:#2E7D52">No artificial colors</span>
+        </div>
+        <div class="trial-ings">
+          <div class="trial-ing"><span class="trial-dot" style="background:#3E9C6D"></span>Organic wheat flour</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Organic cane sugar</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:#3E9C6D"></span>Organic strawberry filling</div>
+        </div>
+        <div class="trial-jump">Score jumped from 22 to 81</div>
+      </div>`;
+    view.innerHTML = `
+      <h1 class="center">Try Underneath free.</h1>
+      ${card}
+      <div class="trial-note">${check}No payment due now.</div>
+      <button class="cta" id="cta">Try for $0.00</button>
+    `;
+    const revealBtn = document.getElementById("revealBtn");
+    if (revealBtn) revealBtn.addEventListener("click", () => { swapRevealed = true; renderTrialPreview(); });
+    onCta(() => go(13));
+  }
+
   // ── Plan picker + RC Web Billing checkout ──
   function renderPlan() {
     view.innerHTML = `
       <h1 class="center">How your free trial works.</h1>
       <div class="timeline">
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:var(--orange);color:#fff">&#10003;</div><div class="tl-line"></div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:var(--orange)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
           <div class="tl-body"><b>Today</b><p>Full access unlocked instantly.</p></div>
         </div>
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:#fbf0da">&#128337;</div><div class="tl-line"></div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:#fbf0da"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="#A86A14" stroke-width="1.6"/><path d="M8 4.5V8l2.4 1.4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
           <div class="tl-body"><b>Day 5: Reminder</b><p>You get a reminder 48 hours before any charge.</p></div>
         </div>
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:#eadfca">&#9634;</div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:#eadfca"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2" stroke="#9AA0AB" stroke-width="1.6"/></svg></div></div>
           <div class="tl-body"><b>Day 7: Trial ends</b><p>You're only charged if you don't cancel. Cancel anytime.</p></div>
         </div>
       </div>
@@ -820,7 +1011,7 @@
           <b>Weekly</b><span class="price">$1.99/wk</span>
         </button>
       </div>
-      <div class="trial-note">&#10003;&nbsp;No payment due now.</div>
+      <div class="trial-note"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#3E9C6D" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#3E9C6D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>No payment due now.</div>
       <button class="cta" id="cta">Start 7-day free trial</button>
       <p class="legal">After the 7-day trial, Annual is $49.99/yr or Weekly is $1.99/wk, auto-renewing until cancelled. Cancel anytime.</p>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
@@ -860,7 +1051,7 @@
       await purchases.purchase({ rcPackage: pkg, customerEmail: user.email || undefined });
       state.purchased = true;
       save();
-      go(13);
+      go(14);
     } catch (e) {
       const msg = (e && (e.message || String(e))) || "";
       if (/cancel|closed|dismiss/i.test(msg) || (e && e.errorCode === 1)) {
