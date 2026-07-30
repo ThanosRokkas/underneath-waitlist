@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["4GDBCJQZA4.com.underneath.v2"],
+        "components": [
+          { "/": "/r/*", "comment": "referral invite links" }
+        ]
+      }
+    ]
+  }
+}
