@@ -199,6 +199,35 @@
     font-size: 12.5px; color: #7a5510; line-height: 1.45;
   }
 
+  /* Calibration */
+  .calib { padding-top: 40px; }
+  .calib-pct {
+    display: block; text-align: center; font-size: 46px; font-weight: 600;
+    letter-spacing: -1px; color: var(--orange); font-variant-numeric: tabular-nums;
+  }
+  .calib-bar {
+    height: 6px; border-radius: 3px; background: var(--line);
+    overflow: hidden; margin-top: 20px;
+  }
+  .calib-fill { height: 100%; width: 0; background: var(--orange); transition: width 0.12s linear; }
+  .calib-section {
+    font-size: 11.5px; letter-spacing: 1px; font-weight: 600;
+    color: var(--muted); margin: 30px 0 16px;
+  }
+  .calib-list { display: flex; flex-direction: column; gap: 13px; }
+  .calib-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--muted); }
+  .calib-row .bubble { flex: 0 0 auto; }
+  .calib-row .calib-label { flex: 1; }
+  .calib-row.done { color: var(--ink); }
+  .calib-tick {
+    flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--line); opacity: 0.5; transition: background 0.15s ease, opacity 0.15s ease;
+  }
+  .calib-tick svg { visibility: hidden; }
+  .calib-row.done .calib-tick { background: var(--green); opacity: 1; }
+  .calib-row.done .calib-tick svg { visibility: visible; }
+
   /* Forms */
   input[type="email"], input[type="password"], input[type="text"] {
     width: 100%; padding: 15px 17px; font-size: 16px; font-family: inherit;
@@ -267,6 +296,31 @@
     background: #E6F4EC; border-radius: 12px; padding: 12px; margin-top: 14px;
     text-align: center; font-size: 13px; font-weight: 600; color: #2E7D52;
   }
+
+  /* Score quiz */
+  .quiz-opts { display: flex; gap: 12px; margin-top: 4px; }
+  .quiz-opt {
+    flex: 1 1 0; font-family: inherit; text-align: left; cursor: pointer;
+    background: var(--card); border: 1.5px solid var(--line);
+    border-radius: 16px; padding: 12px; transition: all 0.12s ease;
+  }
+  .quiz-opt:hover { border-color: var(--orange); }
+  .quiz-opt img {
+    display: block; width: 100%; height: 92px; border-radius: 11px;
+    object-fit: cover; background: #eae3d4; margin-bottom: 11px;
+  }
+  .quiz-opt b { display: block; font-size: 13.5px; line-height: 1.25; }
+  .quiz-opt span { font-size: 11.5px; color: var(--muted); }
+
+  /* Price anchor */
+  .anchor-row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 15px 16px; margin-bottom: 10px;
+  }
+  .anchor-row span { font-size: 14.5px; line-height: 1.35; }
+  .anchor-row b { font-size: 14.5px; white-space: nowrap; }
+  .anchor-row.hi { border-color: var(--orange); background: #fdf3e8; }
 
   /* Plans */
   .plans { display: flex; gap: 10px; margin-top: 20px; }
@@ -341,7 +395,7 @@
   const RCB_PUBLIC_KEY = "rcb_sb_fTdROOAOghYgKhQLZlpMxSrrw";
   const OTP_START = SUPABASE_URL + "/functions/v1/auth-otp-start";
   const OTP_VERIFY = SUPABASE_URL + "/functions/v1/auth-otp-verify";
-  const STATE_KEY = "underneath_funnel_v1";
+  const STATE_KEY = "underneath_funnel_v2";
   const DEVICE_KEY = "underneath_device_id";
 
   const db = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
@@ -450,19 +504,43 @@
     { label: "Gluten", icon: "wheat" },
   ];
 
+  const WORRIES = [
+    { label: "I cannot pronounce half of it", icon: "flask" },
+    { label: "The front and the back disagree", icon: "box" },
+    { label: "I cannot tell which additives matter", icon: "layers" },
+    { label: "I gave up reading them", icon: "moon" },
+  ];
+  const RELATE = [
+    { key: "buyAnyway", text: "I buy it anyway when I cannot read the label" },
+    { key: "googledAisle", text: "I have googled an ingredient in the shop" },
+    { key: "expensiveCleaner", text: "I assume the expensive one is cleaner" },
+  ];
+
   // ── State ──
-  // Steps: 0 hero, 1 how, 2 bread, 3 stat, 4 cred, 5 goals, 6 habit,
-  // 7 additives, 8 diet, 9 allergies, 10 account, 11 code, 12 trial preview, 13 plan, 14 done
-  const PREF_STEPS = [5, 6, 7, 8, 9];
+  const STEPS = [
+    "hero", "worry", "bread", "relate", "stat", "quiz",
+    "goals", "habit", "additives", "diet", "allergies", "calibrate",
+    "how", "cred",
+    "account", "code", "timeline", "anchor", "plan", "done",
+  ];
+  // Progress dots, in funnel order, so the bar always fills left to right.
+  const PROGRESS_STEPS = ["quiz", "goals", "habit", "additives", "diet", "allergies", "account", "plan"];
+
+  // ?step=<name> jumps straight to one screen and stops writing to localStorage,
+  // so preview.html can show every screen at once without them fighting over
+  // the same saved progress. Ignored unless the name is a real step.
+  const previewParam = new URLSearchParams(location.search).get("step");
+  const PREVIEW = STEPS.indexOf(previewParam) !== -1;
+
   let state = loadState();
   let authBusy = false;
-  let swapRevealed = false; // trial preview reveal, transient
   let resendTimer = null;
   let pendingPw = ""; // held in memory only for the resend link, never persisted
 
   function defaultState() {
     return {
-      step: 0,
+      step: "hero",
+      worry: null, relate: {}, quizGuess: null,
       goals: {}, habit: null, additives: {}, diet: {}, allergies: {},
       flagUltraProcessed: true,
       email: "", authMode: "signup",
@@ -472,11 +550,21 @@
   function loadState() {
     try {
       const raw = localStorage.getItem(STATE_KEY);
-      if (raw) return Object.assign(defaultState(), JSON.parse(raw));
+      if (raw) {
+        const st = Object.assign(defaultState(), JSON.parse(raw));
+        if (STEPS.indexOf(st.step) === -1) st.step = "hero";
+        if (PREVIEW) st.step = previewParam;
+        return st;
+      }
     } catch (e) {}
-    return defaultState();
+    const st = defaultState();
+    if (PREVIEW) st.step = previewParam;
+    return st;
   }
-  function save() { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {} }
+  function save() {
+    if (PREVIEW) return;
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
   function deviceId() {
     let id = localStorage.getItem(DEVICE_KEY);
     if (!id) {
@@ -492,23 +580,27 @@
   const progressEl = document.getElementById("progress");
   const backBtn = document.getElementById("backBtn");
   backBtn.addEventListener("click", () => {
-    if (state.step === 11) { go(10); return; }
-    if (state.step > 0 && state.step <= 10) go(state.step - 1);
+    if (state.step === "code") { go("account"); return; }
+    // Skip back over calibrate, it would only auto-advance forward again.
+    if (state.step === "how") { go("allergies"); return; }
+    const i = idx();
+    if (i >= 1 && i <= STEPS.indexOf("code")) go(STEPS[i - 1]);
   });
 
-  function go(step) {
-    state.step = step;
+  function go(name) {
+    state.step = name;
     save();
     window.scrollTo(0, 0);
     render();
   }
+  function idx() { return Math.max(0, STEPS.indexOf(state.step)); }
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   // iconStyle: "bubble" = tinted circle bubble (goals), "inline" = bare 16px icon
-  // that turns white when selected (diet/allergies) — mirrors the app.
+  // that turns white when selected (diet/allergies), mirroring the app.
   function chipHtml(list, selected, iconStyle) {
     return '<div class="chips">' + list.map((it) => {
       const on = !!selected[it.label];
@@ -533,36 +625,29 @@
     }
   }
 
+  const RENDERERS = {
+    hero: renderHero, worry: renderWorry, bread: renderBread, relate: renderRelate,
+    stat: renderStat, quiz: renderQuiz, goals: renderGoals, habit: renderHabit,
+    additives: renderAdditives, diet: renderDiet, allergies: renderAllergies,
+    calibrate: renderCalibrate, how: renderHow, cred: renderCred,
+    account: renderAccount, code: renderCode, timeline: renderTimeline,
+    anchor: renderAnchor, plan: renderPlan, done: renderDone,
+  };
+
   function render() {
-    const s = state.step;
+    const i = idx();
     // chrome
-    if (s >= 1 && s <= 13) {
+    if (i >= 1 && i <= STEPS.indexOf("plan")) {
       chrome.style.display = "flex";
-      backBtn.style.visibility = (s >= 1 && s <= 10) || s === 11 ? "visible" : "hidden";
-      const segs = PREF_STEPS.concat([10, 12, 13]);
-      progressEl.innerHTML = segs.map((st) => `<span class="${s > st ? "on" : ""}"></span>`).join("");
-      progressEl.style.visibility = s >= 5 ? "visible" : "hidden";
+      backBtn.style.visibility = i <= STEPS.indexOf("code") ? "visible" : "hidden";
+      progressEl.innerHTML = PROGRESS_STEPS
+        .map((n) => `<span class="${i > STEPS.indexOf(n) ? "on" : ""}"></span>`).join("");
+      progressEl.style.visibility = i >= STEPS.indexOf("quiz") ? "visible" : "hidden";
     } else {
       chrome.style.display = "none";
     }
 
-    switch (s) {
-      case 0: return renderHero();
-      case 1: return renderHow();
-      case 2: return renderBread();
-      case 3: return renderStat();
-      case 4: return renderCred();
-      case 5: return renderGoals();
-      case 6: return renderHabit();
-      case 7: return renderAdditives();
-      case 8: return renderDiet();
-      case 9: return renderAllergies();
-      case 10: return renderAccount();
-      case 11: return renderCode();
-      case 12: return renderTrialPreview();
-      case 13: return renderPlan();
-      case 14: return renderDone();
-    }
+    (RENDERERS[state.step] || renderHero)();
   }
 
   function onCta(fn) { document.getElementById("cta").addEventListener("click", fn); }
@@ -575,7 +660,42 @@
       <p class="sub center">Scan any label. Get a score you can actually interrogate.</p>
       <button class="cta" id="cta">Get started</button>
     `;
-    onCta(() => go(1));
+    onCta(() => go("worry"));
+  }
+
+  function renderWorry() {
+    const selected = state.worry ? { [state.worry]: true } : {};
+    view.innerHTML = `
+      <h1>What bothers you most about labels?</h1>
+      <p class="hint">Pick one.</p>
+      ${chipHtml(WORRIES, selected, "bubble")}
+    `;
+    view.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+      state.worry = b.dataset.val;
+      save(); go("bread");
+    }));
+  }
+
+  function renderRelate() {
+    view.innerHTML = `
+      <h1>Any of this sound familiar?</h1>
+      <p class="hint">Tap the ones that sound like you.</p>
+      <div class="rows">
+        ${RELATE.map((r) => `
+          <button type="button" class="row-btn ${state.relate[r.key] ? "on" : ""}" data-key="${esc(r.key)}">
+            <span class="row-left"><span>${esc(r.text)}</span></span>
+          </button>`).join("")}
+      </div>
+      <p class="italic-note">Most people tap at least two.</p>
+      <button class="cta" id="cta">Continue</button>
+    `;
+    view.querySelectorAll(".row-btn").forEach((b) => b.addEventListener("click", () => {
+      const k = b.dataset.key;
+      if (state.relate[k]) delete state.relate[k];
+      else state.relate[k] = true;
+      save(); renderRelate();
+    }));
+    onCta(() => go("stat"));
   }
 
   function renderHow() {
@@ -595,7 +715,7 @@
       <p class="italic-note">The only scanner that shows its work.</p>
       <button class="cta" id="cta">Continue</button>
     `;
-    onCta(() => go(2));
+    onCta(() => go("cred"));
   }
 
   function renderBread() {
@@ -619,7 +739,7 @@
       <p class="italic-note">Same bread. Decades apart.</p>
       <button class="cta" id="cta">Continue</button>
     `;
-    onCta(() => go(3));
+    onCta(() => go("relate"));
   }
 
   function renderStat() {
@@ -642,7 +762,7 @@
       save();
       e.currentTarget.classList.toggle("on", state.flagUltraProcessed);
     });
-    onCta(() => go(4));
+    onCta(() => go("quiz"));
   }
 
   function renderCred() {
@@ -657,7 +777,7 @@
       <p class="mono-note">Every deduction in a scan links<br/>back to one of these.</p>
       <button class="cta" id="cta">Continue</button>
     `;
-    onCta(() => go(5));
+    onCta(() => go("account"));
   }
 
   function renderGoals() {
@@ -671,12 +791,12 @@
       toggleMulti(state.goals, b.dataset.val, false);
       save(); renderGoals();
     }));
-    onCta(() => go(6));
+    onCta(() => go("habit"));
   }
 
   function renderHabit() {
     view.innerHTML = `
-      <h1>How often do you eat packaged or ultra-processed food?</h1>
+      <h1>How often do you eat packaged food?</h1>
       <div class="rows" style="margin-top:20px">
         ${HABITS.map((h) => `
           <button type="button" class="row-btn ${state.habit === h.label ? "on" : ""}" data-val="${esc(h.label)}">
@@ -689,13 +809,13 @@
       state.habit = b.dataset.val;
       save(); renderHabit();
     }));
-    onCta(() => go(7));
+    onCta(() => go("additives"));
   }
 
   function renderAdditives() {
     view.innerHTML = `
-      <h1>Anything you specifically want flagged?</h1>
-      <p class="hint">Highlighted at the top of every scan.</p>
+      <h1>Anything you want flagged?</h1>
+      <p class="hint">Pinned to the top of every scan.</p>
       <div class="rows">
         ${ADDITIVES.map((a) => `
           <button type="button" class="row-btn ${state.additives[a.key] ? "on" : ""}" data-val="${esc(a.key)}">
@@ -709,7 +829,7 @@
       toggleMulti(state.additives, b.dataset.val, false);
       save(); renderAdditives();
     }));
-    onCta(() => go(8));
+    onCta(() => go("diet"));
   }
 
   function renderDiet() {
@@ -722,7 +842,7 @@
       toggleMulti(state.diet, b.dataset.val, true);
       save(); renderDiet();
     }));
-    onCta(() => go(9));
+    onCta(() => go("allergies"));
   }
 
   function renderAllergies() {
@@ -731,7 +851,7 @@
       <div style="margin-top:20px">${chipHtml(ALLERGIES, state.allergies, "inline")}</div>
       <div class="warning">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#A86A14" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#A86A14"/></svg>
-        <span>Underneath helps you spot ingredients. It is not a substitute for medical advice. Always check packaging and consult a professional for allergies.</span>
+        <span>Underneath helps you spot ingredients. It is not medical advice. Always check the packaging too.</span>
       </div>
       <button class="cta" id="cta">Next</button>
     `;
@@ -739,7 +859,48 @@
       toggleMulti(state.allergies, b.dataset.val, true);
       save(); renderAllergies();
     }));
-    onCta(() => go(10));
+    onCta(() => go("calibrate"));
+  }
+
+  // Fills a progress bar while the answers are applied, then moves on by itself.
+  function renderCalibrate() {
+    const items = [
+      { label: "Additive database", icon: "flask" },
+      { label: "NOVA processing markers", icon: "box" },
+      { label: "Your dietary filters", icon: "sliders" },
+      { label: "Allergen watchlist", icon: "shaker" },
+      { label: "Scoring engine", icon: "gauge" },
+    ];
+    view.innerHTML = `
+      <div class="calib">
+        <span class="calib-pct" id="calibPct">0%</span>
+        <h1 class="center" style="font-size:25px">Setting up your scanner</h1>
+        <div class="calib-bar"><div class="calib-fill" id="calibFill"></div></div>
+        <p class="calib-section">ACTIVATING</p>
+        <div class="calib-list">
+          ${items.map((it) => `
+            <div class="calib-row" data-row>
+              ${bubbleHtml(it.icon, 32)}
+              <span class="calib-label">${esc(it.label)}</span>
+              <span class="calib-tick"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.5 6.2l2.2 2.2L9.5 3.4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </div>`).join("")}
+        </div>
+      </div>
+    `;
+    const pctEl = document.getElementById("calibPct");
+    const fillEl = document.getElementById("calibFill");
+    const rows = Array.from(view.querySelectorAll("[data-row]"));
+    let pct = 0;
+    const tick = setInterval(() => {
+      pct = Math.min(100, pct + 2);
+      pctEl.textContent = pct + "%";
+      fillEl.style.width = pct + "%";
+      rows.forEach((r, i) => r.classList.toggle("done", pct >= (i + 1) * 20));
+      if (pct < 100) return;
+      clearInterval(tick);
+      // In preview the screen is on its own, so hold it instead of advancing.
+      if (!PREVIEW) setTimeout(() => { if (state.step === "calibrate") go("how"); }, 500);
+    }, 40);
   }
 
   // ── Account ──
@@ -811,7 +972,7 @@
         state.email = email;
         save();
         pendingPw = pw;
-        go(11);
+        go("code");
         return;
       }
       if (res.status === 401) { setMsg("Wrong email or password.", "err"); return; }
@@ -856,7 +1017,7 @@
       }
     }, 1000);
     resendBtn.addEventListener("click", async () => {
-      if (!pendingPw) { go(10); return; }
+      if (!pendingPw) { go("account"); return; }
       resendBtn.disabled = true;
       try {
         await fetch(OTP_START, {
@@ -868,7 +1029,7 @@
       } catch (e) { setMsg("Network error. Please try again.", "err"); }
       renderCode();
     });
-    document.getElementById("diffBtn").addEventListener("click", () => go(10));
+    document.getElementById("diffBtn").addEventListener("click", () => go("account"));
     onCta(() => verifyCode(codeInput.value));
   }
 
@@ -915,7 +1076,7 @@
     chrome.style.display = "none";
     const { data } = await db.auth.getUser();
     const user = data && data.user;
-    if (!user) { go(10); return; }
+    if (!user) { go("account"); return; }
     const prefs = {
       goals: state.goals,
       habit: state.habit,
@@ -934,13 +1095,75 @@
     }
     state.prefsSaved = true;
     save();
-    go(12);
+    go("timeline");
   }
 
-  // ── Trial preview: Pop-Tarts vs Nature's Path swap demo (app S14) ──
-  function renderTrialPreview() {
-    const check = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#3E9C6D" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#3E9C6D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    const card = !swapRevealed ? `
+  // ── Your first two weeks ──
+  function renderTimeline() {
+    const rows = [
+      { icon: "viewfinder", color: "#F47B45", bg: "#FDEFE3", t: "Day 1", d: "Scan what is already in your cupboard. Start with the things you buy weekly." },
+      { icon: "layers", color: "#C57B57", bg: "#F6EAE2", t: "Week 1", d: "Swap the worst three. Every red flag comes with a cleaner pick at a similar price." },
+      { icon: "bag", color: "#8FA37A", bg: "#EDF1E7", t: "Week 2", d: "Scan before you buy. The whole shop gets cleaner without thinking about it." },
+    ];
+    view.innerHTML = `
+      <h1>Your first two weeks.</h1>
+      ${rows.map((x, i) => `
+        ${i > 0 ? '<div class="arrow">&#8595;</div>' : ""}
+        <div class="step-card">
+          <div class="step-icon" style="background:${x.bg}">${iconSvg(x.icon, 22, x.color)}</div>
+          <div><h3>${x.t}</h3><p>${x.d}</p></div>
+        </div>`).join("")}
+      <button class="cta" id="cta">Continue</button>
+    `;
+    onCta(() => go("anchor"));
+  }
+
+  // ── Price anchor ──
+  function renderAnchor() {
+    view.innerHTML = `
+      <h1>What it costs to check this yourself.</h1>
+      <div style="margin-top:20px">
+        <div class="anchor-row"><span>Nutritionist consult</span><b>$150 an hour</b></div>
+        <div class="anchor-row"><span>Reading every label properly</span><b>Hours a week</b></div>
+        <div class="anchor-row"><span>Cross checking additives against EFSA</span><b>Unpaid</b></div>
+        <div class="anchor-row hi"><span>Underneath</span><b>About $4 a month</b></div>
+      </div>
+      <p class="italic-note">Roughly the price of one coffee.</p>
+      <button class="cta" id="cta">Continue</button>
+    `;
+    onCta(() => go("plan"));
+  }
+
+  // ── Score quiz: Pop-Tarts vs Nature's Path swap demo (app S14) ──
+  function renderQuiz() {
+    if (!state.quizGuess) {
+      view.innerHTML = `
+        <h1>One of these scores 22. One scores 81.</h1>
+        <p class="sub">Tap the one you think scores 22.</p>
+        <div class="quiz-opts">
+          <button type="button" class="quiz-opt" data-val="poptarts">
+            <img src="assets/poptarts.jpg" alt="Pop-Tarts Frosted Strawberry" />
+            <b>Frosted Strawberry Toaster Pastries</b><span>Pop-Tarts</span>
+          </button>
+          <button type="button" class="quiz-opt" data-val="naturespath">
+            <img src="assets/naturespath.jpg" alt="Nature's Path Toaster Pastries" />
+            <b>Berry Strawberry Toaster Pastries</b><span>Nature's Path</span>
+          </button>
+        </div>
+        <p class="italic-note">Same aisle. Same shape. Same picture on the box.</p>
+      `;
+      view.querySelectorAll(".quiz-opt").forEach((b) => b.addEventListener("click", () => {
+        state.quizGuess = b.dataset.val;
+        save(); renderQuiz();
+      }));
+      return;
+    }
+    const correct = state.quizGuess === "poptarts";
+    view.innerHTML = `
+      <h1>${correct ? "You called it." : "Other way round."}</h1>
+      <p class="sub">${correct
+        ? "Plenty of people get this one backwards. The box art gives you nothing."
+        : "They look the same on the shelf. The ingredient list is where they split."}</p>
       <div class="trial-card">
         <div class="trial-head">
           <img class="trial-thumb" src="assets/poptarts.jpg" alt="Pop-Tarts Frosted Strawberry" />
@@ -957,11 +1180,7 @@
           <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>TBHQ (preservative)</div>
           <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Soy lecithin</div>
         </div>
-        <button type="button" class="trial-reveal" id="revealBtn">
-          Reveal a better alternative
-          <svg width="8" height="13" viewBox="0 0 9 15" fill="none" aria-hidden="true"><path d="M1.5 1.5l6 6-6 6" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>` : `
+      </div>
       <div class="trial-card better">
         <div class="trial-head">
           <img class="trial-thumb" src="assets/naturespath.jpg" alt="Nature's Path Toaster Pastries" />
@@ -977,17 +1196,11 @@
           <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Organic cane sugar</div>
           <div class="trial-ing"><span class="trial-dot" style="background:#3E9C6D"></span>Organic strawberry filling</div>
         </div>
-        <div class="trial-jump">Score jumped from 22 to 81</div>
-      </div>`;
-    view.innerHTML = `
-      <h1 class="center">Try Underneath free.</h1>
-      ${card}
-      <div class="trial-note">${check}No payment due now.</div>
-      <button class="cta" id="cta">Try for $0.00</button>
+        <div class="trial-jump">59 points apart, one aisle apart</div>
+      </div>
+      <button class="cta" id="cta">Continue</button>
     `;
-    const revealBtn = document.getElementById("revealBtn");
-    if (revealBtn) revealBtn.addEventListener("click", () => { swapRevealed = true; renderTrialPreview(); });
-    onCta(() => go(13));
+    onCta(() => go("goals"));
   }
 
   // ── Plan picker + RC Web Billing checkout ──
@@ -1001,11 +1214,11 @@
         </div>
         <div class="tl-row">
           <div class="tl-rail"><div class="tl-dot" style="background:#fbf0da"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="#A86A14" stroke-width="1.6"/><path d="M8 4.5V8l2.4 1.4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
-          <div class="tl-body"><b>Day 5: Reminder</b><p>You get a reminder 48 hours before any charge.</p></div>
+          <div class="tl-body"><b>Day 1: Reminder</b><p>You get a reminder 48 hours before any charge.</p></div>
         </div>
         <div class="tl-row">
           <div class="tl-rail"><div class="tl-dot" style="background:#eadfca"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2" stroke="#9AA0AB" stroke-width="1.6"/></svg></div></div>
-          <div class="tl-body"><b>Day 7: Trial ends</b><p>You're only charged if you don't cancel. Cancel anytime.</p></div>
+          <div class="tl-body"><b>Day 3: Trial ends</b><p>You're only charged if you don't cancel. Cancel anytime.</p></div>
         </div>
       </div>
       <div class="plans">
@@ -1017,8 +1230,8 @@
         </button>
       </div>
       <div class="trial-note"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#3E9C6D" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#3E9C6D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>No payment due now.</div>
-      <button class="cta" id="cta">Start 7-day free trial</button>
-      <p class="legal">After the 7-day trial, Annual is $49.99/yr or Weekly is $1.99/wk, auto-renewing until cancelled. Cancel anytime.</p>
+      <button class="cta" id="cta">Start 3-day free trial</button>
+      <p class="legal">After the 3-day trial, Annual is $49.99/yr or Weekly is $1.99/wk, auto-renewing until cancelled. Cancel anytime.</p>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
     `;
     view.querySelectorAll(".plan").forEach((b) => b.addEventListener("click", () => {
@@ -1037,7 +1250,7 @@
     try {
       const { data } = await db.auth.getUser();
       const user = data && data.user;
-      if (!user) { authBusy = false; go(10); return; }
+      if (!user) { authBusy = false; go("account"); return; }
 
       const { Purchases } = await import("https://esm.sh/@revenuecat/purchases-js");
       let purchases;
@@ -1056,7 +1269,7 @@
       await purchases.purchase({ rcPackage: pkg, customerEmail: user.email || undefined });
       state.purchased = true;
       save();
-      go(14);
+      go("done");
     } catch (e) {
       const msg = (e && (e.message || String(e))) || "";
       if (/cancel|closed|dismiss/i.test(msg) || (e && e.errorCode === 1)) {
@@ -1097,7 +1310,7 @@
     const session = data && data.session;
     if (session) {
       if (state.purchased) { renderDone(); return; }
-      if (state.prefsSaved) { go(12); return; }
+      if (state.prefsSaved) { go("timeline"); return; }
       await afterAuth();
       return;
     }
