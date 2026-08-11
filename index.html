@@ -84,6 +84,22 @@
   .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
   .btn.ghost:hover { background: var(--card); border-color: var(--orange); }
 
+  /* Store buttons */
+  .store-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .store-row.center { justify-content: center; }
+  .store-btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 12px 22px; border-radius: 14px;
+    background: var(--ink); color: #fff; text-decoration: none;
+    transition: opacity .15s, transform .05s;
+  }
+  .store-btn:hover { opacity: .88; }
+  .store-btn:active { transform: translateY(1px); }
+  .store-btn svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
+  .store-btn .txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+  .store-btn .txt small { font-size: 11px; font-weight: 500; opacity: .78; letter-spacing: .2px; }
+  .store-btn .txt strong { font-size: 16px; font-weight: 600; letter-spacing: -.2px; }
+
   /* Hero */
   .hero { padding: 76px 0 40px; }
   .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; }
@@ -107,7 +123,6 @@
     margin-bottom: 20px;
   }
   .lead { font-size: 19px; color: var(--muted); max-width: 520px; margin-bottom: 30px; }
-  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
   .trust { margin-top: 22px; font-size: 14px; color: var(--muted); }
 
   .hero-visual { display: flex; justify-content: center; }
@@ -205,28 +220,7 @@
   }
   .get-card h2 { font-size: 30px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; }
   .get-card p.sub { color: var(--muted); font-size: 16px; margin-bottom: 26px; }
-  form { display: flex; flex-direction: column; gap: 12px; }
-  .platforms { display: flex; gap: 12px; }
-  .platform-btn {
-    flex: 1 1 0; padding: 14px 12px; font-size: 15px; font-weight: 500; font-family: inherit;
-    color: var(--muted); background: var(--cream); border: 1px solid var(--line);
-    border-radius: 12px; cursor: pointer; transition: border-color .15s, background .15s, color .15s;
-  }
-  .platform-btn:hover { border-color: var(--orange); }
-  .platform-btn.active, .platform-btn.active:hover {
-    border-color: var(--orange); background: rgba(245, 138, 60, 0.1); color: var(--ink);
-  }
-  input[type="email"] {
-    width: 100%; padding: 15px 18px; font-size: 16px; font-family: inherit; color: var(--ink);
-    background: var(--cream); border: 1px solid var(--line); border-radius: 12px; outline: none;
-    transition: border-color .15s;
-  }
-  input[type="email"]:focus { border-color: var(--orange); }
-  .get-card button[type="submit"] { padding: 15px 18px; font-size: 16px; }
-  .msg { margin-top: 16px; font-size: 15px; min-height: 20px; }
-  .msg.ok { color: var(--green); }
-  .msg.err { color: var(--red); }
-  .no-spam { margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .no-spam { margin-top: 20px; font-size: 13px; color: var(--muted); }
 
   /* Company */
   .company-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: start; }
@@ -277,7 +271,7 @@
         <a href="#features">Features</a>
         <a href="#company">Company</a>
       </nav>
-      <a class="btn" href="#get">Get early access</a>
+      <a class="btn" href="#download">Download</a>
     </div>
   </header>
 
@@ -286,18 +280,24 @@
     <section class="hero">
       <div class="container hero-grid">
         <div>
-          <span class="eyebrow">The honest food scanner</span>
+          <span class="eyebrow">Out now on iPhone and Android</span>
           <h1>Know what's really in your food</h1>
           <p class="lead">
             Underneath scans any product and scores it by how processed it
             actually is. Not the health halo on the front of the pack. What is
             genuinely inside.
           </p>
-          <div class="cta-row">
-            <a class="btn" href="#get">Get early access</a>
-            <a class="btn ghost" href="#how">See how it works</a>
+          <div class="store-row">
+            <a class="store-btn" href="https://apps.apple.com/app/id6785015345">
+              <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+              <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+            </a>
+            <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+              <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+              <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+            </a>
           </div>
-          <p class="trust">Built on the NOVA processing framework and published food science.</p>
+          <p class="trust">Free to try. Built on the NOVA processing framework and published food science.</p>
         </div>
         <div class="hero-visual">
           <div class="app-tile">
@@ -441,22 +441,23 @@
       </div>
     </section>
 
-    <!-- Get early access -->
-    <section id="get" class="alt">
+    <!-- Download -->
+    <section id="download" class="alt">
       <div class="container">
         <div class="get-card">
-          <h2>Get early access</h2>
-          <p class="sub">Underneath is rolling out now. Leave your email and we will send you the download the moment it is available for your phone.</p>
-          <form id="waitlist-form" novalidate>
-            <div class="platforms" role="group" aria-label="Which phone do you use?">
-              <button type="button" class="platform-btn" data-platform="ios">iPhone</button>
-              <button type="button" class="platform-btn" data-platform="android">Android</button>
-            </div>
-            <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address" required />
-            <button class="btn" id="submit" type="submit">Notify me at launch</button>
-          </form>
-          <p id="msg" class="msg" role="status" aria-live="polite"></p>
-          <p class="no-spam">We will only email you about Underneath. No spam, ever.</p>
+          <h2>Get Underneath</h2>
+          <p class="sub">Scan your first product in under a minute. Free to try on iPhone and Android.</p>
+          <div class="store-row center">
+            <a class="store-btn" href="https://apps.apple.com/app/id6785015345">
+              <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+              <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+            </a>
+            <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+              <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+              <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+            </a>
+          </div>
+          <p class="no-spam">Requires iOS 16.4 or later, or Android 7.0 or later.</p>
         </div>
       </div>
     </section>
@@ -515,73 +516,6 @@
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
-
-    var SUPABASE_URL = "https://ufqqilewsnujxroesgqa.supabase.co";
-    var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcXFpbGV3c251anhyb2VzZ3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0Njk5NTYsImV4cCI6MjA5ODA0NTk1Nn0.TYmTsPd1PKn3vhwndZ-YC3QXF20nq0zrPe43kUy1VHQ";
-    var ENDPOINT = SUPABASE_URL + "/functions/v1/waitlist-signup";
-    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    var form = document.getElementById("waitlist-form");
-    var input = document.getElementById("email");
-    var button = document.getElementById("submit");
-    var msg = document.getElementById("msg");
-    var platformButtons = document.querySelectorAll(".platform-btn");
-    var selectedPlatform = null;
-
-    function setMsg(text, kind) {
-      msg.textContent = text;
-      msg.className = "msg" + (kind ? " " + kind : "");
-    }
-
-    platformButtons.forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        selectedPlatform = btn.getAttribute("data-platform");
-        platformButtons.forEach(function (b) {
-          b.classList.toggle("active", b === btn);
-        });
-      });
-    });
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var email = input.value.trim().toLowerCase();
-      if (!EMAIL_RE.test(email)) {
-        setMsg("Please enter a valid email address.", "err");
-        return;
-      }
-      if (!selectedPlatform) {
-        setMsg("Please choose iPhone or Android.", "err");
-        return;
-      }
-      button.disabled = true;
-      setMsg("Joining...", "");
-
-      fetch(ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
-        },
-        body: JSON.stringify({ email: email, platform: selectedPlatform, source: "landing" }),
-      })
-        .then(function (res) {
-          if (res.ok) {
-            form.style.display = "none";
-            setMsg("You're on the list. We'll email you the moment Underneath is ready.", "ok");
-          } else if (res.status === 429) {
-            setMsg("Too many attempts. Please try again a bit later.", "err");
-            button.disabled = false;
-          } else {
-            setMsg("Something went wrong. Please try again.", "err");
-            button.disabled = false;
-          }
-        })
-        .catch(function () {
-          setMsg("Network error. Please try again.", "err");
-          button.disabled = false;
-        });
-    });
   </script>
 </body>
 </html>
