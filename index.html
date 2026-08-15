@@ -155,17 +155,13 @@
     scrollbar-width: none;
   }
   .gallery::-webkit-scrollbar { display: none; }
-  .gallery figure { flex: 0 0 auto; width: 235px; scroll-snap-align: center; text-align: center; }
-  /* The cutouts have slightly different widths, so size them by height instead
-     and the phones line up on a common baseline with the captions in a row.
-     The store assets crop the app screen mid element, so the first few rows of
-     some shots are a sliced card. Fading the top hides that and reads as a
-     screen carrying on past the frame. */
+  .gallery figure { flex: 0 0 auto; scroll-snap-align: center; text-align: center; }
+  /* The cutouts have slightly different widths, so size them by height and let
+     each figure hug its own image: the phones then line up on a common baseline
+     with the captions in a row, and nothing gets squashed to a fixed width. */
   .gallery img {
-    width: auto; height: 440px; max-width: 100%;
+    width: auto; height: 440px;
     filter: drop-shadow(0 12px 28px rgba(33,29,23,.14));
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 13%);
-    mask-image: linear-gradient(to bottom, transparent 0, #000 13%);
   }
   .gallery figcaption { margin-top: 14px; font-size: 14.5px; color: var(--muted); font-weight: 500; }
 
@@ -285,7 +281,6 @@
     .prod img { height: 180px; }
     .why-grid, .company-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
     .gallery { padding: 4px 24px 20px; margin: 0 -24px; justify-content: center; }
-    .gallery figure { width: 250px; }
     .gallery img { height: 470px; }
     .get-card { padding: 40px 34px; }
   }
@@ -345,7 +340,7 @@
         </div>
 
         <div class="hero-shot">
-          <img src="assets/shot-02.png" alt="The Underneath app showing a scanned product scored 8 out of 100, with its processing, macro and additive breakdown" width="607" height="1055" />
+          <img src="assets/shot-02.png" alt="The Underneath app showing a scanned biscuit scored 19 out of 100, with its processing, macro and additive breakdown" width="599" height="1087" />
         </div>
       </div>
     </section>
@@ -381,19 +376,19 @@
       <div class="container">
         <div class="gallery">
           <figure>
-            <img src="assets/shot-01.png" alt="Scanning a drink barcode with the Underneath camera" loading="lazy" width="548" height="1053" />
+            <img src="assets/shot-01.png" alt="Scanning a drink barcode with the Underneath camera" loading="lazy" width="592" height="1087" />
             <figcaption>Point at any barcode</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-02.png" alt="A product scored 8 out of 100 with processing, macro and additive breakdown" loading="lazy" width="607" height="1055" />
+            <img src="assets/shot-02.png" alt="A biscuit scored 19 out of 100 and marked Poor, with processing, macro and additive bars" loading="lazy" width="599" height="1087" />
             <figcaption>Get one clear score</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-03.png" alt="Ingredient detail explaining what artificial flavors actually are" loading="lazy" width="556" height="1051" />
-            <figcaption>Understand every ingredient</figcaption>
+            <img src="assets/shot-03.png" alt="A strained yogurt scored 85 out of 100 and marked Good, with its own breakdown and nutrition facts" loading="lazy" width="601" height="1087" />
+            <figcaption>See what actually scores well</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-04.png" alt="Higher scoring alternatives in the same category" loading="lazy" width="588" height="1048" />
+            <img src="assets/shot-04.png" alt="A list of higher scoring alternatives in the same category, each with its own score" loading="lazy" width="600" height="1087" />
             <figcaption>Find a better version</figcaption>
           </figure>
         </div>
