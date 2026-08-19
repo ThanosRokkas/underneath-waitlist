@@ -11,9 +11,16 @@
 //   APP_URL_IOS               App Store link (falls back to APP_URL)
 //   APP_URL_ANDROID           Google Play link (falls back to APP_URL)
 //   DRY_RUN                   set to "1" to preview without sending
+//   ONLY_EMAIL                send to just this one address (live test before the real run)
 //
 // Run:  node broadcast.mjs
 // Preview only:  DRY_RUN=1 node broadcast.mjs
+// Live test to one inbox:  ONLY_EMAIL=you@example.com node broadcast.mjs
+//
+// The email itself lives in email.mjs so it can be previewed and edited without
+// touching any of the sending logic here.
+
+import { SUBJECT, renderHtml, renderText } from "./email.mjs";
 
 const {
   SUPABASE_URL,
@@ -24,14 +31,12 @@ const {
   APP_URL_IOS,
   APP_URL_ANDROID,
   DRY_RUN,
+  ONLY_EMAIL,
 } = process.env;
 
 // Per-platform store links; fall back to the generic APP_URL when unset.
 const IOS_URL = APP_URL_IOS || APP_URL;
 const ANDROID_URL = APP_URL_ANDROID || APP_URL;
-function linkFor(platform) {
-  return platform === "android" ? ANDROID_URL : IOS_URL;
-}
 
 for (const [k, v] of Object.entries({
   SUPABASE_URL,
@@ -52,17 +57,11 @@ const dbHeaders = {
   "Content-Type": "application/json",
 };
 
-const subject = "Underneath is here";
-function bodyText(link) {
-  return [
-    "Thanks for joining the Underneath waitlist.",
-    "",
-    "The app is live. Scan any food, see how processed it really is, and find cleaner swaps.",
-    "",
-    `Get it here: ${link}`,
-    "",
-    "Underneath",
-  ].join("\n");
+// Both parts are built per recipient so the primary button points at the store
+// they actually said they were on when they signed up.
+function emailFor(platform) {
+  const args = { platform, iosUrl: IOS_URL, androidUrl: ANDROID_URL };
+  return { html: renderHtml(args), text: renderText(args) };
 }
 
 async function fetchPending() {
@@ -73,14 +72,28 @@ async function fetchPending() {
 }
 
 async function sendEmail(to, platform) {
+  const { html, text } = emailFor(platform);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from: RESEND_FROM, to, subject, text: bodyText(linkFor(platform)) }),
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to,
+      subject: SUBJECT,
+      html,
+      text,
+      // Gmail and Outlook surface a native unsubscribe control when this is
+      // present, which keeps complaints from turning into spam reports.
+      headers: {
+        "List-Unsubscribe": "<mailto:tryunderneath@gmail.com?subject=Unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }),
   });
+  if (!res.ok) console.warn(`    resend ${res.status}: ${await res.text()}`);
   return res.ok;
 }
 
@@ -94,8 +107,20 @@ async function markNotified(id) {
 }
 
 async function main() {
-  const pending = await fetchPending();
+  let pending = await fetchPending();
   console.log(`${pending.length} pending recipient(s).`);
+
+  // A live test send. Restricted to one address so a mistake here costs one
+  // email rather than the whole list, and notified_at is left alone so the
+  // address still gets the real broadcast later.
+  if (ONLY_EMAIL) {
+    const target = ONLY_EMAIL.toLowerCase();
+    const platform = pending.find((r) => r.email.toLowerCase() === target)?.platform ?? "ios";
+    console.log(`ONLY_EMAIL set — sending one ${platform} email to ${ONLY_EMAIL}.`);
+    console.log((await sendEmail(ONLY_EMAIL, platform)) ? "Sent." : "FAILED.");
+    return;
+  }
+
   if (DRY_RUN === "1") {
     for (const r of pending) console.log(`  would email: ${r.email}`);
     console.log("DRY_RUN=1 — nothing sent.");
