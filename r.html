@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>You have been invited to Underneath</title>
+<meta name="description" content="A friend invited you to Underneath, the food scanner that shows you how processed a product really is. Download the app and enter their referral code." />
+<meta name="theme-color" content="#faf5ec" />
+<meta name="robots" content="noindex" />
+
+<meta property="og:title" content="You have been invited to Underneath" />
+<meta property="og:description" content="Scan any food, see what is really inside, and find cleaner swaps. Free to try on iPhone and Android." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://tryunderneath.com/icon.png" />
+<meta name="twitter:card" content="summary" />
+
+<link rel="icon" href="/icon.png" />
+<link rel="apple-touch-icon" href="/icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #faf5ec;
+    --ink: #211d17;
+    --muted: #6f675a;
+    --orange: #f58a3c;
+    --orange-dark: #e0752a;
+    --card: #ffffff;
+    --line: #e9e0d0;
+    --shadow: 0 10px 40px rgba(33, 29, 23, 0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px 44px;
+  }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+
+  .wrap { width: 100%; max-width: 460px; text-align: center; }
+
+  .app-icon { width: 78px; height: 78px; border-radius: 20px; margin: 0 auto 20px; box-shadow: var(--shadow); }
+
+  .eyebrow {
+    display: inline-block; font-size: 12.5px; font-weight: 600;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    color: var(--orange-dark); background: rgba(245, 138, 60, 0.12);
+    padding: 6px 12px; border-radius: 999px; margin-bottom: 14px;
+  }
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.6px; line-height: 1.2; }
+  .lead { margin-top: 12px; font-size: 16.5px; color: var(--muted); }
+
+  /* ---------- The code ---------- */
+  /* Neither store carries a link through an install, so the code has to be
+     something the invitee can read and keep. It is the payload of this page. */
+  .code-card {
+    margin: 26px 0 22px; padding: 20px 18px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow);
+  }
+  .code-label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); }
+  .code {
+    margin-top: 8px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 34px; font-weight: 600; letter-spacing: 4px;
+    word-break: break-all;
+  }
+  .copy {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+    min-height: 42px; padding: 9px 18px;
+    font-family: inherit; font-size: 15px; font-weight: 600;
+    color: #fff; background: var(--orange);
+    border: none; border-radius: 10px; cursor: pointer;
+    transition: background .15s, transform .05s;
+  }
+  .copy:hover { background: var(--orange-dark); }
+  .copy:active { transform: translateY(1px); }
+
+  /* ---------- Store buttons ---------- */
+  /* Both render by default, which is also the no-JS state; platform
+     detection then narrows it to the one that can actually install. */
+  .store-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .store-btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    min-height: 56px; padding: 12px 24px;
+    border-radius: 14px;
+    background: var(--ink); color: #fff; text-decoration: none;
+    transition: opacity .15s, transform .05s;
+  }
+  .store-btn:hover { opacity: .88; }
+  .store-btn:active { transform: translateY(1px); }
+  .store-btn svg { width: 26px; height: 26px; flex: none; fill: currentColor; }
+  .store-btn .txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+  .store-btn .txt small { font-size: 11px; font-weight: 500; opacity: .78; letter-spacing: .2px; }
+  .store-btn .txt strong { font-size: 17px; font-weight: 600; letter-spacing: -.2px; }
+
+  .alt-plat { margin-top: 14px; font-size: 14px; color: var(--muted); display: none; }
+  .alt-plat a { color: var(--muted); text-underline-offset: 3px; }
+  body.plat-ios .store-btn.for-android,
+  body.plat-android .store-btn.for-ios { display: none; }
+  body.plat-ios .alt-plat.for-android,
+  body.plat-android .alt-plat.for-ios { display: block; }
+
+  /* ---------- Steps ---------- */
+  .steps { margin-top: 30px; text-align: left; display: grid; gap: 14px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; }
+  .step .n {
+    flex: none; width: 24px; height: 24px; border-radius: 999px;
+    background: rgba(245, 138, 60, 0.14); color: var(--orange-dark);
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .step p { font-size: 15.5px; color: var(--muted); }
+  .step strong { color: var(--ink); font-weight: 600; }
+
+  .have-app { margin-top: 26px; font-size: 14px; color: var(--muted); }
+  .have-app a { text-underline-offset: 3px; }
+  .foot { margin-top: 30px; font-size: 13px; color: var(--muted); }
+  .foot a { text-underline-offset: 3px; }
+
+  /* Shown instead of the code when the path carries nothing usable. */
+  .no-code .code-card, .no-code .steps { display: none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="app-icon" src="/icon.png" alt="" width="78" height="78" />
+
+    <span class="eyebrow">You have been invited</span>
+    <h1>Know what is really in your food</h1>
+    <p class="lead">
+      Scan any barcode and get one honest score, 0 to 100, based on how
+      processed a food actually is. Not the health halo on the front of the pack.
+    </p>
+
+    <div class="code-card">
+      <div class="code-label">Your friend's referral code</div>
+      <div class="code" id="code">--------</div>
+      <button class="copy" id="copyBtn" type="button">Copy code</button>
+    </div>
+
+    <div class="store-row">
+      <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+      </a>
+      <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+        <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+      </a>
+    </div>
+    <p class="alt-plat for-android">Also on <a href="https://play.google.com/store/apps/details?id=com.underneath.v2">Google Play</a></p>
+    <p class="alt-plat for-ios">Also on the <a href="https://apps.apple.com/app/id6785015345">App Store</a></p>
+
+    <div class="steps">
+      <div class="step"><span class="n">1</span><p>Install Underneath and open it.</p></div>
+      <div class="step"><span class="n">2</span><p>Create your account when it asks.</p></div>
+      <div class="step"><span class="n">3</span><p>On the <strong>Do you have a referral code?</strong> step, enter the code above.</p></div>
+    </div>
+
+    <p class="have-app">Already have the app? <a id="openApp" href="#">Open it here</a>.</p>
+
+    <p class="foot">
+      <a href="/">tryunderneath.com</a>
+    </p>
+  </div>
+
+  <script>
+    // The code is the last segment of /r/<code>. Vercel rewrites every such
+    // path to this one file, so the address bar is the only source of truth.
+    var raw = decodeURIComponent(window.location.pathname).split("/").filter(Boolean).pop() || "";
+    var code = /^[A-Za-z0-9]{8}$/.test(raw) ? raw.toLowerCase() : null;
+
+    var codeEl = document.getElementById("code");
+    var copyBtn = document.getElementById("copyBtn");
+    var openApp = document.getElementById("openApp");
+
+    if (code) {
+      codeEl.textContent = code;
+      openApp.href = "underneathv2://r/" + code;
+    } else {
+      // A malformed link should still land somewhere useful rather than
+      // showing a placeholder that looks like a real code.
+      document.body.classList.add("no-code");
+      openApp.href = "underneathv2://";
+    }
+
+    copyBtn.addEventListener("click", function () {
+      if (!code) return;
+      var done = function () {
+        copyBtn.textContent = "Copied";
+        setTimeout(function () { copyBtn.textContent = "Copy code"; }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done, fallback);
+      } else {
+        fallback();
+      }
+      // Older in-app browsers have no clipboard API. Selecting the text at
+      // least leaves the user one tap from copying it by hand.
+      function fallback() {
+        try {
+          var range = document.createRange();
+          range.selectNodeContents(codeEl);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          done();
+        } catch (e) {}
+      }
+    });
+
+    var ua = navigator.userAgent || "";
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                (/Macintosh/.test(ua) && typeof document.ontouchend !== "undefined");
+    var isAndroid = /Android/.test(ua);
+    if (isIOS) document.body.classList.add("plat-ios");
+    else if (isAndroid) document.body.classList.add("plat-android");
+  </script>
+</body>
+</html>

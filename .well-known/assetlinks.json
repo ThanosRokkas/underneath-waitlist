@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.underneath.v2",
+      "sha256_cert_fingerprints": [
+        "3F:23:F2:DE:5F:50:A5:43:DE:35:B8:5C:5E:E3:2F:FE:C1:AD:45:E7:28:F2:04:57:5C:7E:66:69:50:2F:F7:AD",
+        "5C:ED:2C:DA:70:C6:EA:9D:4C:FD:8C:02:A6:F2:AB:2B:54:70:67:3F:0A:C9:A4:11:AF:5B:3B:C4:F7:79:31:7F"
+      ]
+    }
+  }
+]
