@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Underneath | Know what's really in your food</title>
 <meta name="description" content="Scan any barcode and get one honest score, 0 to 100, based on how processed a food really is. Underneath reads the additives behind the label and shows you cleaner swaps. Free to try on iPhone and Android." />
-<meta name="theme-color" content="#faf5ec" />
+<meta name="theme-color" content="#86A36E" />
 
 <meta property="og:title" content="Underneath | Know what's really in your food" />
 <meta property="og:description" content="Scan any food, see what's really inside, and find cleaner swaps. A processing-first food scanner, out now on iPhone and Android." />
@@ -18,499 +18,733 @@
 <link rel="apple-touch-icon" href="icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Sagepanel's two faces. Gliker is a Canva exclusive with no binary, so the
+     marker face falls back to Grandstander exactly as the token stack does. -->
+<link href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
+  /* ------------------------------------------------------------------
+     Sagepanel tokens, verbatim from the design system.
+     Sage outside, forest inside, and never a third background colour.
+     ------------------------------------------------------------------ */
   :root {
-    --cream: #faf5ec;
-    --cream-2: #f4ecdd;
-    --ink: #211d17;
-    --muted: #6f675a;
-    --orange: #f58a3c;
-    --orange-dark: #e0752a;
-    --green: #2f7d4f;
-    --red: #c0492b;
-    --card: #ffffff;
-    --line: #e9e0d0;
-    --shadow: 0 10px 40px rgba(33, 29, 23, 0.10);
-    --dock-h: 76px;
+    /* Surfaces */
+    --sp-canvas:       #86A36E;
+    --sp-canvas-deep:  #6D8B54;
+    --sp-canvas-tint:  #93AE7C;
+    --sp-panel:        #1E3211;
+    --sp-panel-raised: #2A4419;
+    --sp-chip:         #405C2D;
+    --sp-leaf:         #417121;
+
+    /* Ink */
+    --sp-ink:      #FFFFFF;
+    --sp-ink-soft: #DCE5D4;
+    --sp-ink-dim:  #A9BE96;
+
+    /* Verdict, straight from the app. Never retuned to suit a layout. */
+    --sp-good:    #2F7D55;
+    --sp-caution: #C8901A;
+    --sp-poor:    #BE4238;
+    --sp-action:  #D9571A;
+
+    /* Faces */
+    --font-display: "Gliker", "Grandstander", "Comfortaa", cursive;
+    --font-body: "Poppins", "Commissioner", "Noto Sans", system-ui, sans-serif;
+
+    /* The 1080px post scale, re-authored fluidly for a browser. The ratios
+       and the six steps survive; only the pixel anchoring is dropped, because
+       a web page cannot be exported at a fixed width. */
+    --t-display-xl: clamp(38px, 8.8vw, 74px);
+    --t-display-lg: clamp(30px, 6.2vw, 52px);
+    --t-display-md: clamp(23px, 4.4vw, 36px);
+    --t-score:      clamp(54px, 13vw, 104px);
+    --t-chip:       clamp(13px, 3.4vw, 16px);
+    --t-body:       clamp(15.5px, 4.1vw, 18px);
+    --t-caption:    clamp(13px, 3.4vw, 14.5px);
+
+    --lead-display: 1.02;
+    --lead-body: 1.42;
+    --track-display: 0.01em;
+
+    /* Space and form */
+    --gutter: 18px;
+    --pad:    clamp(22px, 5.2vw, 56px);
+    --r-panel: clamp(26px, 4vw, 40px);
+    --r-block: 22px;
+    --r-pill:  999px;
+    --r-thumb: 16px;
+    --gap-tight: 14px;
+    --gap: 22px;
+    --gap-loose: 36px;
+    --gap-section: clamp(16px, 3vw, 26px);
+
+    /* The only shadow in the system, and it belongs to a handset cutout. */
+    --device-shadow: drop-shadow(0 -8px 44px rgba(0, 0, 0, 0.45));
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   body {
-    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--cream);
-    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: var(--t-body);
+    line-height: var(--lead-body);
+    background: var(--sp-canvas);
+    color: var(--sp-ink-soft);
     -webkit-font-smoothing: antialiased;
-    line-height: 1.5;
     overflow-x: hidden;
   }
   a { color: inherit; }
   img { max-width: 100%; display: block; }
-  .container { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 20px; }
 
-  /* ---------- Buttons ---------- */
+  /* The sage field. Flat colour and organic blobs in the two adjacent greens,
+     drawn from the system's fixed scenes. Never photographic, never gradient,
+     no noise and no texture. */
+  .field {
+    position: fixed; inset: 0; z-index: -1;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* ------------------------------------------------------------------
+     The panel. Flat forest, 40px radius, no border and no shadow: it
+     separates from the canvas by colour alone. Everything readable on this
+     page lives inside one.
+     ------------------------------------------------------------------ */
+  .panel {
+    position: relative;
+    background: var(--sp-panel);
+    border-radius: var(--r-panel);
+    padding: var(--pad);
+  }
+  .panel.clip { overflow: hidden; }
+  section { padding-bottom: var(--gap-section); }
+
+  /* ---------- Type ---------- */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--sp-ink);
+    line-height: var(--lead-display);
+    letter-spacing: var(--track-display);
+  }
+  h1.display { font-size: var(--t-display-xl); }
+  h2.display { font-size: var(--t-display-lg); }
+  h3.display { font-size: var(--t-display-md); }
+
+  .body { color: var(--sp-ink-soft); font-size: var(--t-body); }
+  .body + .body { margin-top: 0.7em; }
+  .caption { color: var(--sp-ink-dim); font-size: var(--t-caption); }
+  .lede { max-width: 42ch; }
+
+  /* The promise pill. Marker face, one line, never wraps. */
+  .chip {
+    display: inline-block;
+    background: var(--sp-chip);
+    color: var(--sp-ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--t-chip);
+    line-height: 1;
+    padding: 13px 22px;
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+    margin-bottom: var(--gap);
+  }
+  .chip.leaf { background: var(--sp-leaf); }
+
+  /* ---------- Buttons. Solid fills that darken. No lift, no glow. ---------- */
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 50px; padding: 13px 22px;
-    font-family: inherit; font-size: 16px; font-weight: 600;
-    color: #fff; background: var(--orange);
-    border: none; border-radius: 12px; cursor: pointer;
+    min-height: 46px; padding: 12px 24px;
+    font-family: var(--font-body); font-size: 15px; font-weight: 600;
+    color: #fff; background: var(--sp-action);
+    border: 0; border-radius: var(--r-pill); cursor: pointer;
     text-decoration: none; white-space: nowrap;
-    transition: background .15s, transform .05s;
+    transition: background .15s;
   }
-  .btn:hover { background: var(--orange-dark); }
-  .btn:active { transform: translateY(1px); }
-  .btn.sm { min-height: 42px; padding: 9px 18px; font-size: 15px; border-radius: 10px; }
+  .btn:hover { background: #C24A13; }
 
-  /* Store buttons. Both render by default so the page still works with no JS;
-     platform detection then narrows it down to the one that matters. */
+  /* Store lockups. White pills so the wordmarks stay legible on forest, and
+     both render with no JS; platform detection then narrows to the one that
+     can actually install. */
   .store-row { display: flex; gap: 12px; flex-wrap: wrap; }
   .store-row.center { justify-content: center; }
   .store-btn {
     display: inline-flex; align-items: center; gap: 12px;
-    min-height: 56px; padding: 12px 24px;
-    border-radius: 14px;
-    background: var(--ink); color: #fff; text-decoration: none;
-    transition: opacity .15s, transform .05s;
+    min-height: 56px; padding: 11px 26px;
+    border-radius: var(--r-pill);
+    background: #fff; color: var(--sp-panel); text-decoration: none;
+    transition: background .15s;
   }
-  .store-btn:hover { opacity: .88; }
-  .store-btn:active { transform: translateY(1px); }
-  .store-btn svg { width: 26px; height: 26px; flex: none; fill: currentColor; }
+  .store-btn:hover { background: var(--sp-ink-soft); }
+  .store-btn svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
   .store-btn .txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
-  .store-btn .txt small { font-size: 11px; font-weight: 500; opacity: .78; letter-spacing: .2px; }
-  .store-btn .txt strong { font-size: 17px; font-weight: 600; letter-spacing: -.2px; }
+  .store-btn .txt small { font-size: 11px; font-weight: 500; opacity: .7; }
+  .store-btn .txt strong { font-size: 16.5px; font-weight: 600; }
 
-  /* The other platform, demoted to a quiet text link. */
-  .alt-plat { margin-top: 14px; font-size: 14px; color: var(--muted); display: none; }
-  .alt-plat a { color: var(--muted); text-underline-offset: 3px; }
+  .alt-plat { margin-top: 14px; font-size: var(--t-caption); color: var(--sp-ink-dim); display: none; }
+  .alt-plat a { text-underline-offset: 3px; }
   body.plat-ios .store-btn.for-android,
   body.plat-android .store-btn.for-ios { display: none; }
   body.plat-ios .alt-plat.for-android,
   body.plat-android .alt-plat.for-ios { display: block; }
   .store-row.center + .alt-plat { text-align: center; }
 
+  /* ---------- Stickers ----------
+     Flat garden illustrations hanging off the panel corners, mostly outside
+     the card, rotated 10 to 28 degrees. Two per panel maximum, and never in
+     the top strip where a headline runs. */
+  .sticker { position: absolute; z-index: 2; pointer-events: none; }
+  .sticker svg { display: block; width: 100%; height: auto; }
+  @media (max-width: 780px) { .sticker { display: none; } }
+
   /* ---------- Header ---------- */
-  /* Sticky on desktop only. On a phone the bottom dock is the persistent
-     call to action, and a second one pinned to the top is just clutter
-     sitting outside thumb reach. */
-  header.site {
-    background: rgba(250, 245, 236, 0.9);
-    backdrop-filter: saturate(140%) blur(10px);
-    border-bottom: 1px solid var(--line);
+  header.site { padding: 18px 0 14px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand img { width: 34px; height: 34px; border-radius: 10px; }
+  .brand span {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 21px; color: var(--sp-panel); letter-spacing: var(--track-display);
   }
-  @media (min-width: 900px) {
-    header.site { position: sticky; top: 0; z-index: 50; }
+  .nav-links { display: none; align-items: center; gap: 10px; }
+  .nav-links a {
+    text-decoration: none; color: var(--sp-panel);
+    font-size: 14.5px; font-weight: 500;
+    padding: 9px 16px; border-radius: var(--r-pill);
+    transition: background .15s;
   }
-  .nav { display: flex; align-items: center; justify-content: space-between; height: 62px; gap: 12px; }
-  .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
-  .brand img { width: 32px; height: 32px; border-radius: 9px; }
-  .brand span { font-weight: 600; font-size: 19px; letter-spacing: -0.3px; }
-  .nav-links { display: none; align-items: center; gap: 28px; }
-  .nav-links a { text-decoration: none; color: var(--muted); font-size: 15px; font-weight: 500; }
-  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover { background: var(--sp-canvas-tint); }
 
   /* ---------- Hero ---------- */
-  .hero { padding: 40px 0 0; }
-  .eyebrow {
-    display: inline-block; font-size: 12.5px; font-weight: 600;
-    letter-spacing: 0.6px; text-transform: uppercase;
-    color: var(--orange-dark); background: rgba(245, 138, 60, 0.12);
-    padding: 6px 12px; border-radius: 999px; margin-bottom: 16px;
-  }
-  h1 {
-    font-size: clamp(34px, 8.6vw, 56px);
-    font-weight: 600; line-height: 1.06; letter-spacing: -1px;
-    margin-bottom: 16px;
-  }
-  .lead { font-size: clamp(16.5px, 4.3vw, 19px); color: var(--muted); max-width: 520px; margin-bottom: 24px; }
-  .trust { margin-top: 16px; font-size: 14px; color: var(--muted); }
-  .hero-shot { margin: 30px auto 0; max-width: 320px; }
-  .hero-shot img { width: 100%; height: auto; filter: drop-shadow(0 18px 40px rgba(33,29,23,.18)); }
+  /* Every track is minmax(0, 1fr): a bare 1fr floors at min-content, so one
+     long unbreakable word would widen the column past the panel. */
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-loose); align-items: end; }
+  .hero-copy { padding-bottom: 6px; }
+  h1.display { margin-bottom: 18px; }
+  .hero .store-row { margin-top: 26px; }
+  .hero .trust { margin-top: 18px; }
+  /* Bottom cuts only. The handset runs off the panel's own rounded floor and
+     is never sliced by a side edge. */
+  .hero-shot { position: relative; margin: 0 auto -1px; max-width: 320px; }
+  .hero-shot img { width: 100%; height: auto; filter: var(--device-shadow); margin-bottom: calc(var(--pad) * -1); }
 
-  /* ---------- Sections ---------- */
-  section { padding: 56px 0; }
-  .section-head { max-width: 640px; margin: 0 auto 32px; text-align: center; }
-  .section-head h2 { font-size: clamp(26px, 6.4vw, 36px); font-weight: 600; letter-spacing: -0.6px; margin-bottom: 12px; }
-  .section-head p { font-size: clamp(15.5px, 4vw, 18px); color: var(--muted); }
-  .alt { background: var(--cream-2); }
-
-  /* ---------- Fact strip ---------- */
-  .facts { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .fact {
-    display: flex; align-items: flex-start; gap: 12px;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 16px 18px;
+  /* ---------- Numbers ---------- */
+  .stats { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-tight); }
+  .stat { background: var(--sp-chip); border-radius: var(--r-block); padding: 22px 26px; }
+  .stat b {
+    display: block; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(30px, 7vw, 42px); line-height: 1; color: var(--sp-ink);
+    letter-spacing: var(--track-display);
   }
-  .fact svg { width: 22px; height: 22px; flex: none; margin-top: 1px; stroke: var(--orange-dark); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .fact b { display: block; font-size: 16px; font-weight: 600; }
-  .fact span { font-size: 14.5px; color: var(--muted); }
+  .stat span { display: block; margin-top: 9px; font-size: var(--t-caption); color: var(--sp-ink-dim); }
 
-  /* ---------- Screenshot gallery ---------- */
+  /* ---------- Section heads ---------- */
+  .head { margin-bottom: var(--gap-loose); }
+  .head .body { margin-top: 14px; max-width: 46ch; }
+  .head.center { text-align: center; }
+  .head.center .body { margin-left: auto; margin-right: auto; }
+
+  /* ---------- Steps ---------- */
+  .steps { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-tight); }
+  .step { background: var(--sp-chip); border-radius: var(--r-block); padding: 26px 24px; }
+  .step .n {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 34px; line-height: 1; color: var(--sp-ink-dim);
+    display: block; margin-bottom: 14px;
+  }
+  .step h3 { font-size: clamp(20px, 4.4vw, 26px); margin-bottom: 8px; }
+  .step p { color: var(--sp-ink-soft); font-size: clamp(14.5px, 3.8vw, 16px); }
+
+  /* ---------- Split layouts ---------- */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-loose); align-items: center; }
+  .split-shot { max-width: 300px; margin: 0 auto; }
+  .split-shot img { width: 100%; height: auto; filter: var(--device-shadow); }
+  /* Bottom cuts only: a handset in a split runs off the panel's own floor
+     rather than ending on a hard edge in mid air. */
+  .split-shot.bleed { align-self: end; }
+  .split-shot.bleed img { display: block; margin-bottom: calc(var(--pad) * -1); }
+
+  /* Spec rows. The one typographic glyph in the system is the guillemet. */
+  .spec { display: flex; flex-direction: column; gap: 10px; margin-top: var(--gap); }
+  .spec-row {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    background: var(--sp-chip); border-radius: var(--r-block);
+    padding: 16px 22px;
+  }
+  .spec-row .g { color: var(--sp-ink); opacity: .85; font-size: 17px; }
+  .spec-row .term { font-weight: 600; color: var(--sp-ink); min-width: 108px; font-size: clamp(15px, 3.9vw, 17px); }
+  .spec-row .detail { color: var(--sp-ink-soft); font-size: clamp(14.5px, 3.8vw, 16px); min-width: 0; overflow-wrap: break-word; }
+
+  /* ---------- Gallery ----------
+     Cutouts, not crops. The screens keep the app's own warm cream and its red
+     score card; nothing here is tinted green to match the page. */
   .gallery {
-    display: flex; gap: 18px;
+    display: flex; gap: 20px;
     overflow-x: auto; scroll-snap-type: x mandatory;
-    padding: 4px 20px 20px;
-    margin: 0 -20px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    padding-bottom: 4px;
+    margin: 0 calc(var(--pad) * -1);
+    padding-left: var(--pad); padding-right: var(--pad);
   }
   .gallery::-webkit-scrollbar { display: none; }
   .gallery figure { flex: 0 0 auto; scroll-snap-align: center; text-align: center; }
-  /* The cutouts have slightly different widths, so size them by height and let
-     each figure hug its own image: the phones then line up on a common baseline
-     with the captions in a row, and nothing gets squashed to a fixed width. */
-  .gallery img {
-    width: auto; height: 440px;
-    filter: drop-shadow(0 12px 28px rgba(33,29,23,.14));
+  .gallery img { width: auto; height: 380px; filter: var(--device-shadow); }
+  .gallery figcaption {
+    margin-top: 18px;
+    display: inline-block; background: var(--sp-chip);
+    border-radius: var(--r-pill); padding: 10px 20px;
+    font-size: var(--t-caption); color: var(--sp-ink);
   }
-  .gallery figcaption { margin-top: 14px; font-size: 14.5px; color: var(--muted); font-weight: 500; }
 
-  /* ---------- Steps ---------- */
-  .steps { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  .step { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px 22px; }
-  .step .n {
-    width: 36px; height: 36px; border-radius: 11px;
-    background: rgba(245, 138, 60, 0.14); color: var(--orange-dark);
+  /* ---------- Swap comparison ---------- */
+  .swap { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-tight); align-items: stretch; }
+  .prod {
+    background: var(--sp-chip); border-radius: var(--r-block);
+    padding: 20px; display: flex; align-items: center; gap: 18px;
+  }
+  .prod .tile {
+    width: 92px; height: 92px; flex: none;
+    border-radius: var(--r-thumb); background: #fff; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 17px; margin-bottom: 14px;
   }
-  .step h3 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
-  .step p { color: var(--muted); font-size: 15px; }
+  .prod .tile img { width: 100%; height: 100%; object-fit: contain; }
+  .prod .meta { flex: 1; min-width: 0; }
+  /* Both are spans, so they need an explicit block to stack and to honour the
+     note's margin. */
+  .prod .pname { display: block; font-weight: 600; color: var(--sp-ink); font-size: clamp(15px, 4vw, 17px); }
+  .prod .pnote { display: block; color: var(--sp-ink-dim); font-size: var(--t-caption); margin-top: 3px; }
+  /* Never a bare score: the number always ships with its bar and its verdict. */
+  .verdict { flex: none; text-align: right; min-width: 96px; }
+  .verdict .n {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(34px, 8vw, 46px); line-height: 1;
+    letter-spacing: var(--track-display);
+  }
+  /* Verdict colour is a fill behind white ink, never the ink itself: as text on
+     the chip it does not clear contrast, worst of all the good green. */
+  .verdict .n { color: var(--sp-ink); }
+  .verdict .w {
+    display: inline-block; margin-top: 6px; padding: 3px 10px;
+    border-radius: var(--r-pill); color: #fff;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .4px;
+  }
+  .verdict .track { margin-top: 8px; height: 8px; border-radius: var(--r-pill); background: var(--sp-panel-raised); }
+  .verdict .track i { display: block; height: 100%; border-radius: var(--r-pill); }
+  .poor .w, .poor .track i { background: var(--sp-poor); }
+  .good .w, .good .track i { background: var(--sp-good); }
+  /* On a handset the tile, the copy and a 96px verdict cannot share one line:
+     the name column collapses to roughly one word per line. Drop the verdict to
+     its own full-width row so the bar can stretch and the copy can breathe. */
+  @media (max-width: 460px) {
+    .prod { flex-wrap: wrap; gap: 14px; }
+    .prod .meta { flex: 1 1 120px; }
+    .verdict {
+      flex: 1 0 100%; min-width: 0; text-align: left;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .verdict .n { font-size: 34px; }
+    .verdict .w { margin-top: 0; flex: none; }
+    .verdict .track { margin-top: 0; flex: 1; }
+  }
+  .swap-note { margin-top: var(--gap); }
 
-  /* ---------- Compare ---------- */
-  .compare { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 760px; margin: 0 auto; align-items: center; }
-  .prod { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; text-align: center; box-shadow: var(--shadow); }
-  .prod img { height: 150px; width: auto; margin: 0 auto 14px; border-radius: 8px; }
-  .badge { display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 15px; border-radius: 999px; font-weight: 700; font-size: 21px; }
-  .badge small { font-size: 11.5px; font-weight: 600; }
-  .badge.bad { background: rgba(192, 73, 43, 0.12); color: var(--red); }
-  .badge.good { background: rgba(47, 125, 79, 0.12); color: var(--green); }
-  .prod .pname { margin-top: 10px; font-weight: 600; font-size: 15px; }
-  .prod .pnote { font-size: 13px; color: var(--muted); margin-top: 3px; }
-  .arrow { font-size: 26px; color: var(--muted); text-align: center; transform: rotate(90deg); }
-  .compare-caption { text-align: center; color: var(--muted); font-size: 15px; margin-top: 24px; }
-
-  /* ---------- Why ---------- */
-  .why-grid { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; }
-  .why-imgs { display: grid; gap: 14px; }
-  .why-imgs figure { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
-  .why-imgs img { width: 100%; height: 165px; object-fit: cover; }
-  .why-imgs figcaption { padding: 10px 15px; font-size: 13px; color: var(--muted); font-weight: 500; }
-  .why-text h2 { font-size: clamp(26px, 6.4vw, 34px); font-weight: 600; letter-spacing: -0.6px; margin-bottom: 14px; }
-  .why-text p { color: var(--muted); font-size: clamp(15.5px, 4vw, 17px); margin-bottom: 12px; }
+  /* ---------- Then and now ---------- */
+  .then-now { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap-tight); }
+  .then-now figure { background: var(--sp-chip); border-radius: var(--r-block); overflow: hidden; }
+  .then-now img { width: 100%; height: 150px; object-fit: cover; }
+  .then-now figcaption { padding: 13px 16px; font-size: var(--t-caption); color: var(--sp-ink-soft); }
 
   /* ---------- FAQ ---------- */
-  .faq { max-width: 720px; margin: 0 auto; }
-  .faq details {
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 0 18px; margin-bottom: 10px;
-  }
+  .faq { display: flex; flex-direction: column; gap: 10px; }
+  .faq details { background: var(--sp-chip); border-radius: var(--r-block); padding: 0 22px; }
   .faq summary {
-    list-style: none; cursor: pointer; padding: 17px 0;
-    font-weight: 600; font-size: 16.5px;
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    list-style: none; cursor: pointer; padding: 19px 0;
+    font-weight: 600; color: var(--sp-ink);
+    font-size: clamp(15.5px, 4vw, 17.5px);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
   }
   .faq summary::-webkit-details-marker { display: none; }
   .faq summary::after {
-    content: "+"; font-size: 22px; font-weight: 400; color: var(--orange-dark);
-    line-height: 1; flex: none; transition: transform .2s;
+    content: "+";
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 26px; line-height: 1; color: var(--sp-ink-dim);
+    flex: none; transition: transform .2s;
   }
   .faq details[open] summary::after { transform: rotate(45deg); }
-  .faq p { color: var(--muted); font-size: 15.5px; padding: 0 0 18px; }
+  .faq p { color: var(--sp-ink-soft); font-size: clamp(14.5px, 3.9vw, 16px); padding: 0 0 20px; max-width: 62ch; }
 
-  /* ---------- Final CTA ---------- */
-  .get-card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 22px;
-    box-shadow: var(--shadow); max-width: 540px; margin: 0 auto;
-    padding: 34px 24px; text-align: center;
-  }
-  .get-card img.icon { width: 76px; height: 76px; border-radius: 19px; margin: 0 auto 18px; box-shadow: var(--shadow); }
-  .get-card h2 { font-size: clamp(25px, 6vw, 31px); font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; }
-  .get-card p.sub { color: var(--muted); font-size: 16px; margin-bottom: 24px; }
-  .req { margin-top: 18px; font-size: 13px; color: var(--muted); }
+  /* ---------- Download ---------- */
+  .get { text-align: center; }
+  .get img.icon { width: 78px; height: 78px; border-radius: 20px; margin: 0 auto 22px; }
+  .get .body { margin: 14px auto 26px; max-width: 40ch; }
 
   /* ---------- Company ---------- */
-  .company-grid { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: start; }
-  .company-grid h2 { font-size: clamp(26px, 6.4vw, 34px); font-weight: 600; letter-spacing: -0.6px; margin-bottom: 14px; }
-  .company-grid p { color: var(--muted); font-size: clamp(15.5px, 4vw, 17px); margin-bottom: 12px; }
-  .company-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px; font-size: 15px; color: var(--muted); }
-  .company-card h3 { color: var(--ink); font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-  .company-card dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; }
-  .company-card dt { color: var(--ink); font-weight: 500; }
-  .company-card a { color: var(--orange-dark); }
+  .company { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-loose); align-items: start; }
 
   /* ---------- Footer ---------- */
-  footer.site { border-top: 1px solid var(--line); background: var(--cream-2); padding: 34px 0; }
-  .foot-top { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
-  .foot-links { display: flex; gap: 18px; font-size: 15px; flex-wrap: wrap; }
-  .foot-links a { color: var(--muted); text-decoration: none; }
-  .foot-links a:hover { color: var(--ink); }
-  .legal { font-size: 13px; color: var(--muted); line-height: 1.6; }
-  .legal a { color: var(--muted); }
+  footer.site { padding-bottom: 30px; }
+  .foot-top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 18px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .foot-top .brand span { color: var(--sp-ink); }
+  .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .foot-links a {
+    text-decoration: none; color: var(--sp-ink);
+    background: var(--sp-chip); border-radius: var(--r-pill);
+    padding: 10px 18px; font-size: var(--t-caption);
+    transition: background .15s;
+  }
+  .foot-links a:hover { background: var(--sp-leaf); }
+  .legal { color: var(--sp-ink-dim); font-size: 12.5px; line-height: 1.65; }
 
-  /* ---------- Sticky mobile download dock ----------
-     Revealed by JS once the hero CTA has scrolled away, so the download action
-     is never more than a thumb away on a phone. */
+  /* ---------- Sticky download dock, phones only ----------
+     Solid forest, no blur and no glass: text never sits on an image here, so
+     it never needs a protection layer. */
   .dock {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-    background: rgba(250, 245, 236, 0.94);
-    backdrop-filter: saturate(140%) blur(12px);
-    border-top: 1px solid var(--line);
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    transform: translateY(110%);
+    position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 60;
+    background: var(--sp-panel);
+    border-radius: var(--r-pill);
+    padding: 10px 12px 10px 14px;
+    transform: translateY(160%);
     transition: transform .25s ease;
     display: none;
   }
   .dock.show { transform: translateY(0); }
-  .dock-inner { display: flex; align-items: center; gap: 12px; max-width: 560px; margin: 0 auto; }
-  .dock img { width: 42px; height: 42px; border-radius: 11px; flex: none; }
+  .dock-inner { display: flex; align-items: center; gap: 12px; }
+  .dock img { width: 40px; height: 40px; border-radius: 12px; flex: none; }
   .dock .meta { flex: 1; min-width: 0; line-height: 1.25; }
-  .dock .meta b { display: block; font-size: 15.5px; font-weight: 600; }
-  .dock .meta span { font-size: 13px; color: var(--muted); }
-  .dock .btn { flex: none; }
-  body.has-dock { padding-bottom: var(--dock-h); }
+  .dock .meta b { display: block; font-size: 15px; font-weight: 600; color: var(--sp-ink); }
+  .dock .meta span { font-size: 12.5px; color: var(--sp-ink-dim); }
+  .dock .btn { flex: none; min-height: 42px; padding: 10px 20px; font-size: 14.5px; }
+  body.has-dock { padding-bottom: 82px; }
 
   /* ---------- Larger screens ---------- */
   @media (min-width: 700px) {
-    .container { padding: 0 24px; }
-    section { padding: 68px 0; }
-    .facts { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .steps { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .compare { grid-template-columns: 1fr auto 1fr; gap: 22px; }
-    .arrow { transform: none; }
-    .prod img { height: 180px; }
-    .why-grid, .company-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
-    .gallery { padding: 4px 24px 20px; margin: 0 -24px; justify-content: center; }
-    .gallery img { height: 470px; }
-    .get-card { padding: 40px 34px; }
+    :root { --gutter: 24px; }
+    .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .then-now img { height: 200px; }
+    .gallery img { height: 440px; }
   }
-  @media (min-width: 900px) {
-    .nav { height: 68px; }
+  @media (min-width: 920px) {
+    header.site { padding: 26px 0 20px; }
     .nav-links { display: flex; }
-    .hero { padding: 64px 0 20px; }
-    .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
-    .hero-shot { margin: 0; max-width: 360px; }
-    .gallery { overflow: visible; }
+    .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 48px; }
+    .hero-shot { margin-right: 0; max-width: 340px; }
+    .split { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; }
+    .split .split-shot.bleed { order: -1; }
+    /* Flip puts the imagery second, so the copy takes the wide track and the
+       headline keeps its two hand-broken lines. */
+    .split.flip { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+    .split.flip .split-shot { order: 2; }
+    .swap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .company { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); }
+    .gallery { justify-content: center; }
   }
 </style>
 </head>
 <body>
-  <header class="site">
-    <div class="container nav">
-      <a class="brand" href="#top">
-        <img src="icon.png" alt="Underneath app icon" width="32" height="32" />
-        <span>Underneath</span>
-      </a>
-      <nav class="nav-links">
-        <a href="#how">How it works</a>
-        <a href="#see">Screens</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <a class="btn sm" href="#download">Download</a>
+
+<!-- The sage field: three organic blobs in the adjacent greens, taken from the
+     system's first fixed scene. Flat, never a gradient. -->
+<svg class="field" viewBox="0 0 1080 1350" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <path d="M0,120 C180,40 340,180 300,340 C265,480 60,470 0,380 Z" fill="#6D8B54"/>
+  <path d="M1080,760 C900,700 860,940 980,1060 C1040,1120 1080,1140 1080,1140 Z" fill="#93AE7C"/>
+  <path d="M700,1350 C700,1180 900,1140 1010,1230 C1090,1296 1080,1350 1080,1350 Z" fill="#6D8B54"/>
+</svg>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="#top">
+      <img src="icon.png" alt="Underneath app icon" width="34" height="34" />
+      <span>Underneath</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#score">The score</a>
+      <a href="#screens">Screens</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn" href="#download">Get the app</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="panel clip">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="chip">Two seconds, in the aisle.</span>
+            <h1 class="display">Know What's<br />Underneath</h1>
+            <p class="body lede">
+              Scan any barcode and get one honest number out of 100, weighted by
+              how processed a food actually is. Not by the health halo on the
+              front of the pack.
+            </p>
+
+            <div class="store-row">
+              <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
+                <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+              </a>
+              <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+                <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+              </a>
+            </div>
+            <p class="alt-plat for-android">Also on <a href="https://play.google.com/store/apps/details?id=com.underneath.v2">Google Play</a></p>
+            <p class="alt-plat for-ios">Also on the <a href="https://apps.apple.com/app/id6785015345">App Store</a></p>
+
+            <p class="caption trust">Free to try. Built on the NOVA processing framework and published food science.</p>
+          </div>
+
+          <div class="hero-shot">
+            <img src="assets/shot-02.png" alt="The Underneath app showing a scanned chocolate digestive scored 8 out of 100, with its processing, macro and additive breakdown" width="600" height="1087" />
+          </div>
+        </div>
+      </div>
     </div>
-  </header>
+  </section>
 
-  <main id="top">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <span class="eyebrow">Out now on iPhone and Android</span>
-          <h1>Know what's really in your food</h1>
-          <p class="lead">
-            Scan any barcode and get one honest score, 0 to 100, based on how
-            processed a food actually is. Not the health halo on the front of
-            the pack.
-          </p>
-
-          <div class="store-row">
-            <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
-              <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-              <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
-            </a>
-            <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
-              <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
-              <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
-            </a>
+  <!-- Numbers -->
+  <section>
+    <div class="wrap">
+      <div class="panel">
+        <div class="stats">
+          <div class="stat">
+            <b>0 to 100</b>
+            <span>One number per product, and one verdict word to go with it.</span>
           </div>
-          <p class="alt-plat for-android">Also on <a href="https://play.google.com/store/apps/details?id=com.underneath.v2">Google Play</a></p>
-          <p class="alt-plat for-ios">Also on the <a href="https://apps.apple.com/app/id6785015345">App Store</a></p>
-
-          <p class="trust">Free to try. Built on the NOVA processing framework and published food science.</p>
-        </div>
-
-        <div class="hero-shot">
-          <img src="assets/shot-02.png" alt="The Underneath app showing a scanned biscuit scored 19 out of 100, with its processing, macro and additive breakdown" width="599" height="1087" />
-        </div>
-      </div>
-    </section>
-
-    <!-- Quick facts -->
-    <section class="alt" style="padding-top:36px;padding-bottom:36px">
-      <div class="container">
-        <div class="facts">
-          <div class="fact">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M15 8v8"/></svg>
-            <div><b>Scan in seconds</b><span>Point at a barcode and the full ingredient list comes back.</span></div>
+          <div class="stat">
+            <b>50 / 30 / 20</b>
+            <span>Additives, then processing, then macros. That is the weighting.</span>
           </div>
-          <div class="fact">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 7v5l3 2"/></svg>
-            <div><b>One honest score</b><span>0 to 100, weighted by processing, not marketing.</span></div>
-          </div>
-          <div class="fact">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3h4v4M21 3l-7 7M7 21H3v-4M3 21l7-7"/><path d="M3 7V3h4M3 3l7 7M17 21h4v-4M21 21l-7-7"/></svg>
-            <div><b>Cleaner swaps</b><span>Better options in the same aisle, ranked by real scores.</span></div>
+          <div class="stat">
+            <b>0</b>
+            <span>Ads on the page, and brands that can pay to move a score.</span>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Screens -->
-    <section id="see">
-      <div class="container">
-        <div class="section-head">
-          <h2>See it before you download</h2>
-          <p>This is the whole app: scan, read what is actually inside, then swap.</p>
+  <!-- How it works -->
+  <section id="how">
+    <div class="wrap">
+      <div class="panel">
+        <!-- Sticker hugs the panel from outside, well clear of the headline. -->
+        <div class="sticker" style="width:104px; right:-34px; bottom:-30px; transform:rotate(18deg)">
+          <svg viewBox="0 0 160 220" aria-hidden="true"><path d="M80 210 L44 92 C64 78 96 78 116 92 Z" fill="#F0A854"/><path d="M80 84 C60 50 40 42 26 44 C40 62 56 78 80 84 Z" fill="#417121"/><path d="M80 84 C100 50 120 42 134 44 C120 62 104 78 80 84 Z" fill="#417121"/></svg>
+        </div>
+
+        <div class="head">
+          <h2 class="display">Scan It Before<br />You Buy It</h2>
+          <p class="body">Three steps between you and a genuinely informed choice at the shelf.</p>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="n">01</span>
+            <h3 class="display">Point And Hold</h3>
+            <p>Point the camera at any barcode. When a product is missing from the
+              database, Underneath reads the printed ingredient list instead.</p>
+          </div>
+          <div class="step">
+            <span class="n">02</span>
+            <h3 class="display">Read The Number</h3>
+            <p>One score from 0 to 100, with the three axes broken out so you can
+              see which one dragged it down.</p>
+          </div>
+          <div class="step">
+            <span class="n">03</span>
+            <h3 class="display">Take The Swap</h3>
+            <p>Higher-scoring products in the same category, so you upgrade what
+              you already buy rather than change what you eat.</p>
+          </div>
         </div>
       </div>
-      <div class="container">
+    </div>
+  </section>
+
+  <!-- The score -->
+  <section id="score">
+    <div class="wrap">
+      <div class="panel">
+        <div class="split">
+          <div>
+            <span class="chip leaf">One number, three reasons.</span>
+            <h2 class="display">See What's<br />Really Inside</h2>
+            <p class="body">
+              Processing, macros and additives are each scored on their own, then
+              weighted into the number on the front. Nothing is hidden behind an
+              average.
+            </p>
+            <div class="spec">
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Additives</span><span class="detail">50 percent of the score</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Processing</span><span class="detail">30 percent, how far from whole food</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Macros</span><span class="detail">20 percent, measured not assumed</span></div>
+            </div>
+          </div>
+          <div class="split-shot bleed">
+            <img src="assets/shot-05.png" alt="A strawberry jam scored 70 out of 100, with processing 70, macros 47 and additives 100 shown as separate bars" loading="lazy" width="600" height="1087" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Swap -->
+  <section id="swap">
+    <div class="wrap">
+      <div class="panel">
+        <div class="sticker" style="width:96px; left:-30px; bottom:-26px; transform:rotate(-14deg)">
+          <svg viewBox="0 0 200 200" aria-hidden="true"><path d="M30 170 C30 80 100 20 180 20 C180 100 110 170 30 170 Z" fill="#E4CE5E"/><path d="M30 170 C70 120 120 70 180 20" stroke="#1E3211" stroke-width="7" fill="none" opacity=".35"/></svg>
+        </div>
+
+        <div class="head">
+          <h2 class="display">Same Shelf,<br />Different Story</h2>
+          <p class="body">Two toaster pastries, one aisle apart. The front of the pack reads the same. The label does not.</p>
+        </div>
+
+        <div class="swap">
+          <div class="prod">
+            <span class="tile"><img src="assets/poptarts.jpg" alt="A conventional toaster pastry" loading="lazy" /></span>
+            <span class="meta">
+              <span class="pname">A supermarket toaster pastry</span>
+              <span class="pnote">Ultra-processed, added colours and sugar</span>
+            </span>
+            <span class="verdict poor">
+              <span class="n">22</span>
+              <span class="w">POOR</span>
+              <span class="track"><i style="width:22%"></i></span>
+            </span>
+          </div>
+          <div class="prod">
+            <span class="tile"><img src="assets/naturespath.jpg" alt="A cleaner toaster pastry alternative" loading="lazy" /></span>
+            <span class="meta">
+              <span class="pname">A cleaner alternative</span>
+              <span class="pnote">Simpler ingredients, far less processing</span>
+            </span>
+            <span class="verdict good">
+              <span class="n">81</span>
+              <span class="w">GOOD</span>
+              <span class="track"><i style="width:81%"></i></span>
+            </span>
+          </div>
+        </div>
+
+        <p class="body swap-note">A better swap in one tap, ranked by how the alternatives actually score.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screens -->
+  <section id="screens">
+    <div class="wrap">
+      <div class="panel">
+        <div class="head center">
+          <h2 class="display">See It Before<br />You Download</h2>
+          <p class="body">This is the whole app: scan, read what is actually inside, then swap.</p>
+        </div>
         <div class="gallery">
           <figure>
             <img src="assets/shot-01.png" alt="Scanning a drink barcode with the Underneath camera" loading="lazy" width="592" height="1087" />
             <figcaption>Point at any barcode</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-02.png" alt="A biscuit scored 19 out of 100 and marked Poor, with processing, macro and additive bars" loading="lazy" width="599" height="1087" />
+            <img src="assets/shot-02.png" alt="A chocolate digestive scored 8 out of 100 and marked Poor, with processing, macro and additive bars" loading="lazy" width="600" height="1087" />
             <figcaption>Get one clear score</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-03.png" alt="A strained yogurt scored 85 out of 100 and marked Good, with its own breakdown and nutrition facts" loading="lazy" width="601" height="1087" />
-            <figcaption>See what actually scores well</figcaption>
+            <img src="assets/shot-04.png" alt="A protein bar scored 76 out of 100 and marked Moderate, with natural flavors flagged underneath" loading="lazy" width="600" height="1087" />
+            <figcaption>See what gets flagged</figcaption>
           </figure>
           <figure>
-            <img src="assets/shot-04.png" alt="A list of higher scoring alternatives in the same category, each with its own score" loading="lazy" width="600" height="1087" />
-            <figcaption>Find a better version</figcaption>
+            <img src="assets/shot-03.png" alt="A strained yogurt scored 90 out of 100 and marked Good, with its own breakdown and nutrition facts" loading="lazy" width="600" height="1087" />
+            <figcaption>See what scores well</figcaption>
           </figure>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- How it works -->
-    <section id="how" class="alt">
-      <div class="container">
-        <div class="section-head">
-          <h2>How it works</h2>
-          <p>Three steps between you and a genuinely informed choice at the shelf.</p>
-        </div>
-        <div class="steps">
-          <div class="step">
-            <div class="n">1</div>
-            <h3>Scan</h3>
-            <p>Point your camera at any barcode. When a product is missing from
-              the database, Underneath reads the printed ingredient list
-              directly instead.</p>
+  <!-- Why processing -->
+  <section id="why">
+    <div class="wrap">
+      <div class="panel">
+        <div class="split flip">
+          <div class="split-shot" style="max-width:none">
+            <div class="then-now">
+              <figure>
+                <img src="assets/bread-then.webp" alt="Simple traditional bread" loading="lazy" />
+                <figcaption>Then: flour, water, yeast, salt.</figcaption>
+              </figure>
+              <figure>
+                <img src="assets/bread-now.jpg" alt="Modern packaged bread" loading="lazy" />
+                <figcaption>Now: a much longer list.</figcaption>
+              </figure>
+            </div>
           </div>
-          <div class="step">
-            <div class="n">2</div>
-            <h3>Score</h3>
-            <p>Every product gets one clear score from 0 to 100. Additives carry
-              the most weight, then the processing level, then the nutrition.</p>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <h3>Swap</h3>
-            <p>See cleaner alternatives in the same category, ranked by how they
-              actually score, so you can upgrade what you already buy.</p>
+          <div>
+            <h2 class="display">The Food Changed.<br />The Labels Did Not.</h2>
+            <p class="body">
+              Everyday staples that used to be a handful of ingredients are now
+              built from additives, refined starches and industrial processing.
+              The packaging still looks wholesome.
+            </p>
+            <p class="body">
+              Underneath reads the modern version and tells you, in one number,
+              how far it has drifted from real food. The choice stays yours, you
+              just get to make it with the full picture.
+            </p>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Real example -->
-    <section id="example">
-      <div class="container">
-        <div class="section-head">
-          <h2>See past the front of the pack</h2>
-          <p>Two toaster pastries, same aisle. The label tells one story. Underneath tells you the rest.</p>
-        </div>
-        <div class="compare">
-          <div class="prod">
-            <img src="assets/poptarts.jpg" alt="A conventional toaster pastry" loading="lazy" />
-            <span class="badge bad">22 <small>POOR</small></span>
-            <div class="pname">A supermarket toaster pastry</div>
-            <div class="pnote">Ultra-processed, added colours and sugar</div>
-          </div>
-          <div class="arrow">&rarr;</div>
-          <div class="prod">
-            <img src="assets/naturespath.jpg" alt="A cleaner toaster pastry alternative" loading="lazy" />
-            <span class="badge good">81 <small>GOOD</small></span>
-            <div class="pname">A cleaner alternative</div>
-            <div class="pnote">Simpler ingredients, far less processing</div>
-          </div>
-        </div>
-        <p class="compare-caption">Same category, very different reality. Underneath surfaces the swap for you.</p>
-      </div>
-    </section>
-
-    <!-- Why processing -->
-    <section id="why" class="alt">
-      <div class="container why-grid">
-        <div class="why-imgs">
-          <figure>
-            <img src="assets/bread-then.webp" alt="Simple traditional bread" loading="lazy" />
-            <figcaption>Then: flour, water, yeast, salt.</figcaption>
-          </figure>
-          <figure>
-            <img src="assets/bread-now.jpg" alt="Modern packaged bread" loading="lazy" />
-            <figcaption>Now: a much longer ingredient list.</figcaption>
-          </figure>
-        </div>
-        <div class="why-text">
-          <h2>The food changed. The labels did not keep up.</h2>
-          <p>Everyday staples that used to be a handful of ingredients are now
-            built from additives, refined starches and industrial processing.
-            The packaging still looks wholesome.</p>
-          <p>Underneath reads what is actually in the modern version and tells
-            you, in one honest number, how far it has drifted from real food, so
-            the choice is yours to make with the full picture.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq">
-      <div class="container">
-        <div class="section-head">
-          <h2>Before you download</h2>
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="panel">
+        <div class="head">
+          <h2 class="display">Before You<br />Download</h2>
         </div>
         <div class="faq">
           <details>
             <summary>Is Underneath free?</summary>
-            <p>You can try it free. After the trial, Underneath is a paid
-              subscription. That is deliberate: there are no ads and no brand can
-              pay to move its score, so the only thing the app answers to is
-              you.</p>
+            <p>You can try it free. After the trial it is a paid subscription.
+              That is deliberate: there are no ads, and no brand can pay to move
+              its score, so the only thing the app answers to is you.</p>
           </details>
           <details>
             <summary>Will it recognise the products I actually buy?</summary>
             <p>Underneath looks up barcodes in a global food database that covers
-              most packaged products. If yours is missing, point the camera at
-              the ingredient list and the app will read and score it from the
-              label itself.</p>
+              most packaged products. If yours is missing, point the camera at the
+              ingredient list and the app reads and scores it from the label.</p>
           </details>
           <details>
             <summary>What does the score actually mean?</summary>
             <p>One number from 0 to 100, weighted toward processing. Additives
-              carry the most weight, then how processed the food is on the NOVA
-              scale, then the nutrition. A high score means the food is close to
-              its whole form, not that it is low calorie.</p>
+              carry the most weight, then how far the food sits from its whole
+              form, then the nutrition. A high score means close to real food, not
+              low calorie.</p>
           </details>
           <details>
             <summary>Does it work outside the US?</summary>
-            <p>Yes. The underlying database is global and community maintained,
-              so coverage is strongest for packaged food in Europe and North
-              America and keeps improving elsewhere. The label reader works
-              anywhere, in any language it can see.</p>
+            <p>Yes. The underlying database is global and community maintained, so
+              coverage is strongest for packaged food in Europe and North America
+              and keeps improving elsewhere. The label reader works anywhere, in
+              any language it can see.</p>
           </details>
           <details>
             <summary>Which phones does it run on?</summary>
@@ -519,15 +753,21 @@
           </details>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Download -->
-    <section id="download" class="alt">
-      <div class="container">
-        <div class="get-card">
-          <img class="icon" src="icon.png" alt="Underneath" width="76" height="76" />
-          <h2>Scan your first product tonight</h2>
-          <p class="sub">Take it to the cupboard you think is healthy. That is usually where it gets interesting.</p>
+  <!-- Download -->
+  <section id="download">
+    <div class="wrap">
+      <div class="panel">
+        <div class="sticker" style="width:92px; right:-28px; bottom:-24px; transform:rotate(14deg)">
+          <svg viewBox="0 0 180 220" aria-hidden="true"><path d="M90 210 V96" stroke="#90482A" stroke-width="9"/><path d="M90 130 C46 128 22 100 26 66 C68 62 92 92 90 130 Z" fill="#93AE7C"/><path d="M90 112 C134 110 158 82 154 48 C112 44 88 74 90 112 Z" fill="#417121"/></svg>
+        </div>
+
+        <div class="get">
+          <img class="icon" src="icon.png" alt="Underneath" width="78" height="78" />
+          <h2 class="display">Scan Your First<br />Product Tonight</h2>
+          <p class="body">Take it to the cupboard you think is the healthy one. That is usually where it gets interesting.</p>
           <div class="store-row center">
             <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
               <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
@@ -540,46 +780,60 @@
           </div>
           <p class="alt-plat for-android">Also on <a href="https://play.google.com/store/apps/details?id=com.underneath.v2">Google Play</a></p>
           <p class="alt-plat for-ios">Also on the <a href="https://apps.apple.com/app/id6785015345">App Store</a></p>
-          <p class="req">Requires iOS 16.4 or later, or Android 7.0 or later.</p>
+          <p class="caption" style="margin-top:18px">Requires iOS 16.4 or later, or Android 7.0 or later.</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Company -->
-    <section id="company">
-      <div class="container company-grid">
-        <div>
-          <h2>About Underneath</h2>
-          <p>Underneath is built by a small independent team who were tired of
-            reading the front of a package one way and the ingredient list
-            another. We think the true processing level of everyday food should
-            be readable in seconds by anyone, standing in any aisle.</p>
-          <p>Our scoring is grounded in the NOVA processing classification and
-            published research on additives and ultra-processed food. We do not
-            sell your data and we do not take money to move a product up a score.</p>
-          <p>Questions, feedback or press? Email us at
-            <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>.</p>
-        </div>
-        <div class="company-card">
-          <h3>Company details</h3>
-          <dl>
-            <dt>Legal name</dt><dd>Underneath Ltd</dd>
-            <dt>Company no.</dt><dd>17312263</dd>
-            <dt>Registered</dt><dd>England and Wales</dd>
-            <dt>Office</dt><dd>128 City Road, London, EC1V 2NX, United Kingdom</dd>
-            <dt>Contact</dt><dd><a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a></dd>
-          </dl>
+  <!-- Company -->
+  <section id="company">
+    <div class="wrap">
+      <div class="panel">
+        <div class="company">
+          <div>
+            <h2 class="display">We Read The Label<br />So You Don't Have To</h2>
+            <p class="body" style="margin-top:18px">
+              Underneath is built by a small independent team who were tired of
+              reading the front of a package one way and the ingredient list
+              another. The true processing level of everyday food should be
+              readable in seconds by anyone, standing in any aisle.
+            </p>
+            <p class="body">
+              The scoring is grounded in the NOVA processing classification and
+              published research on additives and ultra-processed food. We do not
+              sell your data, and we do not take money to move a product up a
+              score.
+            </p>
+            <p class="body">
+              Questions, feedback or press:
+              <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>.
+            </p>
+          </div>
+          <div>
+            <span class="chip">Company details</span>
+            <div class="spec" style="margin-top:0">
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Legal name</span><span class="detail">Underneath Ltd</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Company no.</span><span class="detail">17312263</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Registered</span><span class="detail">England and Wales</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Office</span><span class="detail">128 City Road, London, EC1V 2NX</span></div>
+              <div class="spec-row"><span class="g">&raquo;</span><span class="term">Contact</span><span class="detail"><a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a></span></div>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </section>
 
-  <footer class="site">
-    <div class="container">
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="panel">
       <div class="foot-top">
         <a class="brand" href="#top">
-          <img src="icon.png" alt="Underneath" width="30" height="30" style="width:30px;height:30px;border-radius:8px" />
-          <span style="font-weight:600;font-size:18px">Underneath</span>
+          <img src="icon.png" alt="Underneath" width="30" height="30" style="width:30px;height:30px;border-radius:9px" />
+          <span style="font-size:19px">Underneath</span>
         </a>
         <nav class="foot-links">
           <a href="#how">How it works</a>
@@ -595,67 +849,68 @@
         <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>
       </p>
     </div>
-  </footer>
-
-  <!-- Sticky download bar, phones only -->
-  <div class="dock" id="dock">
-    <div class="dock-inner">
-      <img src="icon.png" alt="" width="42" height="42" />
-      <div class="meta">
-        <b>Underneath</b>
-        <span>Free to try</span>
-      </div>
-      <a class="btn sm" id="dockBtn" href="#download">Download</a>
-    </div>
   </div>
+</footer>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+<!-- Sticky download bar, phones only -->
+<div class="dock" id="dock">
+  <div class="dock-inner">
+    <img src="icon.png" alt="" width="40" height="40" />
+    <div class="meta">
+      <b>Underneath</b>
+      <span>Free to try</span>
+    </div>
+    <a class="btn" id="dockBtn" href="#download">Get it</a>
+  </div>
+</div>
 
-    var IOS_URL = "https://apps.apple.com/app/id6785015345";
-    var PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
 
-    // Show people the store they can actually install from. Anything we cannot
-    // identify keeps both buttons, which is also the no-JS state.
-    var ua = navigator.userAgent || "";
-    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-                (/Macintosh/.test(ua) && typeof document.ontouchend !== "undefined");
-    var isAndroid = /Android/.test(ua);
+  var IOS_URL = "https://apps.apple.com/app/id6785015345";
+  var PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
 
-    if (isIOS) document.body.classList.add("plat-ios");
-    else if (isAndroid) document.body.classList.add("plat-android");
+  // Show people the store they can actually install from. Anything we cannot
+  // identify keeps both buttons, which is also the no-JS state.
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+              (/Macintosh/.test(ua) && typeof document.ontouchend !== "undefined");
+  var isAndroid = /Android/.test(ua);
 
-    // The floating bar only earns its space on a phone, where the header CTA
-    // scrolls away and there is no room for a persistent one.
-    var dock = document.getElementById("dock");
-    var dockBtn = document.getElementById("dockBtn");
-    var isPhone = window.matchMedia("(max-width: 899px)").matches;
+  if (isIOS) document.body.classList.add("plat-ios");
+  else if (isAndroid) document.body.classList.add("plat-android");
 
-    if (isPhone) {
-      if (isIOS) dockBtn.href = IOS_URL;
-      else if (isAndroid) dockBtn.href = PLAY_URL;
+  // The floating bar only earns its space on a phone, where the header call to
+  // action scrolls away and there is no room for a persistent one.
+  var dock = document.getElementById("dock");
+  var dockBtn = document.getElementById("dockBtn");
+  var isPhone = window.matchMedia("(max-width: 919px)").matches;
 
-      dock.style.display = "block";
-      document.body.classList.add("has-dock");
+  if (isPhone) {
+    if (isIOS) dockBtn.href = IOS_URL;
+    else if (isAndroid) dockBtn.href = PLAY_URL;
 
-      var hero = document.querySelector(".hero .store-row");
-      var footerCta = document.getElementById("download");
+    dock.style.display = "block";
+    document.body.classList.add("has-dock");
 
-      // Hide the bar while either real set of buttons is on screen, so we are
-      // never stacking a second call to action on top of the one being read.
-      var onscreen = [];
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          var i = onscreen.indexOf(e.target);
-          if (e.isIntersecting && i === -1) onscreen.push(e.target);
-          if (!e.isIntersecting && i !== -1) onscreen.splice(i, 1);
-        });
-        dock.classList.toggle("show", onscreen.length === 0);
-      }, { threshold: 0.15 });
+    var hero = document.querySelector(".hero .store-row");
+    var footerCta = document.getElementById("download");
 
-      if (hero) io.observe(hero);
-      if (footerCta) io.observe(footerCta);
-    }
-  </script>
+    // Hide the bar while either real set of buttons is on screen, so we are
+    // never stacking a second call to action on top of the one being read.
+    var onscreen = [];
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var i = onscreen.indexOf(e.target);
+        if (e.isIntersecting && i === -1) onscreen.push(e.target);
+        if (!e.isIntersecting && i !== -1) onscreen.splice(i, 1);
+      });
+      dock.classList.toggle("show", onscreen.length === 0);
+    }, { threshold: 0.15 });
+
+    if (hero) io.observe(hero);
+    if (footerCta) io.observe(footerCta);
+  }
+</script>
 </body>
 </html>

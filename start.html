@@ -7,257 +7,299 @@
 <meta name="description" content="Set up Underneath in two minutes. Tell us your goals, create your account, and start your free trial." />
 <meta name="robots" content="noindex" />
 
+<meta name="theme-color" content="#86A36E" />
+
 <link rel="icon" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Sagepanel's two faces, identical to the landing page. Gliker is a Canva
+     exclusive with no binary, so the marker face falls back to Grandstander
+     exactly as the token stack does. -->
+<link href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --cream: #faf5ec;
-    --ink: #211d17;
-    --muted: #6f675a;
-    --orange: #f58a3c;
-    --orange-dark: #e0752a;
-    --card: #ffffff;
-    --line: #e9e0d0;
-    --green: #2f7d4f;
-    --green-bg: #e4f0e6;
-    --red: #c0492b;
-    --red-bg: #f8e7e0;
+    /* Sagepanel tokens, verbatim, identical to the landing page. */
+    --sp-canvas: #86A36E;
+    --sp-canvas-deep: #6D8B54;
+    --sp-canvas-tint: #93AE7C;
+    --sp-panel: #1E3211;
+    --sp-panel-raised: #2A4419;
+    --sp-chip: #405C2D;
+    --sp-leaf: #417121;
+
+    --sp-ink: #FFFFFF;
+    --sp-ink-soft: #DCE5D4;
+    --sp-ink-dim: #A9BE96;
+
+    /* Verdict, straight from the app, never retuned. On forest these are only
+       ever used as fills behind white ink: as text colour they would not clear
+       contrast against the panel. */
+    --sp-good: #2F7D55;
+    --sp-caution: #C8901A;
+    --sp-poor: #BE4238;
+    --sp-action: #D9571A;
+
+    --font-display: "Gliker", "Grandstander", "Comfortaa", cursive;
+    --font-body: "Poppins", "Commissioner", "Noto Sans", system-ui, sans-serif;
+
+    --t-display-md: clamp(23px, 5.6vw, 34px);
+    --t-body: clamp(15px, 4vw, 16.5px);
+    --t-caption: clamp(12.5px, 3.3vw, 13.5px);
+    --lead-display: 1.06;
+    --lead-body: 1.45;
+
+    --pad: clamp(22px, 6vw, 34px);
+    --r-panel: clamp(26px, 5vw, 34px);
+    --r-block: 18px;
+    --r-pill: 999px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--cream);
-    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: var(--lead-body);
+    background: var(--sp-canvas);
+    color: var(--sp-ink-soft);
     -webkit-font-smoothing: antialiased;
-    display: flex;
-    flex-direction: column;
     min-height: 100%;
+    overflow-x: hidden;
   }
-  .wrap {
-    flex: 1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 28px 20px 40px;
+  img { max-width: 100%; display: block; }
+  /* Renamed from .field: start.html already uses .field for form rows. */
+  .canvas-field {
+    position: fixed; inset: 0; z-index: -1;
+    width: 100%; height: 100%; pointer-events: none;
   }
-  .card { width: 100%; max-width: 480px; }
+  .wrap { width: 100%; max-width: 520px; margin: 0 auto; padding: 20px 16px 28px; }
+  /* Rule 1: one panel, nothing readable outside it. No border, no shadow. */
+  .card { background: var(--sp-panel); border-radius: var(--r-panel); padding: var(--pad); }
 
   .chrome {
     display: flex;
     align-items: center;
     gap: 14px;
     margin-bottom: 26px;
-    min-height: 38px;
+    min-height: 40px;
   }
   .back-btn {
-    width: 38px; height: 38px; border-radius: 19px;
-    background: var(--card); border: 1px solid var(--line);
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--sp-chip); border: none;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex: 0 0 auto; font-size: 16px; color: var(--ink);
+    cursor: pointer; flex: 0 0 auto; font-size: 17px; color: var(--sp-ink);
     padding: 0;
   }
-  .back-btn:hover { background: var(--card); border-color: var(--orange); }
+  .back-btn:hover { background: var(--sp-leaf); }
   .progress { flex: 1; display: flex; gap: 4px; }
-  .progress span { flex: 1; height: 4px; border-radius: 2px; background: #eadfca; }
-  .progress span.on { background: var(--orange); }
+  .progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--sp-chip); }
+  .progress span.on { background: var(--sp-action); }
 
-  .logo {
-    width: 78px; height: 78px; border-radius: 20px;
-    box-shadow: 0 8px 30px rgba(33, 29, 23, 0.12);
-    margin: 0 auto 24px; display: block;
-  }
-  .hero-logo { height: 30px; width: auto; max-width: 264px; display: block; margin: 18px auto 34px; }
+  .hero-mark { width: 84px; height: 84px; border-radius: 24px; margin: 6px auto 20px; display: block; }
   .bubble {
     display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%; flex: 0 0 auto;
   }
   .bubble svg, .chip svg { display: block; }
-  h1 { font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 12px; }
+  h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: var(--t-display-md); line-height: var(--lead-display);
+    color: var(--sp-ink); letter-spacing: 0.01em; margin-bottom: 12px;
+  }
   h1.center { text-align: center; }
-  .sub { font-size: 16px; line-height: 1.5; color: var(--muted); margin-bottom: 22px; }
+  .sub { font-size: var(--t-body); color: var(--sp-ink-soft); margin-bottom: 22px; }
   .sub.center { text-align: center; }
-  .hint { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
-  .italic-note { font-style: italic; text-align: center; color: var(--muted); font-size: 14px; margin-top: 22px; }
+  .sub b { color: var(--sp-ink); }
+  .hint { font-size: var(--t-caption); color: var(--sp-ink-dim); margin-bottom: 16px; }
+  .italic-note { text-align: center; color: var(--sp-ink-dim); font-size: var(--t-caption); margin-top: 22px; }
 
   .cta {
-    width: 100%; padding: 16px 18px; font-size: 16px; font-weight: 600;
-    font-family: inherit; color: #fff; background: var(--orange);
-    border: none; border-radius: 14px; cursor: pointer; margin-top: 26px;
-    transition: background 0.15s ease, transform 0.05s ease;
+    width: 100%; padding: 17px 18px; font-size: 16px; font-weight: 600;
+    font-family: inherit; color: #fff; background: var(--sp-action);
+    border: none; border-radius: var(--r-pill); cursor: pointer; margin-top: 26px;
+    transition: filter 0.15s ease, transform 0.05s ease;
   }
-  .cta:hover { background: var(--orange-dark); }
+  .cta:hover { filter: brightness(1.08); }
   .cta:active { transform: translateY(1px); }
-  .cta:disabled { opacity: 0.45; cursor: default; }
+  /* Fading orange to 0.4 muddied to brown against forest, so the disabled
+     state takes a flat chip fill with dim ink instead. */
+  .cta:disabled { background: var(--sp-chip); color: var(--sp-ink-dim); cursor: default; }
+  .cta:disabled:hover { filter: none; }
   .link-btn {
     display: block; width: 100%; background: none; border: none;
-    font-family: inherit; font-size: 14.5px; color: var(--muted);
+    font-family: inherit; font-size: 14.5px; color: var(--sp-ink-dim);
     text-decoration: underline; cursor: pointer; margin-top: 16px; text-align: center;
   }
 
-  /* Step cards (how it works) */
+  /* Step cards (how it works). Raised blocks separate by colour, not border. */
   .step-card {
     display: flex; gap: 14px; align-items: flex-start;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 16px; padding: 16px;
+    background: var(--sp-panel-raised); border-radius: var(--r-block); padding: 16px;
   }
-  .step-card + .arrow { text-align: center; color: #d8cfbe; padding: 6px 0; font-size: 13px; }
+  .step-card + .arrow { text-align: center; color: var(--sp-ink-dim); padding: 6px 0; font-size: 13px; }
   .step-icon {
     width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto;
+    background: var(--sp-chip);
     display: flex; align-items: center; justify-content: center; font-size: 20px;
   }
-  .step-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
-  .step-card p { font-size: 13.5px; color: var(--muted); line-height: 1.4; }
+  .step-card h3 { font-size: 16px; font-weight: 600; color: var(--sp-ink); margin-bottom: 3px; }
+  .step-card p { font-size: 13.5px; color: var(--sp-ink-soft); line-height: 1.4; }
 
   /* Compare cards */
-  .compare { display: flex; gap: 12px; margin-top: 6px; }
+  .compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 6px; }
   .compare-card {
-    flex: 1 1 0; background: var(--card); border: 1px solid var(--line);
-    border-radius: 16px; padding: 14px;
+    background: var(--sp-panel-raised); border-radius: var(--r-block); padding: 14px;
   }
+  /* Rule 8: verdict colours untouched, used as fills behind white ink. */
   .pill {
-    display: inline-block; font-size: 11.5px; font-weight: 600;
-    padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+    display: inline-block; font-size: 11.5px; font-weight: 600; color: #fff;
+    padding: 4px 10px; border-radius: var(--r-pill); margin-bottom: 10px;
   }
-  .pill.green { background: var(--green-bg); color: var(--green); }
-  .pill.red { background: var(--red-bg); color: var(--red); }
-  .compare-card p { font-size: 12.5px; line-height: 1.5; color: var(--ink); }
+  .pill.green { background: var(--sp-good); }
+  .pill.red { background: var(--sp-poor); }
+  .compare-card p { font-size: 12.5px; line-height: 1.5; color: var(--sp-ink-soft); }
   .compare-img {
     display: block; width: 100%; height: 70px; border-radius: 10px;
-    object-fit: cover; background: #eee7d9; margin: 2px 0 12px;
+    object-fit: cover; background: var(--sp-chip); margin: 2px 0 12px;
   }
-  .danger { color: var(--red); font-weight: 500; }
+  /* Apricot sticker accent, not a retuned poor red: red ink fails on forest. */
+  .danger { color: #F0A854; font-weight: 500; }
 
   /* Stat bars */
   .bars { display: flex; align-items: flex-end; justify-content: center; gap: 28px; height: 120px; margin: 26px 0 8px; }
   .bar-col { display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: flex-end; height: 100%; }
   .bar { width: 48px; border-radius: 8px; }
-  .bar-label { font-size: 12px; color: var(--muted); text-align: center; }
-  .chart-caption { text-align: center; font-size: 11px; letter-spacing: 1px; color: var(--muted); margin-bottom: 20px; }
-  .source { font-size: 11px; color: var(--muted); line-height: 1.4; margin-top: 16px; }
+  .bar-label { font-size: 12px; color: var(--sp-ink-soft); text-align: center; }
+  .chart-caption { text-align: center; font-size: 11px; letter-spacing: 1px; color: var(--sp-ink-dim); margin-bottom: 20px; }
+  .source { font-size: 11px; color: var(--sp-ink-dim); line-height: 1.4; margin-top: 16px; }
 
   .flag-card {
     display: flex; align-items: center; gap: 14px;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 16px; padding: 16px;
+    background: var(--sp-panel-raised); border-radius: var(--r-block); padding: 16px;
   }
-  .flag-card p { flex: 1; font-size: 14.5px; font-weight: 600; line-height: 1.35; }
+  .flag-card p { flex: 1; font-size: 14.5px; font-weight: 600; color: var(--sp-ink); line-height: 1.35; }
   .toggle {
-    width: 52px; height: 30px; border-radius: 999px; background: #eadfca;
+    width: 52px; height: 30px; border-radius: var(--r-pill); background: var(--sp-chip);
     border: none; cursor: pointer; position: relative; flex: 0 0 auto;
     transition: background 0.15s ease; padding: 0;
   }
   .toggle::after {
     content: ""; position: absolute; top: 3px; left: 3px;
     width: 24px; height: 24px; border-radius: 50%; background: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: left 0.15s ease;
+    transition: left 0.15s ease;
   }
-  .toggle.on { background: var(--orange); }
+  .toggle.on { background: var(--sp-action); }
   .toggle.on::after { left: 25px; }
 
   /* Credibility */
-  .cred-row { display: flex; gap: 10px; margin-top: 8px; }
-  .cred-card {
-    flex: 1 1 0; background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 16px 10px; text-align: center;
+  .cred-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px; margin-top: 8px;
   }
-  .cred-card b { display: block; font-size: 17px; margin-bottom: 4px; }
-  .cred-card span { font-size: 12px; color: var(--muted); }
-  .mono-note { text-align: center; font-size: 13px; color: var(--muted); margin-top: 22px; line-height: 1.5; }
+  .cred-card {
+    background: var(--sp-panel-raised); border-radius: var(--r-block);
+    padding: 16px 10px; text-align: center;
+  }
+  .cred-card b { display: block; font-family: var(--font-display); font-size: 19px; color: var(--sp-ink); margin-bottom: 4px; }
+  .cred-card span { font-size: 12px; color: var(--sp-ink-soft); }
+  .mono-note { text-align: center; font-size: 13px; color: var(--sp-ink-dim); margin-top: 22px; line-height: 1.5; }
 
   /* Chips */
   .chips { display: flex; flex-wrap: wrap; gap: 9px; }
   .chip {
     display: inline-flex; align-items: center; gap: 8px;
     font-family: inherit; font-size: 14px; font-weight: 500;
-    background: var(--card); border: 1px solid var(--line); color: var(--ink);
-    padding: 9px 15px 9px 11px; border-radius: 999px; cursor: pointer;
-    transition: all 0.12s ease;
+    background: var(--sp-chip); border: none; color: var(--sp-ink);
+    padding: 9px 15px 9px 11px; border-radius: var(--r-pill); cursor: pointer;
+    transition: background 0.12s ease;
   }
-  .chip:hover { border-color: var(--orange); }
-  .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip:hover { background: var(--sp-leaf); }
+  .chip.on { background: var(--sp-leaf); }
 
   /* Radio rows */
   .rows { display: flex; flex-direction: column; gap: 10px; }
   .row-btn {
     font-family: inherit; font-size: 15px; font-weight: 500; text-align: left;
-    background: var(--card); border: 1px solid var(--line); color: var(--ink);
-    padding: 15px 18px; border-radius: 14px; cursor: pointer;
-    transition: all 0.12s ease; display: flex; justify-content: space-between; align-items: center;
+    background: var(--sp-panel-raised); border: none; color: var(--sp-ink);
+    padding: 15px 18px; border-radius: var(--r-block); cursor: pointer;
+    transition: background 0.12s ease; display: flex; justify-content: space-between; align-items: center;
   }
-  .row-btn:hover { border-color: var(--orange); }
-  .row-btn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .row-btn .sub-label { font-size: 12px; color: var(--muted); font-weight: 400; }
-  .row-btn.on .sub-label { color: rgba(255,255,255,0.7); }
+  .row-btn:hover { background: var(--sp-chip); }
+  .row-btn.on { background: var(--sp-leaf); }
+  .row-btn .sub-label { font-size: 12px; color: var(--sp-ink-dim); font-weight: 400; }
+  .row-btn.on .sub-label { color: rgba(255,255,255,0.78); }
   .row-left { display: flex; align-items: center; gap: 12px; }
 
   .warning {
-    display: flex; gap: 10px; background: #fbf0da; border: 1px solid #efd9ad;
-    border-radius: 14px; padding: 13px 14px; margin-top: 20px;
-    font-size: 12.5px; color: #7a5510; line-height: 1.45;
+    display: flex; gap: 10px; background: var(--sp-panel-raised); border: none;
+    border-radius: var(--r-block); padding: 13px 14px; margin-top: 20px;
+    font-size: 12.5px; color: var(--sp-ink-soft); line-height: 1.45;
   }
 
   /* Calibration */
   .calib { padding-top: 40px; }
   .calib-pct {
-    display: block; text-align: center; font-size: 46px; font-weight: 600;
-    letter-spacing: -1px; color: var(--orange); font-variant-numeric: tabular-nums;
+    display: block; text-align: center; font-family: var(--font-display);
+    font-size: 46px; font-weight: 700; line-height: var(--lead-display);
+    color: var(--sp-ink); font-variant-numeric: tabular-nums;
   }
   .calib-bar {
-    height: 6px; border-radius: 3px; background: var(--line);
+    height: 6px; border-radius: 3px; background: var(--sp-chip);
     overflow: hidden; margin-top: 20px;
   }
-  .calib-fill { height: 100%; width: 0; background: var(--orange); transition: width 0.12s linear; }
+  .calib-fill { height: 100%; width: 0; background: var(--sp-action); transition: width 0.12s linear; }
   .calib-section {
     font-size: 11.5px; letter-spacing: 1px; font-weight: 600;
-    color: var(--muted); margin: 30px 0 16px;
+    color: var(--sp-ink-dim); margin: 30px 0 16px;
   }
   .calib-list { display: flex; flex-direction: column; gap: 13px; }
-  .calib-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--muted); }
+  .calib-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--sp-ink-dim); }
   .calib-row .bubble { flex: 0 0 auto; }
   .calib-row .calib-label { flex: 1; }
-  .calib-row.done { color: var(--ink); }
+  .calib-row.done { color: var(--sp-ink); }
   .calib-tick {
     flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--line); opacity: 0.5; transition: background 0.15s ease, opacity 0.15s ease;
+    background: var(--sp-chip); opacity: 0.6; transition: background 0.15s ease, opacity 0.15s ease;
   }
   .calib-tick svg { visibility: hidden; }
-  .calib-row.done .calib-tick { background: var(--green); opacity: 1; }
+  .calib-row.done .calib-tick { background: var(--sp-good); opacity: 1; }
   .calib-row.done .calib-tick svg { visibility: visible; }
 
   /* Forms */
   input[type="email"], input[type="password"], input[type="text"] {
     width: 100%; padding: 15px 17px; font-size: 16px; font-family: inherit;
-    color: var(--ink); background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; outline: none; transition: border-color 0.15s ease;
+    color: var(--sp-ink); background: var(--sp-panel-raised); border: none;
+    border-radius: var(--r-block); outline: 2px solid transparent; outline-offset: 0;
+    transition: outline-color 0.15s ease;
   }
-  input:focus { border-color: var(--orange); }
+  input::placeholder { color: var(--sp-ink-dim); }
+  input:focus { outline-color: var(--sp-action); }
   .field { margin-bottom: 14px; }
   .field label {
     display: block; font-size: 11.5px; letter-spacing: 1px; font-weight: 600;
-    color: var(--muted); margin-bottom: 7px;
+    color: var(--sp-ink-dim); margin-bottom: 7px;
   }
+  /* White pill so the Google mark reads at full colour. */
   .auth-btn {
     width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
     font-family: inherit; font-size: 15.5px; font-weight: 500;
-    background: var(--card); border: 1px solid var(--line); color: var(--ink);
-    padding: 15px 18px; border-radius: 14px; cursor: pointer; margin-bottom: 11px;
-    transition: border-color 0.15s ease;
+    background: #fff; border: none; color: var(--sp-panel);
+    padding: 15px 18px; border-radius: var(--r-pill); cursor: pointer; margin-bottom: 11px;
+    transition: filter 0.15s ease;
   }
-  .auth-btn:hover { border-color: var(--orange); }
+  .auth-btn:hover { filter: brightness(0.94); }
   .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
-  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-  .divider span { font-size: 11.5px; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.16); }
+  .divider span { font-size: 11.5px; letter-spacing: 1px; color: var(--sp-ink-dim); font-weight: 600; }
 
   .otp-box {
     text-align: center; letter-spacing: 12px; font-size: 26px; font-weight: 600;
   }
   .msg { margin-top: 14px; font-size: 14.5px; line-height: 1.4; min-height: 20px; text-align: center; }
-  .msg.ok { color: var(--green); }
-  .msg.err { color: var(--red); }
+  .msg.ok { color: var(--sp-ink); }
+  .msg.err { color: #F0A854; }
 
   /* Timeline */
   .timeline { margin: 22px 0 6px; }
@@ -267,106 +309,123 @@
     width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center; font-size: 13px;
   }
-  .tl-line { width: 2px; flex: 1; background: #eadfca; margin: 2px 0; }
+  .tl-line { width: 2px; flex: 1; background: var(--sp-chip); margin: 2px 0; }
   .tl-body { padding-bottom: 18px; }
-  .tl-body b { font-size: 15px; display: block; }
-  .tl-body p { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .tl-body b { font-size: 15px; display: block; color: var(--sp-ink); }
+  .tl-body p { font-size: 13px; color: var(--sp-ink-soft); margin-top: 2px; line-height: 1.4; }
 
   /* Trial preview swap card */
-  .trial-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 16px; margin-top: 22px; }
-  .trial-card.better { border-color: var(--orange); }
+  .trial-card { background: var(--sp-panel-raised); border: none; border-radius: var(--r-block); padding: 16px; margin-top: 22px; }
+  /* The cleaner pick separates by colour, not by a border. */
+  .trial-card.better { background: var(--sp-chip); }
   .trial-head { display: flex; align-items: center; gap: 11px; }
-  .trial-thumb { width: 38px; height: 38px; border-radius: 11px; object-fit: cover; background: #eae3d4; flex: 0 0 auto; }
+  .trial-thumb { width: 38px; height: 38px; border-radius: 11px; object-fit: cover; background: var(--sp-chip); flex: 0 0 auto; }
   .trial-name { flex: 1; min-width: 0; }
-  .trial-name b { display: block; font-size: 14px; line-height: 1.25; }
-  .trial-name span { font-size: 11px; color: var(--muted); }
-  .trial-score { font-size: 22px; font-weight: 700; color: #C0392F; flex: 0 0 auto; }
-  .trial-score.good { color: #2E7D52; }
+  .trial-name b { display: block; font-size: 14px; line-height: 1.25; color: var(--sp-ink); }
+  .trial-name span { font-size: 11px; color: var(--sp-ink-dim); }
+  /* Rule 5: the number never ships bare. Verdict is the fill, ink stays white. */
+  .trial-score {
+    font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff;
+    background: var(--sp-poor); border-radius: var(--r-pill); padding: 4px 13px;
+    flex: 0 0 auto; line-height: 1.2;
+  }
+  .trial-score.good { background: var(--sp-good); }
   .trial-pills { display: flex; gap: 6px; margin-top: 14px; }
-  .trial-pill { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  .trial-pill { font-size: 11.5px; font-weight: 600; color: #fff; padding: 4px 10px; border-radius: var(--r-pill); }
   .trial-ings { margin-top: 14px; display: grid; gap: 9px; }
-  .trial-ing { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .trial-ing { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--sp-ink-soft); }
   .trial-dot { width: 9px; height: 9px; border-radius: 5px; flex: 0 0 auto; }
   .trial-reveal {
     width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-top: 16px; background: var(--ink); color: #fff; border: none; border-radius: 12px;
+    margin-top: 16px; background: var(--sp-chip); color: #fff; border: none; border-radius: var(--r-pill);
     padding: 12px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
   }
+  .trial-reveal:hover { background: var(--sp-leaf); }
   .trial-jump {
-    background: #E6F4EC; border-radius: 12px; padding: 12px; margin-top: 14px;
-    text-align: center; font-size: 13px; font-weight: 600; color: #2E7D52;
+    background: var(--sp-good); border-radius: var(--r-block); padding: 12px; margin-top: 14px;
+    text-align: center; font-size: 13px; font-weight: 600; color: #fff;
   }
 
   /* Score quiz */
-  .quiz-opts { display: flex; gap: 12px; margin-top: 4px; }
+  .quiz-opts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 4px; }
   .quiz-opt {
-    flex: 1 1 0; font-family: inherit; text-align: left; cursor: pointer;
-    background: var(--card); border: 1.5px solid var(--line);
-    border-radius: 16px; padding: 12px; transition: all 0.12s ease;
+    font-family: inherit; text-align: left; cursor: pointer;
+    background: var(--sp-panel-raised); border: none;
+    border-radius: var(--r-block); padding: 12px; transition: background 0.12s ease;
   }
-  .quiz-opt:hover { border-color: var(--orange); }
+  .quiz-opt:hover { background: var(--sp-chip); }
   .quiz-opt img {
     display: block; width: 100%; height: 92px; border-radius: 11px;
-    object-fit: cover; background: #eae3d4; margin-bottom: 11px;
+    object-fit: cover; background: var(--sp-chip); margin-bottom: 11px;
   }
-  .quiz-opt b { display: block; font-size: 13.5px; line-height: 1.25; }
-  .quiz-opt span { font-size: 11.5px; color: var(--muted); }
+  .quiz-opt b { display: block; font-size: 13.5px; line-height: 1.25; color: var(--sp-ink); }
+  .quiz-opt span { font-size: 11.5px; color: var(--sp-ink-dim); }
 
   /* Price anchor */
   .anchor-row {
     display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 15px 16px; margin-bottom: 10px;
+    background: var(--sp-panel-raised); border: none;
+    border-radius: var(--r-block); padding: 15px 16px; margin-bottom: 10px;
   }
-  .anchor-row span { font-size: 14.5px; line-height: 1.35; }
-  .anchor-row b { font-size: 14.5px; white-space: nowrap; }
-  .anchor-row.hi { border-color: var(--orange); background: #fdf3e8; }
+  .anchor-row span { font-size: 14.5px; line-height: 1.35; color: var(--sp-ink-soft); }
+  .anchor-row b { font-size: 14.5px; white-space: nowrap; color: var(--sp-ink); }
+  .anchor-row.hi { background: var(--sp-leaf); }
+  .anchor-row.hi span, .anchor-row.hi b { color: #fff; }
 
   /* Plans */
-  .plans { display: flex; gap: 10px; margin-top: 20px; }
+  .plans { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 20px; }
   .plan {
-    flex: 1 1 0; font-family: inherit; text-align: left; cursor: pointer;
-    background: var(--card); border: 1.5px solid var(--line);
-    border-radius: 16px; padding: 16px; transition: all 0.12s ease;
+    font-family: inherit; text-align: left; cursor: pointer;
+    background: var(--sp-panel-raised); border: none;
+    border-radius: var(--r-block); padding: 16px; transition: background 0.12s ease;
   }
-  .plan.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .plan b { display: block; font-size: 16px; }
-  .plan .price { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
-  .plan.on .price { color: rgba(255,255,255,0.7); }
+  .plan.on { background: var(--sp-leaf); }
+  .plan b { display: block; font-size: 16px; color: var(--sp-ink); }
+  .plan .price { font-size: 13.5px; color: var(--sp-ink-dim); margin-top: 2px; }
+  .plan.on .price { color: rgba(255,255,255,0.78); }
   .plan .tag {
     display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 600;
-    background: var(--orange); color: #fff; padding: 3px 9px; border-radius: 999px;
+    background: var(--sp-action); color: #fff; padding: 3px 9px; border-radius: var(--r-pill);
   }
-  .trial-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 16px; font-size: 13.5px; color: var(--green); font-weight: 600; }
-  .legal { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin-top: 14px; text-align: center; }
+  .trial-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 16px; font-size: 13.5px; color: var(--sp-ink); font-weight: 600; }
+  .legal { font-size: 11.5px; color: var(--sp-ink-dim); line-height: 1.45; margin-top: 14px; text-align: center; }
 
   /* Done */
   .done-icon {
-    width: 72px; height: 72px; border-radius: 50%; background: var(--green-bg);
-    color: var(--green); font-size: 32px; display: flex; align-items: center;
+    width: 72px; height: 72px; border-radius: 50%; background: var(--sp-good);
+    color: #fff; font-size: 32px; display: flex; align-items: center;
     justify-content: center; margin: 10px auto 22px;
   }
   .done-steps { text-align: left; margin: 24px auto 0; max-width: 380px; display: grid; gap: 13px; }
-  .done-steps li { display: flex; gap: 12px; font-size: 15px; color: var(--muted); line-height: 1.4; list-style: none; }
-  .done-steps .dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); margin-top: 7px; }
+  .done-steps li { display: flex; gap: 12px; font-size: 15px; color: var(--sp-ink-soft); line-height: 1.4; list-style: none; }
+  .done-steps .dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--sp-action); margin-top: 7px; }
 
   .spinner {
     width: 34px; height: 34px; border-radius: 50%; margin: 40px auto;
-    border: 3px solid #eadfca; border-top-color: var(--orange);
+    border: 3px solid var(--sp-chip); border-top-color: var(--sp-action);
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  footer { text-align: center; padding: 24px; font-size: 13px; color: var(--muted); }
-  footer a { color: var(--muted); text-decoration: underline; }
+  /* Rule 1: the footer gets its own panel rather than sitting bare on sage. */
+  footer {
+    background: var(--sp-panel); border-radius: var(--r-panel);
+    margin-top: 16px; padding: 22px var(--pad);
+    text-align: center; font-size: 13px; color: var(--sp-ink-dim);
+  }
+  footer a { color: var(--sp-ink-soft); text-decoration: underline; }
   footer .legal { display: inline-block; margin-top: 10px; font-size: 12px; line-height: 1.5; }
   @media (max-width: 420px) {
-    h1 { font-size: 26px; }
-    .compare { flex-direction: column; }
+    .compare, .quiz-opts { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
 <body>
+  <svg class="canvas-field" viewBox="0 0 1080 1350" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M0,120 C180,40 340,180 300,340 C265,480 60,470 0,380 Z" fill="#6D8B54"/>
+    <path d="M1080,760 C900,700 860,940 980,1060 C1040,1120 1080,1140 1080,1140 Z" fill="#93AE7C"/>
+    <path d="M700,1350 C700,1180 900,1140 1010,1230 C1090,1296 1080,1350 1080,1350 Z" fill="#6D8B54"/>
+  </svg>
   <div class="wrap">
     <main class="card">
       <div class="chrome" id="chrome" style="display:none">
@@ -375,15 +434,15 @@
       </div>
       <div id="view"></div>
     </main>
+    <footer>
+      <a href="https://thanosrokkas.github.io/underneath-privacy/">Privacy</a> &middot;
+      <a href="https://thanosrokkas.github.io/underneath-privacy/terms">Terms</a><br />
+      <span class="legal">
+        UNDERNEATH LTD &middot; Company number 17312263 &middot; Registered office: 128 City Road, London, EC1V 2NX, United Kingdom &middot;
+        <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>
+      </span>
+    </footer>
   </div>
-  <footer>
-    <a href="https://thanosrokkas.github.io/underneath-privacy/">Privacy</a> &middot;
-    <a href="https://thanosrokkas.github.io/underneath-privacy/terms">Terms</a><br />
-    <span class="legal">
-      UNDERNEATH LTD &middot; Company number 17312263 &middot; Registered office: 128 City Road, London, EC1V 2NX, United Kingdom &middot;
-      <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>
-    </span>
-  </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.2/dist/umd/supabase.min.js" integrity="sha384-sgcvElP/LlNRtORGYFLO/9K/bENcpJK19HgvqslWXog6d8f/Va4TpltGiBlGntCM" crossorigin="anonymous"></script>
 <script type="module">
@@ -441,7 +500,7 @@
     shell: "#5BA39A", seeds: "#B0875E", minus: "#818AA8", gauge: "#F58A3C",
     sliders: "#F58A3C",
   };
-  function catColor(name) { return CAT_COLORS[name] || "#1A2238"; }
+  function catColor(name) { return CAT_COLORS[name] || "#FFFFFF"; }
   function iconSvg(name, size, color) {
     const c = color || catColor(name);
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true">` +
@@ -454,7 +513,7 @@
   }
   function bubbleHtml(name, size) {
     const c = catColor(name);
-    return `<span class="bubble" style="width:${size}px;height:${size}px;background:${hexToRgba(c, 0.12)}">${iconSvg(name, Math.round(size * 0.56), c)}</span>`;
+    return `<span class="bubble" style="width:${size}px;height:${size}px;background:${hexToRgba(c, 0.24)}">${iconSvg(name, Math.round(size * 0.56), c)}</span>`;
   }
 
   // ── Option lists (labels/keys/icons verbatim from the app's data.ts) ──
@@ -655,7 +714,7 @@
   // ── Steps ──
   function renderHero() {
     view.innerHTML = `
-      <img class="hero-logo" src="assets/logo.png" alt="Underneath" />
+      <img class="hero-mark" src="icon.png" alt="Underneath" />
       <h1 class="center">Know what's<br/>underneath the label.</h1>
       <p class="sub center">Scan any label. Get a score you can actually interrogate.</p>
       <button class="cta" id="cta">Get started</button>
@@ -700,16 +759,16 @@
 
   function renderHow() {
     const steps = [
-      { icon: "viewfinder", color: "#F47B45", bg: "#FDEFE3", t: "Scan", d: "Point at any ingredient list. No barcode hunting." },
-      { icon: "gauge", color: "#F5A623", bg: "#FBEFD6", t: "Score", d: "Every product gets a score from 0 to 100, color coded by risk." },
-      { icon: "sliders", color: "#5BA39A", bg: "#E7F1EF", t: "Trace", d: "See exactly how the score was calculated, with every deduction sourced." },
+      { icon: "viewfinder", color: "#F0A854", t: "Scan", d: "Point at any ingredient list. No barcode hunting." },
+      { icon: "gauge", color: "#E4CE5E", t: "Score", d: "Every product gets a score from 0 to 100, color coded by risk." },
+      { icon: "sliders", color: "#A9BE96", t: "Trace", d: "See exactly how the score was calculated, with every deduction sourced." },
     ];
     view.innerHTML = `
       <h1>Three steps.<br/>No black box.</h1>
       ${steps.map((x, i) => `
         ${i > 0 ? '<div class="arrow">&#8595;</div>' : ""}
         <div class="step-card">
-          <div class="step-icon" style="background:${x.bg}">${iconSvg(x.icon, 22, x.color)}</div>
+          <div class="step-icon">${iconSvg(x.icon, 22, x.color)}</div>
           <div><h3>${x.t}</h3><p>${x.d}</p></div>
         </div>`).join("")}
       <p class="italic-note">The only scanner that shows its work.</p>
@@ -746,8 +805,8 @@
     view.innerHTML = `
       <h1 class="center" style="font-size:25px">Only <span class="danger">7%</span> of common food additives have been tested for <span class="danger">long term safety</span>.</h1>
       <div class="bars">
-        <div class="bar-col"><div class="bar" style="height:8px;background:#1a2238"></div><span class="bar-label">Safety tested</span></div>
-        <div class="bar-col"><div class="bar" style="height:84px;background:#c0492b"></div><span class="bar-label">Inadequate or no data</span></div>
+        <div class="bar-col"><div class="bar" style="height:8px;background:var(--sp-ink-dim)"></div><span class="bar-label">Safety tested</span></div>
+        <div class="bar-col"><div class="bar" style="height:84px;background:var(--sp-poor)"></div><span class="bar-label">Inadequate or no data</span></div>
       </div>
       <p class="chart-caption">FDA ALLOWED FOOD ADDITIVES &middot; BY SAFETY DATA</p>
       <div class="flag-card">
@@ -850,7 +909,7 @@
       <h1>Any allergies we should watch for?</h1>
       <div style="margin-top:20px">${chipHtml(ALLERGIES, state.allergies, "inline")}</div>
       <div class="warning">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#A86A14" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#A86A14"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:0 0 auto;margin-top:1px" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#C8901A" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#C8901A" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#C8901A"/></svg>
         <span>Underneath helps you spot ingredients. It is not medical advice. Always check the packaging too.</span>
       </div>
       <button class="cta" id="cta">Next</button>
@@ -1101,16 +1160,16 @@
   // ── Your first two weeks ──
   function renderTimeline() {
     const rows = [
-      { icon: "viewfinder", color: "#F47B45", bg: "#FDEFE3", t: "Day 1", d: "Scan what is already in your cupboard. Start with the things you buy weekly." },
-      { icon: "layers", color: "#C57B57", bg: "#F6EAE2", t: "Week 1", d: "Swap the worst three. Every red flag comes with a cleaner pick at a similar price." },
-      { icon: "bag", color: "#8FA37A", bg: "#EDF1E7", t: "Week 2", d: "Scan before you buy. The whole shop gets cleaner without thinking about it." },
+      { icon: "viewfinder", color: "#F0A854", t: "Day 1", d: "Scan what is already in your cupboard. Start with the things you buy weekly." },
+      { icon: "layers", color: "#E4CE5E", t: "Week 1", d: "Swap the worst three. Every red flag comes with a cleaner pick at a similar price." },
+      { icon: "bag", color: "#A9BE96", t: "Week 2", d: "Scan before you buy. The whole shop gets cleaner without thinking about it." },
     ];
     view.innerHTML = `
       <h1>Your first two weeks.</h1>
       ${rows.map((x, i) => `
         ${i > 0 ? '<div class="arrow">&#8595;</div>' : ""}
         <div class="step-card">
-          <div class="step-icon" style="background:${x.bg}">${iconSvg(x.icon, 22, x.color)}</div>
+          <div class="step-icon">${iconSvg(x.icon, 22, x.color)}</div>
           <div><h3>${x.t}</h3><p>${x.d}</p></div>
         </div>`).join("")}
       <button class="cta" id="cta">Continue</button>
@@ -1171,14 +1230,14 @@
           <div class="trial-score">22</div>
         </div>
         <div class="trial-pills">
-          <span class="trial-pill" style="background:#FBE3E1;color:#C0392F">Ultra-processed</span>
-          <span class="trial-pill" style="background:#FBE3E1;color:#C0392F">4 flagged</span>
+          <span class="trial-pill" style="background:var(--sp-poor)">Ultra-processed</span>
+          <span class="trial-pill" style="background:var(--sp-poor)">4 flagged</span>
         </div>
         <div class="trial-ings">
-          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>High-fructose corn syrup</div>
-          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>Red 40 (artificial color)</div>
-          <div class="trial-ing"><span class="trial-dot" style="background:#E5564E"></span>TBHQ (preservative)</div>
-          <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Soy lecithin</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-poor)"></span>High-fructose corn syrup</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-poor)"></span>Red 40 (artificial color)</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-poor)"></span>TBHQ (preservative)</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-caution)"></span>Soy lecithin</div>
         </div>
       </div>
       <div class="trial-card better">
@@ -1188,13 +1247,13 @@
           <div class="trial-score good">81</div>
         </div>
         <div class="trial-pills">
-          <span class="trial-pill" style="background:#E6F4EC;color:#2E7D52">Organic</span>
-          <span class="trial-pill" style="background:#E6F4EC;color:#2E7D52">No artificial colors</span>
+          <span class="trial-pill" style="background:var(--sp-good)">Organic</span>
+          <span class="trial-pill" style="background:var(--sp-good)">No artificial colors</span>
         </div>
         <div class="trial-ings">
-          <div class="trial-ing"><span class="trial-dot" style="background:#3E9C6D"></span>Organic wheat flour</div>
-          <div class="trial-ing"><span class="trial-dot" style="background:#F5A623"></span>Organic cane sugar</div>
-          <div class="trial-ing"><span class="trial-dot" style="background:#3E9C6D"></span>Organic strawberry filling</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-good)"></span>Organic wheat flour</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-caution)"></span>Organic cane sugar</div>
+          <div class="trial-ing"><span class="trial-dot" style="background:var(--sp-good)"></span>Organic strawberry filling</div>
         </div>
         <div class="trial-jump">59 points apart, one aisle apart</div>
       </div>
@@ -1209,15 +1268,15 @@
       <h1 class="center">How your free trial works.</h1>
       <div class="timeline">
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:var(--orange)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:var(--sp-action)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
           <div class="tl-body"><b>Today</b><p>Full access unlocked instantly.</p></div>
         </div>
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:#fbf0da"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="#A86A14" stroke-width="1.6"/><path d="M8 4.5V8l2.4 1.4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:var(--sp-chip)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="#C8901A" stroke-width="1.6"/><path d="M8 4.5V8l2.4 1.4" stroke="#C8901A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tl-line"></div></div>
           <div class="tl-body"><b>Day 1: Reminder</b><p>You get a reminder 48 hours before any charge.</p></div>
         </div>
         <div class="tl-row">
-          <div class="tl-rail"><div class="tl-dot" style="background:#eadfca"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2" stroke="#9AA0AB" stroke-width="1.6"/></svg></div></div>
+          <div class="tl-rail"><div class="tl-dot" style="background:var(--sp-chip)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2" stroke="#A9BE96" stroke-width="1.6"/></svg></div></div>
           <div class="tl-body"><b>Day 3: Trial ends</b><p>You're only charged if you don't cancel. Cancel anytime.</p></div>
         </div>
       </div>
@@ -1229,7 +1288,7 @@
           <b>Weekly</b><span class="price">$1.99/wk</span>
         </button>
       </div>
-      <div class="trial-note"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#3E9C6D" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#3E9C6D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>No payment due now.</div>
+      <div class="trial-note"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="#FFFFFF" stroke-width="1.6"/><path d="M5 8l2 2 4-4.4" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>No payment due now.</div>
       <button class="cta" id="cta">Start 3-day free trial</button>
       <p class="legal">After the 3-day trial, Annual is $49.99/yr or Weekly is $1.99/wk, auto-renewing until cancelled. Cancel anytime.</p>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
