@@ -1,10 +1,8 @@
 {
   "rewrites": [
-    { "source": "/r/:code", "destination": "/r.html" }
-  ],
-  "redirects": [
-    { "source": "/privacy", "destination": "https://thanosrokkas.github.io/underneath-privacy/", "permanent": false },
-    { "source": "/terms", "destination": "https://thanosrokkas.github.io/underneath-privacy/terms", "permanent": false }
+    { "source": "/r/:code", "destination": "/r.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms", "destination": "/terms.html" }
   ],
   "headers": [
     {
