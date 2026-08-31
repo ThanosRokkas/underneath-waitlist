@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Get Underneath</title>
+<meta name="description" content="Download Underneath for iPhone or Android." />
+<meta name="theme-color" content="#86A36E" />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
+<link href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sp-canvas: #86A36E;
+    --sp-panel: #1E3211;
+    --sp-ink: #FFFFFF;
+    --sp-ink-soft: #DCE5D4;
+    --sp-action: #D9571A;
+    --font-display: "Gliker", "Grandstander", "Comfortaa", cursive;
+    --font-body: "Poppins", "Commissioner", "Noto Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    background: var(--sp-canvas);
+    color: var(--sp-ink-soft);
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .panel {
+    background: var(--sp-panel);
+    border-radius: 32px;
+    padding: clamp(30px, 7vw, 52px);
+    text-align: center;
+    width: 100%;
+    max-width: 420px;
+  }
+  .panel img { width: 78px; height: 78px; border-radius: 20px; margin-bottom: 20px; }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(26px, 6vw, 34px);
+    line-height: 1.12;
+    color: var(--sp-ink);
+    margin-bottom: 10px;
+  }
+  p { font-size: 15.5px; line-height: 1.6; margin-bottom: 26px; }
+  .btn {
+    display: block;
+    background: var(--sp-action);
+    color: var(--sp-ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 15px 20px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .btn.alt { background: rgba(255,255,255,0.12); }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <img src="icon.png" alt="" />
+    <h1>Get Underneath</h1>
+    <p>Taking you to your app store.</p>
+    <a class="btn" id="ios" href="https://apps.apple.com/app/id6785015345">Download on the App Store</a>
+    <a class="btn alt" id="android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">Get it on Google Play</a>
+  </div>
+
+<script>
+  var IOS_URL = "https://apps.apple.com/app/id6785015345";
+  var PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
+
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+              (/Macintosh/.test(ua) && typeof document.ontouchend !== "undefined");
+  var isAndroid = /Android/.test(ua);
+
+  // Land on the store URL itself so iOS can raise its own install card inside
+  // in-app browsers. Anything we cannot identify keeps both buttons visible.
+  if (isIOS) location.replace(IOS_URL);
+  else if (isAndroid) location.replace(PLAY_URL);
+</script>
+</body>
+</html>
