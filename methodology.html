@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Scoring Methodology | Underneath</title>
+<meta name="description" content="The full Underneath scoring methodology: the three axes, the exact weights, the ultra-processed anchor, every cap, and the version history." />
+<meta name="theme-color" content="#86A36E" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://tryunderneath.com/methodology" />
+<link rel="icon" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sp-canvas: #86A36E;
+    --sp-panel: #1E3211;
+    --sp-ink: #FFFFFF;
+    --sp-ink-soft: #DCE5D4;
+    --sp-ink-dim: #A9BE96;
+    --sp-apricot: #F0A854;
+    --font-display: "Gliker", "Grandstander", "Comfortaa", cursive;
+    --font-body: "Poppins", "Commissioner", "Noto Sans", system-ui, sans-serif;
+    --gutter: 18px;
+    --pad: clamp(22px, 5.2vw, 56px);
+    --r-panel: clamp(26px, 4vw, 40px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 3.9vw, 16.5px);
+    line-height: 1.62;
+    background: var(--sp-canvas);
+    color: var(--sp-ink-soft);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { width: 100%; max-width: 820px; margin: 0 auto; padding: 0 var(--gutter); }
+  .top { display: flex; align-items: center; gap: 10px; padding: 24px 0 18px; color: var(--sp-panel); }
+  .top img { width: 32px; height: 32px; border-radius: 9px; }
+  .top a { text-decoration: none; font-weight: 600; font-size: 18px; color: var(--sp-panel); }
+  .panel {
+    background: var(--sp-panel);
+    border-radius: var(--r-panel);
+    padding: var(--pad);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(30px, 6.6vw, 46px);
+    line-height: 1.06;
+    color: var(--sp-ink);
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(20px, 4.2vw, 26px);
+    line-height: 1.18;
+    color: var(--sp-ink);
+    margin: 38px 0 12px;
+  }
+  h3 {
+    font-weight: 600;
+    font-size: clamp(16px, 3.9vw, 18px);
+    color: var(--sp-ink);
+    margin: 24px 0 8px;
+  }
+  p, ul, ol { margin-bottom: 14px; }
+  ul, ol { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  strong { color: var(--sp-ink); font-weight: 600; }
+  a { color: var(--sp-apricot); }
+  hr { border: 0; border-top: 1px solid rgba(255,255,255,0.14); margin: 34px 0; }
+  .meta { color: var(--sp-ink-dim); font-size: 14.5px; margin-bottom: 22px; }
+  .meta a { color: var(--sp-apricot); }
+  .tablewrap { overflow-x: auto; margin-bottom: 16px; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.6px; min-width: 460px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.13); vertical-align: top; }
+  th { color: var(--sp-ink); font-weight: 600; }
+  td.n { white-space: nowrap; color: var(--sp-ink); font-weight: 600; }
+  .formula {
+    background: rgba(0,0,0,0.24);
+    border-left: 3px solid var(--sp-apricot);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    font-size: 14.8px;
+    line-height: 1.7;
+    color: var(--sp-ink);
+    overflow-x: auto;
+  }
+  .formula code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; }
+  .note { color: var(--sp-ink-dim); font-size: 14.5px; }
+  footer { padding: 26px 0 42px; text-align: center; color: var(--sp-panel); font-size: 14px; }
+  footer a { color: var(--sp-panel); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <img src="icon.png" alt="" />
+      <a href="/">Underneath</a>
+    </div>
+
+    <main class="panel">
+      <h1>Scoring Methodology</h1>
+      <p class="meta">
+        <strong>Scoring engine version:</strong> 49<br />
+        <strong>Last updated:</strong> September 5, 2026
+      </p>
+
+      <p>This page describes exactly how Underneath turns a product label into a number from 0 to 100. It is published so that anyone, including the brand being scored, can take the data on a package and arrive at the same figure the app shows.</p>
+      <p>Every rule that can change a score is listed here. If a score cannot be reproduced from this page and the product's own label data, that is a defect worth reporting.</p>
+
+      <hr />
+
+      <h2>1. The three axes</h2>
+      <p>Each product is scored on three independent axes, each starting at 100 and losing points.</p>
+
+      <h3>Additives</h3>
+      <p>Every recognised additive carries a fixed penalty held in a public reference table, keyed by E number and by name. Penalties are drawn from regulatory status, principally EFSA re-evaluations and FDA status. An additive with a penalty worse than 5 points is treated as high risk and caps this axis at 49 regardless of what else is in the product.</p>
+      <p>An additive that is present but not named on the label, declared only by its functional class such as "emulsifier" or "sweetener", carries a small penalty for the non-disclosure itself, not for any assumed hazard.</p>
+
+      <h3>Processing</h3>
+      <p>Based on the NOVA framework, which sorts food by degree of industrial processing rather than by nutrient content. NOVA group is taken from the product record where available and otherwise computed from the ingredient list by looking for processing markers. Markers are split into hard markers, which are ingredients that exist only as industrial inputs, and soft markers such as natural flavourings, which are weaker evidence.</p>
+
+      <h3>Macros</h3>
+      <p>Computed from the declared nutrition panel only: sugar, sodium, saturated fat, calorie density, fibre and protein. Nothing on this axis is assumed. If the panel contradicts itself, for example if the declared macronutrients could not fit in 100 grams or could not produce the declared calories, the panel is rejected and the axis returns no value rather than a guess.</p>
+
+      <hr />
+
+      <h2>2. The weighting</h2>
+      <p>When all three axes have data, the blend is:</p>
+      <div class="formula">
+        <code>blend = (additives &times; 0.30) + (processing &times; 0.30) + (macros &times; 0.40)</code>
+      </div>
+      <p>Macros carries the largest single weight because most of the measured harm from ultra-processed food runs through energy density, low satiety and low fibre. Additives carry less weight than they once did, because the evidence concerns a small set of compounds rather than additives in general. Genuinely harmful additives are handled by the hard cap at 49 rather than by weight, which is a sharper instrument than a heavier weighting.</p>
+      <p class="note">This weighting changed in August 2026. See the version history at the end of this page.</p>
+
+      <hr />
+
+      <h2>3. The ultra-processed anchor</h2>
+      <p>The blend alone is not the final number. For a product classified NOVA 4 with at least one hard processing marker, the blend is anchored to the processing axis:</p>
+      <div class="formula">
+        <code>score = round(processing &times; blend / 100)</code>
+      </div>
+      <p>This is the single rule with the largest effect on a low score, so it is set out in full.</p>
+
+      <h3>Why it exists</h3>
+      <p>Without it, a heavily processed product can average its way to a respectable number on the strength of a good nutrition panel. Reformulating a product to hit better macro targets while leaving it just as far from whole food is exactly the move the anchor is designed not to reward.</p>
+
+      <h3>Worked example</h3>
+      <p>A product scoring 40 on additives, 20 on processing and 77 on macros, classified NOVA 4 with three hard markers:</p>
+      <div class="formula">
+        <code>blend = (40 &times; 0.30) + (20 &times; 0.30) + (77 &times; 0.40) = 48.8</code><br />
+        <code>score = round(20 &times; 48.8 / 100) = 10</code>
+      </div>
+      <p>The same product without the NOVA 4 classification would score 49.</p>
+
+      <h3>When the anchor does not apply</h3>
+      <ul>
+        <li><strong>Clean label NOVA 4.</strong> A product pushed into NOVA 4 only by soft markers, with no high risk additive, escapes the anchor and is capped at 85 instead.</li>
+        <li><strong>Category guesses.</strong> If the NOVA 4 classification came from the product's category rather than from markers seen on the package, the anchor does not apply. Nothing was read off that label to justify it.</li>
+      </ul>
+
+      <hr />
+
+      <h2>4. Caps</h2>
+      <p>A cap is a ceiling, never a deduction. Caps exist so that missing or untrustworthy data can never inflate a score. Where more than one applies, the lowest wins.</p>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Cap</th><th>Applies when</th></tr></thead>
+          <tbody>
+            <tr><td class="n">49</td><td>Any additive with a penalty worse than 5 points. Caps the additives axis, not the final score.</td></tr>
+            <tr><td class="n">49</td><td>Only one of the three axes had usable data.</td></tr>
+            <tr><td class="n">74</td><td>Only two of the three axes had usable data.</td></tr>
+            <tr><td class="n">74</td><td>The nutrition panel is missing sugar or sodium.</td></tr>
+            <tr><td class="n">74</td><td>Every scored axis came from a different barcode's record, matched on product name.</td></tr>
+            <tr><td class="n">85</td><td>Clean label NOVA 4, described above.</td></tr>
+            <tr><td class="n">85</td><td>The ingredient list was estimated rather than read, described in section 6.</td></tr>
+            <tr><td class="n">70</td><td>NOVA 3 or above, at least 450 kcal per 100 g, and low protein and fibre per calorie.</td></tr>
+            <tr><td class="n">60, or 65 organic</td><td>The above, plus at least 28 g of fat per 100 g, taken as evidence of frying.</td></tr>
+            <tr><td class="n">45, or 50 organic</td><td>The above, where the product category is a deep fried one such as crisps, corn chips or fries.</td></tr>
+            <tr><td class="n">35</td><td>A processed drink, NOVA 3 or above, carrying 8 g of sugar or more per 100 ml.</td></tr>
+            <tr><td class="n">50</td><td>A processed drink, NOVA 3 or above, carrying 5 g of sugar or more per 100 ml.</td></tr>
+            <tr><td class="n">5</td><td>Clear spirits.</td></tr>
+            <tr><td class="n">4</td><td>Wine, champagne, sake.</td></tr>
+            <tr><td class="n">3</td><td>Beer, cider, aged spirits, and any alcohol not otherwise classified.</td></tr>
+            <tr><td class="n">1</td><td>Liqueurs, cocktails, alcopops, fortified dessert wines.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">The two sugary drink caps are restricted to processed drinks so that milk, whose lactose runs to about 4.8 g per 100 ml, and juice that is only fruit, are never caught by them. Sugar that was already in the food is not treated as sugar that was added to it.</p>
+      <p class="note">Alcohol is a Group 1 carcinogen under IARC with no established safe intake, so the whole alcohol band sits deep in the Poor range and the differences between tiers are deliberately small.</p>
+
+      <hr />
+
+      <h2>5. Verdict words</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Score</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td class="n">80 to 100</td><td>Good</td></tr>
+            <tr><td class="n">50 to 79</td><td>Moderate</td></tr>
+            <tr><td class="n">0 to 49</td><td>Poor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>These words describe the output of this methodology. They are not a clinical or dietary assessment of a product, and a high score means close to whole food, not low calorie or suitable for any particular person.</p>
+
+      <hr />
+
+      <h2>6. Where the data comes from</h2>
+      <ul>
+        <li><strong>Product data</strong> comes from Open Food Facts, a community maintained open database, supplemented by retailer product data in some markets.</li>
+        <li><strong>Additive penalties and sources</strong> come from a reference table maintained by Underneath, each row carrying a citation shown in the app.</li>
+        <li><strong>Label reading.</strong> Where a barcode is not in the database, the ingredient list is read from a photograph of the label.</li>
+        <li><strong>Estimated ingredients.</strong> Where a product is known by name and category but has no ingredient list at all, a typical list may be estimated in order to give any answer. Estimated scores are labelled as such in the app, are capped at 85, and never raise an additive alert.</li>
+      </ul>
+      <p>Product data can be wrong, out of date, or entered for a different market's version of the same package. The label on the product is always the authority.</p>
+
+      <hr />
+
+      <h2>7. When no score is shown</h2>
+      <p>Underneath shows no number at all, rather than a low one, when:</p>
+      <ul>
+        <li>The ingredient list cannot be recognised well enough to score. A list that cannot be read is not evidence of a bad product.</li>
+        <li>No ingredient data exists and none could be estimated.</li>
+        <li>A score is under review following a challenge. In that case the ingredients and the breakdown still display, but no number does.</li>
+      </ul>
+
+      <hr />
+
+      <h2>8. Challenging a score</h2>
+      <p>Any brand or person may ask for the full working behind a specific score: the data used, its source, the additives matched, the NOVA classification, and the arithmetic. That will be provided.</p>
+      <p>Where a score rests on wrong data, it is corrected. Where a score is disputed and the dispute is not obviously unfounded, the number is withheld while it is examined.</p>
+      <p><strong>Contact:</strong> <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a></p>
+
+      <hr />
+
+      <h2>9. Version history</h2>
+
+      <h3>Version 49, September 2026</h3>
+      <p>Published this page. Corrected the description of the weighting on the home page, which still read 50 percent additives, 30 percent processing and 20 percent macros. The engine had used 30 / 30 / 40 since August 2026 and the figures on the home page were not updated at the time. The app itself displayed the correct weighting throughout. No score changed as a result of this correction; only the published description of it did.</p>
+      <p>Also in this version: the ultra-processed anchor and the full cap list are published for the first time.</p>
+
+      <h3>August 2026</h3>
+      <p>Weighting changed from 50 percent additives, 30 percent processing and 20 percent macros to 30 / 30 / 40, on the view that the additives axis should not outrank measured nutrition, and that specific harmful additives are better handled by a hard cap than by a heavier weight across every additive. Processing was unchanged.</p>
+
+      <h3>July 2026</h3>
+      <p>Weighting moved from 40 percent additives, 30 percent processing and 30 percent macros to 50 / 30 / 20. This is the weighting the home page described until the September correction above.</p>
+
+      <h3>Earlier</h3>
+      <p>Scores are recomputed from live data on every scan, so a change to this methodology takes effect immediately. No score is served from a stale calculation.</p>
+
+      <hr />
+
+      <p class="note">This methodology describes a proprietary scoring system. It is informational, is not medical or dietary advice, and is not a substitute for reading the label or consulting a qualified professional. See the <a href="/terms">Terms of Use</a>.</p>
+    </main>
+
+    <footer>
+      <a href="/">Home</a> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a>
+    </footer>
+  </div>
+</body>
+</html>

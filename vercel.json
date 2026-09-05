@@ -3,7 +3,8 @@
     { "source": "/r/:code", "destination": "/r.html" },
     { "source": "/get", "destination": "/get.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/terms", "destination": "/terms.html" }
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/methodology", "destination": "/methodology.html" }
   ],
   "headers": [
     {
