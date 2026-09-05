@@ -109,7 +109,7 @@
     <main class="panel">
       <h1>Scoring Methodology</h1>
       <p class="meta">
-        <strong>Scoring engine version:</strong> 49<br />
+        <strong>Scoring engine version:</strong> 50<br />
         <strong>Last updated:</strong> September 5, 2026
       </p>
 
@@ -121,15 +121,59 @@
       <h2>1. The three axes</h2>
       <p>Each product is scored on three independent axes, each starting at 100 and losing points.</p>
 
+      <p>Two rules hold across all three. Everything is measured per 100 g or per 100 ml, never per serving, so a small pack cannot hide behind a small serving size. And nothing is scored against a category average, so a biscuit is never rewarded for being a better biscuit.</p>
+
       <h3>Additives</h3>
-      <p>Every recognised additive carries a fixed penalty held in a public reference table, keyed by E number and by name. Penalties are drawn from regulatory status, principally EFSA re-evaluations and FDA status. An additive with a penalty worse than 5 points is treated as high risk and caps this axis at 49 regardless of what else is in the product.</p>
-      <p>An additive that is present but not named on the label, declared only by its functional class such as "emulsifier" or "sweetener", carries a small penalty for the non-disclosure itself, not for any assumed hazard.</p>
+      <p>Every additive named on the label is matched against a reference table, keyed by E number and by name, and its penalty is subtracted from 100. The base scale follows regulatory standing.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Penalty</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="n">0</td><td>Approved with no outstanding concern.</td></tr>
+            <tr><td class="n">2</td><td>An acceptable daily intake has been set.</td></tr>
+            <tr><td class="n">5</td><td>Under active safety re-evaluation.</td></tr>
+            <tr><td class="n">8</td><td>Banned in at least one jurisdiction. Classed as high risk.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A second scale covers substances approved everywhere but which exist to make cheap industrial food work: high fructose corn syrup 18 points, artificial flavours 15, maltodextrin 12, caramel colour 12, modified food starch 10, soy protein isolate and hydrolysed vegetable protein 8 each.</p>
+      <p>An additive that is present but not named, declared only by its functional class such as "emulsifier" or "sweetener", carries 5 points for the non-disclosure itself. It is not assumed to be the worst case, because an undeclared emulsifier may well be lecithin.</p>
+      <p>However long the list runs, this axis cannot fall below 40. Its purpose is to separate a formulation from a food, not to keep subtracting once that is established. A single additive banned somewhere in the world is the exception: it caps the axis at 49 whatever else the label shows.</p>
 
       <h3>Processing</h3>
-      <p>Based on the NOVA framework, which sorts food by degree of industrial processing rather than by nutrient content. NOVA group is taken from the product record where available and otherwise computed from the ingredient list by looking for processing markers. Markers are split into hard markers, which are ingredients that exist only as industrial inputs, and soft markers such as natural flavourings, which are weaker evidence.</p>
+      <p>Based on the NOVA framework, which sorts food by degree of industrial processing rather than by nutrient content. The group is taken from the product record where that is reliable and computed from the ingredient list where it is not.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Penalty</th><th>NOVA group</th></tr></thead>
+          <tbody>
+            <tr><td class="n">0</td><td>1, unprocessed or minimally processed. Fruit, plain oats, milk.</td></tr>
+            <tr><td class="n">10</td><td>2, culinary ingredients. Oil, butter, salt, sugar.</td></tr>
+            <tr><td class="n">30</td><td>3, processed food. Bread, cheese, tinned vegetables.</td></tr>
+            <tr><td class="n">45 to 80</td><td>4, ultra-processed formulations, graded below.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>NOVA 4 is graded rather than treated as one band, because a formulation built out of maltodextrin and modified starch is not the same product as a yoghurt containing one natural flavouring. Grading counts industrial markers, meaning ingredients that exist only because of industrial food production.</p>
+      <ul>
+        <li><strong>Three or more hard markers: 80 points,</strong> leaving 20.</li>
+        <li><strong>One or two hard markers: 70 points,</strong> leaving 30.</li>
+        <li><strong>Soft markers only: 45 points,</strong> leaving 55. Soft markers are the borderline declarations, meaning natural flavourings, stevia, and bare functional class words where the label never names the substance. They are enough to place a product in NOVA 4 but not enough to treat it as a full industrial formulation.</li>
+      </ul>
+      <p>Organic certification softens the processing penalty, but only where the product carries no high risk additive: 5 points at NOVA 2, 10 at NOVA 3, 15 at NOVA 4, and nothing at NOVA 1 where there is no penalty to soften. It appears as its own line on the receipt so the underlying penalty stays visible rather than being quietly absorbed.</p>
+      <p>Plain water is forced to NOVA 1 before anything else is considered, because food databases routinely file bottled water under soft drinks. Coconut water, tonic water and flavoured water are excluded from that override.</p>
 
       <h3>Macros</h3>
-      <p>Computed from the declared nutrition panel only: sugar, sodium, saturated fat, calorie density, fibre and protein. Nothing on this axis is assumed. If the panel contradicts itself, for example if the declared macronutrients could not fit in 100 grams or could not produce the declared calories, the panel is rejected and the axis returns no value rather than a guess.</p>
+      <p>Computed from the declared nutrition panel only. Nothing on this axis is assumed. If the panel contradicts itself, for example if the declared macronutrients could not fit in 100 grams or could not produce the declared calories, the panel is rejected and the axis returns no value rather than a guess.</p>
+      <ul>
+        <li><strong>Sodium.</strong> 30 points above 800 mg per 100 g, 18 above 400 mg, 8 above 120 mg.</li>
+        <li><strong>Sugar.</strong> Judged on the share of the product's calories that come from sugar, not on grams alone, because a gram threshold punishes fruit and lets a low calorie syrup through. 45 points above a 75 percent share, 35 above 50 percent, 25 above 30 percent, 12 above 15 percent.</li>
+        <li><strong>Trans fat.</strong> A flat 20 points for any detectable trans fat, or any partially hydrogenated oil on the list.</li>
+        <li><strong>Saturated fat.</strong> 30 points above 10 g per 100 g, 18 above 5 g, 8 above 2 g. Waived where unsaturated fat is at least double the saturated fat, which is what protects olive oil, avocado and nuts. Deep fried products never receive that waiver, because the fat they carry is oxidised frying oil.</li>
+        <li><strong>Calorie density.</strong> Up to 5 points to 50 kcal per 100 g, 15 to 200, 25 to 400, 35 above 400. Protein cancels up to 40 percent of it, fibre up to 35 percent, unsaturated fat up to 25 percent, and 15 g of protein or more per 100 g skips it outright.</li>
+        <li><strong>Points returned.</strong> Fibre at 3 g or more per 100 g returns 5 points. Protein at 5 g or more returns 5 points.</li>
+      </ul>
+      <p>Four guards keep the sugar calculation honest. A product carrying 5 g of sugar or less can never lose more than 12 points, and one carrying 10 g or less never more than 25. A product carrying more than 15 g loses at least 12 and one carrying more than 25 g loses at least 25, whatever the share works out to. A clean label product sweetened only with honey, maple syrup, molasses or dates has its sugar penalty halved. Whole food can never lose more than 12 points for sugar, because fruit is not a soft drink.</p>
+      <p>Individual ingredients may carry their own nutritional caveat, drawn from a reference set of about 140 entries, of which processed meat is the clearest example. Those adjustments are only ever negative, are counted once per ingredient, and their combined total is capped at 20 points so no axis is decided by them alone. A caveat may only charge points for something the label states. Whether a farm used a pesticide or an antibiotic is not on the label, so those notes are shown and cost nothing.</p>
 
       <hr />
 
@@ -144,7 +188,7 @@
       <hr />
 
       <h2>3. The ultra-processed anchor</h2>
-      <p>The blend alone is not the final number. For a product classified NOVA 4 with at least one hard processing marker, the blend is anchored to the processing axis:</p>
+      <p>The blend alone is not the final number. For a product classified NOVA 4 that carries either at least one hard processing marker or a high risk additive, the blend is anchored to the processing axis:</p>
       <div class="formula">
         <code>score = round(processing &times; blend / 100)</code>
       </div>
@@ -244,6 +288,9 @@
       <hr />
 
       <h2>9. Version history</h2>
+
+      <h3>Version 50, September 2026</h3>
+      <p>Ingredient caveats that describe farming practice rather than label content no longer cost points. Conventional dairy and conventional poultry previously carried a small deduction for possible pesticide, hormone or antibiotic residues. None of that is stated on a label, so no product could be shown why it had lost the points. Those notes are still displayed, and now cost nothing. Conventional dairy products gain about 1 point. Plain chicken and turkey lose their only such caveat, so they now carry no ingredient deduction at all.</p>
 
       <h3>Version 49, September 2026</h3>
       <p>Published this page. Corrected the description of the weighting on the home page, which still read 50 percent additives, 30 percent processing and 20 percent macros. The engine had used 30 / 30 / 40 since August 2026 and the figures on the home page were not updated at the time. The app itself displayed the correct weighting throughout. No score changed as a result of this correction; only the published description of it did.</p>
