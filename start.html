@@ -436,7 +436,8 @@
     </main>
     <footer>
       <a href="/privacy">Privacy</a> &middot;
-      <a href="/terms">Terms</a><br />
+      <a href="/terms">Terms</a> &middot;
+      <a href="#" id="manageLink">Manage or cancel subscription</a><br />
       <span class="legal">
         UNDERNEATH LTD &middot; Company number 17312263 &middot; Registered office: 128 City Road, London, EC1V 2NX, United Kingdom &middot;
         <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>
@@ -1345,6 +1346,44 @@
     }
   }
 
+  // ── Manage or cancel ──
+  // RevenueCat hands back a management link for whichever store is charging, so
+  // someone who bought here lands on the billing portal and someone who bought
+  // in the app lands on the App Store or Google Play. Reporting into the link's
+  // own text, because the footer sits outside the view that setMsg writes to.
+  async function openManagement(ev) {
+    ev.preventDefault();
+    const link = ev.currentTarget;
+    if (link.dataset.busy) return;
+    link.dataset.busy = "1";
+    const label = link.textContent;
+    link.textContent = "Opening...";
+    try {
+      const { data } = await db.auth.getUser();
+      const user = data && data.user;
+      if (!user) {
+        link.textContent = "Sign in first to manage your subscription.";
+        return;
+      }
+      const { Purchases } = await import("https://esm.sh/@revenuecat/purchases-js");
+      let purchases;
+      try {
+        purchases = Purchases.configure(RCB_PUBLIC_KEY, user.id);
+      } catch (e) {
+        purchases = Purchases.getSharedInstance();
+      }
+      const info = await purchases.getCustomerInfo();
+      const url = info && info.managementURL;
+      if (url) { window.location.href = url; return; }
+      link.textContent = "No subscription found on this account.";
+    } catch (e) {
+      link.textContent = "Could not open. Email tryunderneath@gmail.com";
+    } finally {
+      delete link.dataset.busy;
+      if (link.textContent === "Opening...") link.textContent = label;
+    }
+  }
+
   // ── Done ──
   function renderDone() {
     chrome.style.display = "none";
@@ -1375,6 +1414,7 @@
     }
     render();
   }
+  document.getElementById("manageLink").addEventListener("click", openManagement);
   boot();
 </script>
 </body>
