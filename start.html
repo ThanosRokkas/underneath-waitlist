@@ -1204,6 +1204,8 @@ const T = {
 
   "onboarding.auth.createTitle": "Save your progress.",
   "onboarding.auth.createSub": "Create an account to keep your preferences and scan history.",
+  "onboarding.auth.paidTitle": "Your trial has started.",
+  "onboarding.auth.paidSub": "Create an account to use it. Your trial is attached the moment you do.",
   "onboarding.auth.signinTitle": "Welcome back.",
   "onboarding.auth.signinSub": "Sign in to pick up where you left off.",
   "onboarding.auth.dividerSignUp": "SIGN UP",
@@ -2415,6 +2417,18 @@ Object.assign(SCREENS, {
     const signin = state.authMode === "signin";
     const stage = state.authStage;
 
+    /* The card is taken before the account exists, so somebody landing here
+       with the trial already running is not saving their progress, they are
+       collecting something they have paid for. Worth saying, because this is
+       the one screen standing between a charge and the thing charged for. */
+    const paid = !!state.purchased && !currentUser;
+    const headTitle = signin
+      ? "onboarding.auth.signinTitle"
+      : paid ? "onboarding.auth.paidTitle" : "onboarding.auth.createTitle";
+    const headSub = signin
+      ? "onboarding.auth.signinSub"
+      : paid ? "onboarding.auth.paidSub" : "onboarding.auth.createSub";
+
     /** The six boxes, and the one real input lying invisible across them. */
     const otpBoxes = (label) => {
       const digits = ui.otp.split("");
@@ -2508,8 +2522,8 @@ Object.assign(SCREENS, {
     if (stage === "form") {
       return {
         cls: "email",
-        html: `<h1 class="title">${esc(t(signin ? "onboarding.auth.signinTitle" : "onboarding.auth.createTitle"))}</h1>
-          <p class="sub">${esc(t(signin ? "onboarding.auth.emailSigninSub" : "onboarding.auth.emailCreateSub"))}</p>
+        html: `<h1 class="title">${esc(t(headTitle))}</h1>
+          <p class="sub">${esc(t(signin ? "onboarding.auth.emailSigninSub" : paid ? "onboarding.auth.paidSub" : "onboarding.auth.emailCreateSub"))}</p>
           ${msgHtml()}
           <form id="authform" novalidate>
             <div class="fields">
@@ -2539,8 +2553,8 @@ Object.assign(SCREENS, {
 
     /* The way in. Two buttons, one shape, no field asked for yet. */
     return {
-      html: `<h1 class="title">${esc(t(signin ? "onboarding.auth.signinTitle" : "onboarding.auth.createTitle"))}</h1>
-        <p class="sub">${esc(t(signin ? "onboarding.auth.signinSub" : "onboarding.auth.createSub"))}</p>
+      html: `<h1 class="title">${esc(t(headTitle))}</h1>
+        <p class="sub">${esc(t(headSub))}</p>
         <div class="divider"><i></i><span>${esc(t(signin ? "onboarding.auth.dividerSignIn" : "onboarding.auth.dividerSignUp"))}</span><i></i></div>
         ${msgHtml()}
         <div class="auth-stack">
@@ -2985,9 +2999,10 @@ async function afterAuth(user, resume) {
   ui.otp = "";
   ui.newPw = "";
   setMsg(null);
-  /* Back to the paywall, so cancelling the sheet leaves them looking at the
-     plans rather than at the account screen they have already finished. */
-  state.i = flow().indexOf(S.PLAN);
+  /* Already paid, so the account was the last thing owed and they are done.
+     Otherwise back to the paywall, so cancelling the sheet leaves them looking
+     at the plans rather than at the account screen they have just finished. */
+  state.i = flow().indexOf(state.purchased ? S.DONE : S.PLAN);
   save();
   render();
   if (resume && !state.purchased) startCheckout();
@@ -3172,7 +3187,11 @@ let purchasesPromise = null;
 async function getPurchases() {
   if (!purchasesPromise) {
     purchasesPromise = (async () => {
-      const { Purchases } = await import("https://esm.sh/@revenuecat/purchases-js");
+      /* Pinned. The alias that carries a pre-account purchase onto the new
+         account rides on `identifyUser`, which the SDK still marks
+         experimental, so an unpinned CDN import could change the checkout
+         under a live page with no deploy to point at. */
+      const { Purchases } = await import("https://esm.sh/@revenuecat/purchases-js@1.62.0");
       const id = currentUser ? currentUser.id : anonBillingId(Purchases);
       try { return Purchases.configure(RCB_PUBLIC_KEY, id); }
       catch (e) { return Purchases.getSharedInstance(); }
@@ -3181,19 +3200,39 @@ async function getPurchases() {
   return purchasesPromise;
 }
 
-/* Moving the browsing shopper onto the account they just made. Anonymous to
-   real is an alias in RevenueCat rather than a new customer, which is what
-   keeps a purchase started before signing in attached afterwards. Failure is
-   swallowed on purpose: checkout re-checks the id it is charging, so the worst
-   case is the alias missing, never a charge on the wrong customer. */
+/* Moving the shopper onto the account they just made. This has to be
+   `identifyUser` and not `changeUser`: `changeUser` only replaces the id the
+   SDK holds in memory, so a card charged before signing up would stay on the
+   anonymous customer and the new account would own nothing. `identifyUser`
+   asks RevenueCat to alias the two, which is what carries the purchase across,
+   and it aliases only while the old id is anonymous, so signing in over a real
+   id stays a plain switch. */
 async function bindBillingToUser(user) {
   if (!purchasesPromise) return;
+  const purchases = await purchasesPromise.catch(() => null);
+  if (!purchases) return;
   try {
-    const purchases = await purchasesPromise;
-    if (purchases && purchases.isAnonymous && purchases.isAnonymous()) {
-      await purchases.changeUser(user.id);
+    if (purchases.isAnonymous && purchases.isAnonymous()) {
+      try {
+        await purchases.identifyUser(user.id);
+      } catch (e) {
+        /* One retry, because this is the single step deciding whether a trial
+           already paid for reaches the account that was just made. */
+        await new Promise((r) => setTimeout(r, 1200));
+        await purchases.identifyUser(user.id);
+      }
     }
-  } catch (e) { /* checkout guards the id itself */ }
+    /* Put the address on the customer now that there is one: checkout may
+       have collected a different one, or none at all. */
+    if (user.email) {
+      try { await purchases.setAttributes({ $email: user.email }); } catch (e) {}
+    }
+  } catch (e) {
+    /* Last resort, so the rest of the page is at least talking about the right
+       customer. A purchase made before signing up is left on the anonymous one
+       and has to be merged by hand. */
+    try { await purchases.changeUser(user.id); } catch (e2) {}
+  }
 }
 
 /* Held as a promise rather than a flag so a checkout that starts while the
@@ -3224,11 +3263,9 @@ function loadOfferings() {
 
 async function startCheckout() {
   if (ui.busy) return;
-  /* The plan is chosen before there is an account, so a card can only be
-     charged once there is a user to attach the subscription to. Anyone who
-     gets here without one is sent to make one, and the purchase resumes on
-     the other side rather than being dropped. */
-  if (!currentUser) { state.i = flow().indexOf(S.ACCOUNT); save(); render(); return; }
+  /* No account needed to reach the card. The charge lands on the anonymous
+     customer the SDK was started with, and `bindBillingToUser` aliases that
+     customer onto the real account as soon as one exists. */
   ui.busy = true;
   setMsg(null);
   render();
@@ -3247,16 +3284,20 @@ async function startCheckout() {
        because the reporting failed is a worse outcome. */
     try {
       const attrs = { fb_click_id: fbClickId(), fb_browser_id: fbBrowserId() };
-      if (currentUser.email) attrs["$email"] = currentUser.email;
+      if (currentUser && currentUser.email) attrs["$email"] = currentUser.email;
       await purchases.setAttributes(attrs);
     } catch (e) { /* attribution is best effort, the sale is not */ }
+    /* Undefined on the way in means the sheet asks for the address itself,
+       which is the usual case now that the card comes before the account. */
     await purchases.purchase({
       rcPackage: pkg,
-      customerEmail: currentUser.email || undefined,
+      customerEmail: (currentUser && currentUser.email) || undefined,
     });
     state.purchased = true;
     ui.busy = false;
-    state.i = flow().indexOf(S.DONE);
+    /* Paying is no longer the last thing owed: a shopper who came through the
+       card without an account still has to make one to use the trial. */
+    state.i = flow().indexOf(currentUser ? S.DONE : S.ACCOUNT);
     save();
     render();
   } catch (e) {
