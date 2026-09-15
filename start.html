@@ -884,6 +884,22 @@ function fbBrowserId() {
   return readCookie("_fbp");
 }
 
+/* ---- who they are, when there is no click id ----------------------
+   Most visitors will not hand us a click id. The cookie gets blocked, the
+   pixel gets stripped, or they came from somewhere that is not an ad at all.
+   The address and the user agent are the pair Meta falls back on, and they
+   are the difference between a sale it can attach to a person and one it
+   files away unmatched.
+
+   The browser does not know its own address, so it is asked for once on
+   arrival and kept for the checkout that happens several screens later.
+   Nothing waits on it: if it never answers we report the sale without it. */
+let clientIp = null;
+fetch("/api/ip", { cache: "no-store" })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((d) => { if (d && d.ip) clientIp = d.ip; })
+  .catch(() => { /* one identifier short is not a reason to break the funnel */ });
+
 /* One table of timings for the whole flow, so a chart that is uncovered, a
    caption that names it and a figure that arrives beneath it are all reading
    off the same clock. These are the app's, to the millisecond. */
@@ -3391,7 +3407,12 @@ async function startCheckout() {
        sale that reports without its ad is a worse number, a sale refused
        because the reporting failed is a worse outcome. */
     try {
-      const attrs = { fb_click_id: fbClickId(), fb_browser_id: fbBrowserId() };
+      const attrs = {
+        fb_click_id: fbClickId(),
+        fb_browser_id: fbBrowserId(),
+        client_ip: clientIp,
+        client_user_agent: navigator.userAgent,
+      };
       if (currentUser && currentUser.email) attrs["$email"] = currentUser.email;
       await purchases.setAttributes(attrs);
     } catch (e) { /* attribution is best effort, the sale is not */ }
