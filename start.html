@@ -487,6 +487,13 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .tl .txt{flex:1;padding-bottom:14px}
 .tl .txt b{display:block;font-size:15px;font-weight:700}
 .tl .txt span{display:block;font-size:13px;color:var(--text-secondary);margin-top:2px;line-height:18px}
+/* What the plan screen shows instead of the timeline when the store has no
+   trial to give: the app's own subtitle and value list, ported as-is. */
+.plan-sub{font-size:15px;line-height:22px;color:var(--text-secondary);text-align:center;margin:12px auto 0;max-width:300px}
+.values{margin-top:28px;display:flex;flex-direction:column;gap:14px}
+.values div{display:flex;align-items:center;gap:12px}
+.values i{width:28px;height:28px;border-radius:14px;background:var(--green);display:flex;align-items:center;justify-content:center;flex:none}
+.values span{flex-shrink:1;font-size:15px}
 .plans{display:flex;gap:10px;margin-top:22px}
 /* A column rather than a button's usual centred content, because the app
    top-aligns the card and a short card sitting level with a tall one is the
@@ -749,6 +756,8 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .timeline{margin-top:14px}
   .tl .txt{padding-bottom:7px}
   .tl .txt span{line-height:17px}
+  .plan-sub{margin-top:8px;line-height:20px}
+  .values{margin-top:16px;gap:10px}
   .plans{margin-top:12px}
   .plan{padding:11px}
   .plan .tagline{margin-top:7px}
@@ -1216,6 +1225,9 @@ const T = {
   "plan.perWeekEquivalent": "about {price} per week",
   "plan.priceUnavailable": "Price unavailable",
 
+  "paywall.title.neutral": "Subscribe to keep scanning.",
+  "paywall.subtitle": "Subscribe to keep unlimited scans, better alternatives, additive alerts, and full score breakdowns.",
+  "paywall.subscribe": "Subscribe",
   "paywall.value.scans": "Unlimited product scans",
   "paywall.value.alternatives": "Better alternative suggestions",
   "paywall.value.alerts": "Additive & recall alerts",
@@ -1228,6 +1240,8 @@ const T = {
   "onboarding.auth.createSub": "Create an account to keep your preferences and scan history.",
   "onboarding.auth.paidTitle": "Your trial has started.",
   "onboarding.auth.paidSub": "Create an account to use it. Your trial is attached the moment you do.",
+  "onboarding.auth.paidTitleNoTrial": "Your subscription is active.",
+  "onboarding.auth.paidSubNoTrial": "Create an account to use it. Your subscription is attached the moment you do.",
   "onboarding.auth.signinTitle": "Welcome back.",
   "onboarding.auth.signinSub": "Sign in to pick up where you left off.",
   "onboarding.auth.dividerSignUp": "SIGN UP",
@@ -1565,7 +1579,7 @@ const state = {
   referralCode: "", plan: "annual",
   authMode: "signup", authStage: "methods", email: "", password: "",
   countryCode: guessCountry(), language: "en",
-  prefsSaved: false, purchased: false,
+  prefsSaved: false, purchased: false, purchasedTrial: true,
 };
 try {
   const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
@@ -2258,6 +2272,7 @@ T["onboarding.done.androidStore"] = "Google Play";
    knows them by the account made a screen ago. Saying so here is the
    difference between a paid trial and a paid trial someone uses. */
 T["onboarding.done.sub"] = "Download the app and sign in with the account you just made. Your trial is already on it.";
+T["onboarding.done.subNoTrial"] = "Download the app and sign in with the account you just made. Your subscription is already on it.";
 T["onboarding.done.signInWith"] = "Sign in with";
 const IOS_URL = "https://apps.apple.com/app/id6785015345";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
@@ -2318,6 +2333,34 @@ function pkgPerPeriod(pkg, periods) {
       style: "currency", currency: currency,
     }).format(micros / 1e6 / periods);
   } catch (e) { return null; }
+}
+/* How many free days this package actually offers, which is not a constant.
+   RevenueCat prices offerings per customer, so the trial phase comes back
+   null for anyone the eligibility rules have already spent it on, and that
+   is every returning customer. Promising a trial we cannot deliver is how
+   a paywall charges someone who was told they would not be charged. */
+function pkgTrialDays(pkg) {
+  if (!pkg) return null;
+  const p = pkg.webBillingProduct || pkg.rcBillingProduct || pkg.product || {};
+  const opt = p.defaultSubscriptionOption || p.defaultPurchaseOption || {};
+  const trial = p.freeTrialPhase || opt.trial || null;
+  if (!trial) return null;
+  const period = trial.period || trial.periodDuration || null;
+  if (period && typeof period === "object" && typeof period.number === "number") {
+    const n = period.number;
+    const unit = String(period.unit || "").toLowerCase();
+    if (unit.indexOf("day") === 0) return n;
+    if (unit.indexOf("week") === 0) return n * 7;
+    if (unit.indexOf("month") === 0) return n * 30;
+    if (unit.indexOf("year") === 0) return n * 365;
+    return null;
+  }
+  const iso = typeof period === "string" ? period : trial.periodDuration;
+  if (typeof iso !== "string") return null;
+  const m = iso.match(/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$/);
+  if (!m) return null;
+  const days = (+m[1] || 0) * 365 + (+m[2] || 0) * 30 + (+m[3] || 0) * 7 + (+m[4] || 0);
+  return days > 0 ? days : null;
 }
 
 Object.assign(SCREENS, {
@@ -2456,12 +2499,15 @@ Object.assign(SCREENS, {
        collecting something they have paid for. Worth saying, because this is
        the one screen standing between a charge and the thing charged for. */
     const paid = !!state.purchased && !currentUser;
+    const trialed = state.purchasedTrial !== false;
     const headTitle = signin
       ? "onboarding.auth.signinTitle"
-      : paid ? "onboarding.auth.paidTitle" : "onboarding.auth.createTitle";
+      : paid ? (trialed ? "onboarding.auth.paidTitle" : "onboarding.auth.paidTitleNoTrial")
+      : "onboarding.auth.createTitle";
     const headSub = signin
       ? "onboarding.auth.signinSub"
-      : paid ? "onboarding.auth.paidSub" : "onboarding.auth.createSub";
+      : paid ? (trialed ? "onboarding.auth.paidSub" : "onboarding.auth.paidSubNoTrial")
+      : "onboarding.auth.createSub";
 
     /** The six boxes, and the one real input lying invisible across them. */
     const otpBoxes = (label) => {
@@ -2607,6 +2653,11 @@ Object.assign(SCREENS, {
     const chosen = state.plan === "annual" ? annual : monthly;
     const chosenPrice = pkgPrice(chosen);
     const unavailable = t("plan.priceUnavailable");
+    /* The trial the store is actually offering this customer, which is null
+       for anyone who has already spent one, here or in the App Store. Until
+       the offering loads we show the trial we intend to give, so the screen
+       does not flicker from one paywall into the other. */
+    const trialDays = ui.packages ? pkgTrialDays(chosen) : TRIAL_DAYS;
 
     const dot = (bg, glyph) => `<span class="dot" style="background:${bg}">${glyph}</span>`;
     const tick = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -2622,7 +2673,7 @@ Object.assign(SCREENS, {
       /* Dated in the language the sentence around it is written in, not the
          browser's. A Greek browser reading English copy was being told the
          trial ends "18 Sep" in Greek, half a sentence in each language. */
-      billingDate = new Date(Date.now() + TRIAL_DAYS * 86400000)
+      billingDate = new Date(Date.now() + trialDays * 86400000)
         .toLocaleDateString(document.documentElement.lang || "en-US",
           { month: "short", day: "numeric" });
     } catch (e) { billingDate = null; }
@@ -2630,14 +2681,14 @@ Object.assign(SCREENS, {
     const rows = [
       [dot("#F58A3C", tick), t("onboarding.plan.today"), t("onboarding.plan.todayDesc"), "#F0C39A"],
     ];
-    if (TRIAL_DAYS >= 2) {
-      rows.push([dot("#FCEFD6", clock), t("onboarding.plan.reminder", { day: TRIAL_DAYS - 1 }), t("onboarding.plan.reminderDesc"), "#E7DFCF"]);
+    if (trialDays >= 2) {
+      rows.push([dot("#FCEFD6", clock), t("onboarding.plan.reminder", { day: trialDays - 1 }), t("onboarding.plan.reminderDesc"), "#E7DFCF"]);
     }
     rows.push([
       dot("#E7DFCF", cal),
       billingDate
-        ? t("onboarding.plan.endsDated", { days: TRIAL_DAYS, date: billingDate })
-        : t("onboarding.plan.ends", { days: TRIAL_DAYS }),
+        ? t("onboarding.plan.endsDated", { days: trialDays, date: billingDate })
+        : t("onboarding.plan.ends", { days: trialDays }),
       t("onboarding.plan.endsDesc"),
       null,
     ]);
@@ -2659,29 +2710,40 @@ Object.assign(SCREENS, {
       </button>`;
     };
 
-    const legal = chosenPrice
-      ? t(TRIAL_DAYS === 1 ? "paywall.legal.trial_one" : "paywall.legal.trial_other", { count: TRIAL_DAYS, price: chosenPrice })
+    const legal = trialDays && chosenPrice
+      ? t(trialDays === 1 ? "paywall.legal.trial_one" : "paywall.legal.trial_other", { count: trialDays, price: chosenPrice })
       : t("paywall.legal");
 
-    return {
-      html: `<h1 class="title">${esc(t("onboarding.plan.title"))}</h1>
-        ${msgHtml()}
-        <div class="timeline">
+    /* With a trial, the screen is a promise about what happens over the next
+       few days. Without one, it is a plain offer, so the timeline, the two
+       reassurances and the free-trial wording all come off rather than lie. */
+    const body = trialDays
+      ? `<div class="timeline">
           ${rows.map(([mark, head, desc, line]) => `<div class="tl">
             <span class="rail">${mark}${line ? `<span class="line" style="background:${line}"></span>` : ""}</span>
             <span class="txt"><b>${esc(head)}</b><span>${esc(desc)}</span></span>
           </div>`).join("")}
-        </div>
+        </div>`
+      : `<p class="plan-sub">${esc(t("paywall.subtitle"))}</p>
+        <div class="values">
+          ${["scans", "alternatives", "alerts", "receipts"].map((k) =>
+            `<div><i>${tick}</i><span>${esc(t("paywall.value." + k))}</span></div>`).join("")}
+        </div>`;
+
+    return {
+      html: `<h1 class="title">${esc(t(trialDays ? "onboarding.plan.title" : "paywall.title.neutral"))}</h1>
+        ${msgHtml()}
+        ${body}
         <div class="plans" role="radiogroup" aria-label="${esc(t("onboarding.plan.title"))}">
           ${planCard("annual", annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue")}
           ${planCard("monthly", monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null)}
         </div>
-        ${reassure(t("onboarding.plan.noChargeToday"), "under")}`,
+        ${trialDays ? reassure(t("onboarding.plan.noChargeToday"), "under") : ""}`,
       /* The cancellation promise is pinned to the button rather than left at
          the end of the scroll, because it is the answer to the question the
          button asks. The legal line closes underneath it. */
-      dock: reassure(t("onboarding.plan.cancelAnytime"), "docked")
-        + cta(t("onboarding.trial.cta"), ui.busy || !chosen, "buy")
+      dock: (trialDays ? reassure(t("onboarding.plan.cancelAnytime"), "docked") : "")
+        + cta(t(trialDays ? "onboarding.trial.cta" : "paywall.subscribe"), ui.busy || !chosen, "buy")
         + `<p class="legal">${esc(legal)}</p>`,
       after: loadOfferings,
     };
@@ -2697,7 +2759,7 @@ Object.assign(SCREENS, {
           </svg>
         </div>
         <h1 class="title">${esc(t("onboarding.done.title"))}</h1>
-        <p class="sub">${esc(t("onboarding.done.sub"))}</p>
+        <p class="sub">${esc(t(state.purchasedTrial === false ? "onboarding.done.subNoTrial" : "onboarding.done.sub"))}</p>
         ${currentUser && currentUser.email ? `<div class="done-acct">
           <span class="done-acct-label">${esc(t("onboarding.done.signInWith"))}</span>
           <span class="done-acct-email">${esc(currentUser.email)}</span>
@@ -3340,6 +3402,9 @@ async function startCheckout() {
       customerEmail: (currentUser && currentUser.email) || undefined,
     });
     state.purchased = true;
+    /* Whether it was a trial or a charge, remembered here because the screens
+       after this one talk about it and the offering is gone by then. */
+    state.purchasedTrial = pkgTrialDays(pkg) != null;
     ui.busy = false;
     /* Paying is no longer the last thing owed: a shopper who came through the
        card without an account still has to make one to use the trial. */
