@@ -234,6 +234,14 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .cta:active{transform:scale(.98);opacity:.92}
 .cta[disabled]{opacity:.35;cursor:default;box-shadow:none}
 .cta.outline{background:#fff;border:1px solid var(--border);color:var(--text);font-weight:600}
+/* The store buttons wear the badge the landing page wears, so the handoff
+   looks like the same company. Same two-line lockup, sat inside the dock's
+   full-width pill rather than the landing page's inline one. */
+.cta.store{gap:12px;text-decoration:none}
+.cta.store svg{width:24px;height:24px;flex:none;fill:currentColor}
+.cta.store .txt{display:flex;flex-direction:column;line-height:1.15;text-align:left}
+.cta.store .txt small{font-size:11px;font-weight:500;opacity:.72;letter-spacing:.1px}
+.cta.store .txt strong{font-size:17px;font-weight:600;letter-spacing:-.2px}
 .link{display:block;width:100%;text-align:center;margin-top:12px;font-size:14px;font-weight:500;color:var(--text-secondary);text-decoration:none;background:none}
 .spin{width:17px;height:17px;border-radius:9px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite}
 
@@ -606,10 +614,21 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   border:1px solid var(--border);background:#fff;
   font-size:14px;font-weight:500;color:var(--text-secondary);letter-spacing:.2px;
 }
-.done-wrap{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:56vh}
+/* Nothing is docked on this screen, so the block owns the whole area and
+   sits in the middle of it rather than hanging off the bottom. */
+.done-wrap{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:100%}
 .done-wrap .mark{width:88px;height:88px;border-radius:44px;background:var(--green-bg);display:flex;align-items:center;justify-content:center}
 .done-wrap h1{font-size:30px;font-weight:700;letter-spacing:-.6px;margin:24px 0 0}
 .done-wrap p{font-size:15px;line-height:22px;color:var(--text-secondary);margin:12px 0 0;max-width:280px}
+/* The email is the one thing on this screen they have to carry into the
+   app, so it gets a card of its own rather than a line in the paragraph. */
+.done-acct{
+  margin-top:18px;max-width:300px;padding:10px 16px;border-radius:14px;
+  border:1px solid var(--border);background:#fff;
+}
+.done-acct-label{display:block;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text-secondary)}
+.done-acct-email{display:block;margin-top:3px;font-size:15px;font-weight:600;word-break:break-all}
+.done-stores{width:100%;max-width:320px;margin-top:26px;display:flex;flex-direction:column;gap:10px}
 
 /* The legal footer has to be on the page, but it is not what anyone came for, so
    it is held to a single quiet strip and the flow keeps the rest of the height. */
@@ -765,6 +784,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .calib-row{padding:8px 0}
   .done-wrap h1{font-size:26px;margin-top:18px}
   .done-wrap p{margin-top:9px}
+  .done-wrap .mark{width:72px;height:72px;border-radius:36px}
+  .done-acct{margin-top:14px;padding:9px 14px}
+  .done-stores{margin-top:20px}
 }
 </style>
 </head>
@@ -2221,11 +2243,18 @@ Object.assign(SCREENS, {
 /* ---- copy the web needs and the app does not ------------------------
    The app's last screen drops you into the scanner. On the web there is
    no scanner to drop into, so the last screen has to hand over to a
-   store. These two are the only strings written here rather than lifted
+   store. These are the only strings written here rather than lifted
    from the app, and they are kept in T so every string still has one
    home. */
-T["onboarding.done.ios"] = "Download for iPhone";
-T["onboarding.done.android"] = "Download for Android";
+T["onboarding.done.iosSmall"] = "Download on the";
+T["onboarding.done.iosStore"] = "App Store";
+T["onboarding.done.androidSmall"] = "Get it on";
+T["onboarding.done.androidStore"] = "Google Play";
+/* The app is where the thing they paid for actually happens, and it only
+   knows them by the account made a screen ago. Saying so here is the
+   difference between a paid trial and a paid trial someone uses. */
+T["onboarding.done.sub"] = "Download the app and sign in with the account you just made. Your trial is already on it.";
+T["onboarding.done.signInWith"] = "Sign in with";
 const IOS_URL = "https://apps.apple.com/app/id6785015345";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
 
@@ -2664,9 +2693,21 @@ Object.assign(SCREENS, {
         </div>
         <h1 class="title">${esc(t("onboarding.done.title"))}</h1>
         <p class="sub">${esc(t("onboarding.done.sub"))}</p>
+        ${currentUser && currentUser.email ? `<div class="done-acct">
+          <span class="done-acct-label">${esc(t("onboarding.done.signInWith"))}</span>
+          <span class="done-acct-email">${esc(currentUser.email)}</span>
+        </div>` : ""}
+        <div class="done-stores">
+          <a class="cta store" href="${IOS_URL}">
+            <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+            <span class="txt"><small>${esc(t("onboarding.done.iosSmall"))}</small><strong>${esc(t("onboarding.done.iosStore"))}</strong></span>
+          </a>
+          <a class="cta store outline" href="${PLAY_URL}">
+            <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+            <span class="txt"><small>${esc(t("onboarding.done.androidSmall"))}</small><strong>${esc(t("onboarding.done.androidStore"))}</strong></span>
+          </a>
+        </div>
       </div>`,
-    dock: `<a class="cta" href="${IOS_URL}">${esc(t("onboarding.done.ios"))}</a>
-      <a class="cta outline" href="${PLAY_URL}" style="margin-top:10px">${esc(t("onboarding.done.android"))}</a>`,
   }),
 });
 
