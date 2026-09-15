@@ -2246,6 +2246,10 @@ Object.assign(SCREENS, {
    store. These are the only strings written here rather than lifted
    from the app, and they are kept in T so every string still has one
    home. */
+/* The app quotes the annual plan by the week. The web quotes it by the day,
+   because a day is the unit the price stops sounding like a subscription in.
+   The app still says per week, so the two paywalls differ on this line. */
+T["plan.perDayEquivalent"] = "about {price} per day";
 T["onboarding.done.iosSmall"] = "Download on the";
 T["onboarding.done.iosStore"] = "App Store";
 T["onboarding.done.androidSmall"] = "Get it on";
@@ -2301,7 +2305,8 @@ function pkgPrice(pkg) {
   const c = p.currentPrice || p.price || {};
   return c.formattedPrice || p.priceString || null;
 }
-function pkgWeekly(pkg, weeks) {
+/* The price cut into however many periods the card wants to quote. */
+function pkgPerPeriod(pkg, periods) {
   if (!pkg) return null;
   const p = pkg.webBillingProduct || pkg.rcBillingProduct || pkg.product || {};
   const c = p.currentPrice || p.price || {};
@@ -2311,7 +2316,7 @@ function pkgWeekly(pkg, weeks) {
   try {
     return new Intl.NumberFormat(navigator.language || "en", {
       style: "currency", currency: currency,
-    }).format(micros / 1e6 / weeks);
+    }).format(micros / 1e6 / periods);
   } catch (e) { return null; }
 }
 
@@ -2637,9 +2642,9 @@ Object.assign(SCREENS, {
       null,
     ]);
 
-    const planCard = (key, pkg, labelKey, per, weeks, tag) => {
+    const planCard = (key, pkg, labelKey, per, days, tag) => {
       const price = pkgPrice(pkg);
-      const weekly = pkgWeekly(pkg, weeks);
+      const daily = pkgPerPeriod(pkg, days);
       return `<button class="plan${state.plan === key ? " on" : ""}" type="button" role="radio"
           aria-checked="${state.plan === key}" data-act="plan" data-value="${key}">
         <span class="top">
@@ -2647,7 +2652,7 @@ Object.assign(SCREENS, {
           <span class="col">
             <span class="pname">${esc(t(labelKey))}</span>
             <span class="psub">${esc(price ? price + t(per) : unavailable)}</span>
-            ${weekly ? `<span class="pweek">${esc(t("plan.perWeekEquivalent", { price: weekly }))}</span>` : ""}
+            ${daily ? `<span class="pweek">${esc(t("plan.perDayEquivalent", { price: daily }))}</span>` : ""}
           </span>
         </span>
         ${tag ? `<span class="tagline">${esc(t(tag))}</span>` : ""}
@@ -2668,8 +2673,8 @@ Object.assign(SCREENS, {
           </div>`).join("")}
         </div>
         <div class="plans" role="radiogroup" aria-label="${esc(t("onboarding.plan.title"))}">
-          ${planCard("annual", annual, "onboarding.plan.annual", "plan.perYear", 52, "onboarding.plan.bestValue")}
-          ${planCard("monthly", monthly, "onboarding.plan.monthly", "plan.perMonth", 4.345, null)}
+          ${planCard("annual", annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue")}
+          ${planCard("monthly", monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null)}
         </div>
         ${reassure(t("onboarding.plan.noChargeToday"), "under")}`,
       /* The cancellation promise is pinned to the button rather than left at
