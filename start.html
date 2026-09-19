@@ -857,6 +857,7 @@ const STATE_KEY = "underneath_funnel_v3";
 const DEVICE_KEY = "underneath_device_id";
 const RC_ANON_KEY = "underneath_rc_anon_id";
 const FBC_KEY = "underneath_fbc";
+const FBP_KEY = "underneath_fbp";
 
 /* ---- which ad sent them -------------------------------------------
    An ad click lands here as ?fbclid=..., and the pixel turns that into the
@@ -880,8 +881,33 @@ function fbClickId() {
   try { return localStorage.getItem(FBC_KEY); } catch (e) { return null; }
 }
 
+/* The browser id is written by the pixel, so an ad blocker takes it along with
+   everything else and the sale arrives carrying one identifier fewer. Making
+   one by hand costs nothing, so the blocked half of the audience stops being
+   the half we can say least about.
+
+   Worth knowing what this is and is not. A click id we write ourselves is the
+   real thing, because the value came from Meta in the URL. A browser id we
+   write ourselves is only ever ours: Meta has no record of a pixel it never
+   ran, so it matches no earlier visit. What it does is hold one person's
+   events together across the funnel and count as another identifier on the
+   sale. Smaller than the click id, and free.
+
+   The cookie wins whenever it exists, so nobody whose pixel loaded normally
+   gets a second identity. */
 function fbBrowserId() {
-  return readCookie("_fbp");
+  const cookie = readCookie("_fbp");
+  if (cookie) return cookie;
+  try {
+    let made = localStorage.getItem(FBP_KEY);
+    if (!made) {
+      made = "fb.1." + Date.now() + "." + Math.floor(Math.random() * 1e10);
+      localStorage.setItem(FBP_KEY, made);
+    }
+    return made;
+  } catch (e) {
+    return null; // private mode, nothing to persist it in
+  }
 }
 
 /* ---- who they are, when there is no click id ----------------------
