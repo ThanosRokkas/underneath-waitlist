@@ -1592,6 +1592,57 @@ const PROGRESS_STEPS = [
 /** No back button, no progress bar. */
 const CHROMELESS = [S.HERO, S.CALIB, S.DONE];
 
+/* ---- where they stop ----------------------------------------------
+   Twenty three screens stand between the ad and the card, and until now
+   the only thing reported from any of them was the first. An ad that
+   sent four hundred readers and sold nothing looked exactly like an ad
+   that sent four hundred readers who all left on the hero, and there
+   was no way to tell those apart.
+
+   REVIEWS is the screen after the last question, so reaching it means
+   the quiz was answered. PLAN is the screen with the price on it. The
+   gap between those two numbers, and between them and the sale, is the
+   whole drop off curve.
+
+   Reported through our own /api/funnel rather than the pixel, for the
+   same reason the sale is reported from the webhook: fbq is the first
+   thing a blocker removes, and it removes it for exactly the readers we
+   can otherwise say least about. */
+const CHECKPOINTS = {
+  [S.REVIEWS]: "Lead",
+  [S.PLAN]: "InitiateCheckout",
+};
+const CHECKPOINT_KEY = "underneath_checkpoints";
+
+/* Once per browser per checkpoint. Someone stepping back to change an
+   answer has not arrived twice, and the event id is the same on a retry,
+   so a cleared store cannot inflate the count either. */
+function reportCheckpoint(screenId) {
+  const event = CHECKPOINTS[screenId];
+  if (!event) return;
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem(CHECKPOINT_KEY) || "{}"); } catch (e) { /* ignore */ }
+  if (seen[event]) return;
+  seen[event] = true;
+  try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(seen)); } catch (e) { /* private mode */ }
+  try {
+    fetch("/api/funnel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      /* The next tap may close this page before the request is done, and
+         the checkpoint is worth nothing if it only survives readers who
+         hesitated. */
+      keepalive: true,
+      body: JSON.stringify({
+        event,
+        eventId: deviceId() + ":" + event,
+        fbc: fbClickId(),
+        fbp: fbBrowserId(),
+      }),
+    }).catch(() => { /* measuring the funnel is not the funnel */ });
+  } catch (e) { /* ignore */ }
+}
+
 /** The region of the browser's own locale, nothing more invasive. */
 function guessCountry() {
   const tag = navigator.language || "en-US";
@@ -2895,6 +2946,10 @@ function render() {
   paintBar(f, idx);
   window.scrollTo(0, 0);
   save();
+  /* Every arrival goes through here, whether it came from the next button,
+     the back button or a resumed draft, so this is the one place a screen
+     cannot be reached without being counted. */
+  reportCheckpoint(id);
   if (screen.after) screen.after();
 }
 
