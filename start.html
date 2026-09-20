@@ -1851,6 +1851,39 @@ function reportCheckpoint(screenId) {
   } catch (e) { /* ignore */ }
 }
 
+/* Per screen drop off, recorded in our own database rather than the pixel.
+   The two checkpoints above are thirty one screens apart, so between them a
+   reader who left on the first question and one who left on the last look the
+   same. Twelve of those screens are the symptom round on its own.
+
+   Not sent to Meta as custom events: only standard events can be optimised on,
+   so thirty six of them would corrupt the signal the ad set is bidding with to
+   buy a report we can run ourselves. */
+const STEP_URL = SUPABASE_URL + "/functions/v1/funnel-step";
+const STEP_KEY = "underneath_steps";
+
+/* Once per browser per screen, for the same reason as the checkpoints: walking
+   back to change an answer is not a second arrival. The server holds the same
+   rule on a unique index, so a cleared store cannot inflate the count either. */
+function reportStep(screenId, position) {
+  if (!screenId) return;
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem(STEP_KEY) || "{}"); } catch (e) { /* ignore */ }
+  if (seen[screenId]) return;
+  seen[screenId] = true;
+  try { localStorage.setItem(STEP_KEY, JSON.stringify(seen)); } catch (e) { /* private mode */ }
+  try {
+    fetch(STEP_URL, {
+      method: "POST",
+      headers: fnHeaders(),
+      /* The next tap may close this page before the request lands, and the
+         readers who leave are the entire point of the measurement. */
+      keepalive: true,
+      body: JSON.stringify({ deviceId: deviceId(), screen: screenId, position }),
+    }).catch(() => { /* measuring the funnel is not the funnel */ });
+  } catch (e) { /* ignore */ }
+}
+
 /** The region of the browser's own locale, nothing more invasive. */
 function guessCountry() {
   const tag = navigator.language || "en-US";
@@ -3253,6 +3286,7 @@ function render() {
      the back button or a resumed draft, so this is the one place a screen
      cannot be reached without being counted. */
   reportCheckpoint(id);
+  reportStep(id, idx);
   if (screen.after) screen.after();
 }
 
