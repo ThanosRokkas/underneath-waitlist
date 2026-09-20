@@ -37,6 +37,11 @@ src="https://www.facebook.com/tr?id=1483844846885965&ev=PageView&noscript=1"></n
 /* The app's palette, verbatim from src/constants/theme.ts. */
 :root{
   --bg:#FAF5EC; --card:#FFFFFF; --paper-deep:#F1EADC; --border:#ECE6DA; --rule:#ECE6DA;
+  /* The drawn edge of an answer. --border is a hairline meant to sit on beige
+     and all but disappears on white, which is what made the white answers read
+     as floating blobs. Rise draws its options in #BDBDBD; this is that weight
+     of grey warmed to the cream. */
+  --line:#CFC5B3;
   --text:#1A2238; --text-secondary:#6B7280; --text-muted:#9AA0AB; --text-faint:#C2BBAD;
   --navy:#1A2238; --accent:#F58A3C; --accent-dark:#F47B45; --accent-wash:#FDEEE2;
   --green:#3E9C6D; --green-bg:#E6F4EC; --green-text:#2E7D52;
@@ -46,6 +51,17 @@ src="https://www.facebook.com/tr?id=1483844846885965&ev=PageView&noscript=1"></n
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   --col:420px;
+  /* The vertical air, as one dial.
+     The design used to switch between two fixed spacings at 900px of viewport,
+     and the tight one was drawn to fit the longest screen on a 667pt handset.
+     That made it the spacing every phone got, so an 844pt screen ran its
+     content to two thirds of the height and left the last third empty, and a
+     desktop window left half. The air is now read off the room instead of
+     picked from two values: nothing at 660, a little more with every pixel
+     above it, and capped so a very tall window stops stretching and simply has
+     margins. Multiplied per property below, because a gap between two rows and
+     the height of a chart do not want to grow at the same rate. */
+  --air:clamp(0px, calc((100dvh - 660px) / 19), 34px);
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -81,7 +97,10 @@ img{max-width:100%}
 }
 .back:active{background:var(--paper-deep)}
 .back[data-hidden="1"]{visibility:hidden}
-.bar{flex:1;display:flex;gap:4px;height:4px}
+/* Twenty two segments now rather than ten, so the gap comes in: at 4px the
+   spacing took more of the track than the segments did and the bar read as
+   a dotted line instead of a measure of how far along the reader is. */
+.bar{flex:1;display:flex;gap:2.5px;height:4px}
 .bar span{flex:1;background:var(--progress-bg);border-radius:2px;transition:background .3s ease}
 .bar span.on{background:var(--accent)}
 
@@ -92,8 +111,21 @@ img{max-width:100%}
    overflow becomes a scroll of this box rather than content the reader never
    sees. Nothing is ever lost, and on every size that fits there is nothing to
    scroll. */
-.step{flex:1;min-height:0;overflow:auto;padding:calc(var(--safe-top) + 112px) 24px 10px}
-.step.chromeless{padding-top:calc(var(--safe-top) + 26px)}
+.step{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;
+  padding:calc(var(--safe-top) + 76px + var(--air) * 1.1) 24px calc(8px + var(--air) * .1)}
+.step.chromeless{padding-top:calc(var(--safe-top) + 18px + var(--air) * .25)}
+/* Two spacers, so a screen whose content runs out early is not left sitting in
+   the top half of the room with the rest of it blank. They are flex-basis zero
+   and allowed to shrink, so the instant the content needs the whole height they
+   collapse to nothing and the screen is laid out exactly as it was. The one
+   below takes the larger share: a title that drifts to the middle of the page
+   reads as a slide rather than as a question, so the block settles above centre
+   rather than on it. */
+.step::before,.step::after{content:"";display:block;flex:1 1 0;min-height:0}
+.step::after{flex-grow:1.7}
+.step--hero::before,.step--hero::after,
+.step--sym::before,.step--sym::after,
+.step--compare::before,.step--compare::after{content:none}
 /* The hero draws its own frame edge to edge, so the step gives up its gutter. */
 .step--hero{padding:0;display:flex;flex-direction:column}
 
@@ -135,7 +167,8 @@ img{max-width:100%}
 /* stepTitle / stepSub / stepHint, straight off the app's StyleSheet. The size
    is per screen, so only the parts every title shares live here. */
 h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;margin:0;color:var(--text)}
-.sub{font-size:15px;line-height:22px;color:var(--text-secondary);margin:14px 0 0}
+.sub{font-size:15px;line-height:22px;color:var(--text-secondary);
+  margin:calc(10px + var(--air) * .3) 0 0}
 .hint{font-size:14px;line-height:20px;color:var(--text-secondary);margin:8px 0 0}
 .mono,.field-label,.group-label,.chart-caption,.big-unit{
   font-family:var(--mono);text-transform:uppercase;color:var(--text-muted);
@@ -146,11 +179,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .step--feel h1.title,.step--habits h1.title,.step--upffreq h1.title,
 .step--additives h1.title{font-size:26px}
 .step--plan h1.title{font-size:26px;text-align:center}
-.step--trial h1.title{font-size:28px;text-align:center}
 .step--account h1.title,.step--email h1.title{font-size:29px;text-align:center}
 .step--about h1.title{font-size:30px;line-height:36px}
 .step--reviews h1.title{font-size:30px;line-height:38px}
-.step--referral h1.title{font-size:31px;line-height:38px}
 .group-label{font-size:11px;letter-spacing:1px;margin:24px 0 11px}
 .field-label{font-size:11px;letter-spacing:1px;margin:20px 0 8px}
 .chart-caption{font-size:10px;letter-spacing:1.2px;margin-top:14px;line-height:1.5}
@@ -162,28 +193,104 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .step--feel .hl{color:var(--green-text)}
 .step--stakes .hl{color:var(--danger-text)}
 
+/* thumbs. Two discs rather than two cards, which is how Rise draws the same
+   answer: a card is a thing you read before you press, and a round target is
+   a thing you press. Side by side as equals rather than stacked, where the
+   top one reads as the expected one, and Yup on the left because the run
+   reads left to right and the statements are written to be agreed with.
+   The hand is drawn in currentColor so it inverts with the disc instead of
+   needing a second icon for the chosen state. Pushed to the two edges of the
+   column rather than bunched in the middle, so Nope sits under the left thumb
+   and Yup under the right one and neither has to be aimed for. */
+.thumbs{display:flex;justify-content:space-between;
+  gap:clamp(18px, 7vw, 44px);margin-top:calc(22px + var(--air) * .7)}
+.thumbs .thumb{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:none;border:0;padding:0;color:inherit;
+}
+.thumb-disc{
+  /* The floor is the diameter verified on a 667pt handset; the ceiling is
+     where a target stops being a button and starts being a plate. */
+  width:clamp(104px, calc(104px + var(--air) * 2.6), 160px);aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  background:var(--card);border:1px solid var(--line);
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.thumbs .thumb:active .thumb-disc{background:var(--paper-deep);transform:scale(.96)}
+.thumbs .thumb.on .thumb-disc{background:var(--navy);border-color:var(--navy);color:#fff}
+/* The mark is sized off the disc, so one drawing serves every viewport. */
+.thumb-disc svg{display:block;width:42%;height:42%}
+.thumb-label{font-size:16px;font-weight:600;letter-spacing:-.1px}
+/* The statement is the whole screen, so it gets the room a title gets and
+   is not asked to share it with a line explaining itself. With no sub line
+   and no button, top-packing leaves two thirds of the screen empty under
+   the answers; the auto margins drop them into the middle of whatever room
+   the statement left, so the hands sit where the thumb already is.
+   The reserve below tips that middle upward: split evenly, the pair sat low
+   enough that the gap under the statement read as a missing paragraph. */
+.step--sym{display:flex;flex-direction:column}
+.step--sym h1.title{font-size:28px;line-height:34px}
+.step--sym .thumbs{margin-top:auto;margin-bottom:auto}
+.step--sym::after{content:"";display:block;flex:none;height:10vh}
+/* Counts the round, not the funnel. The bar above counts every question in
+   the quiz and so barely moves across twelve fast screens; this says how far
+   through the fast part you are, which is the thing being asked. */
+.sym-counter{font-size:13px;font-weight:600;letter-spacing:-.1px;color:var(--text-muted);margin:0 0 10px}
+
+/* the lightning round's door. Two rings under a number, pale enough that the
+   number is the only thing with any weight on the screen. */
+.lightning{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;min-height:70vh;padding:0 24px}
+.lightning h1.title{margin:0}
+.lightning .sub{margin-top:10px}
+.count-ring{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  width:clamp(168px, calc(168px + var(--air) * 4.4), 300px);aspect-ratio:1;
+  margin-top:calc(22px + var(--air) * 1.2);
+}
+.count-ring::before,.count-ring::after{content:"";position:absolute;border-radius:50%;background:var(--paper-deep)}
+.count-ring::before{inset:0;opacity:.55}
+.count-ring::after{inset:15%}
+.count-num{
+  /* Both rings are pseudo-elements and the outer one is the last child, so
+     without a lift it paints over the number it is supposed to sit behind. */
+  position:relative;z-index:1;font-size:clamp(62px, 18vw, 104px);line-height:1;
+  font-weight:700;letter-spacing:-2px;
+  animation:countpop .32s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes countpop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+
 /* rows and chips */
-.rows{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.rows{display:flex;flex-direction:column;
+  gap:calc(8px + var(--air) * .3);margin-top:calc(14px + var(--air) * 1)}
 .row{
-  display:flex;align-items:center;gap:13px;width:100%;text-align:left;min-height:72px;
-  background:var(--paper-deep);border-radius:22px;padding:14px 16px;
-  border:1px solid transparent;transition:background .18s ease,border-color .18s ease;
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  min-height:calc(58px + var(--air) * 1);
+  background:var(--card);border-radius:calc(18px + var(--air) * .15);
+  padding:calc(10px + var(--air) * .25) calc(14px + var(--air) * .08);
+  border:1px solid var(--line);transition:background .18s ease,border-color .18s ease;
 }
 .row .label{flex:1;font-size:16px;font-weight:600;margin-left:2px}
+/* A row with no disc in front of it: the 2px that clears the disc has nothing
+   to clear, and would read as an indent against the title above. */
+.rows--plain .row .label{margin-left:0}
 .row .sublabel{display:block;font-size:12.5px;font-weight:400;color:var(--text-muted);margin-top:1px}
 .row.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .row.on .sublabel{color:rgba(255,255,255,.62)}
-/* The disc holds still when its row inverts: white before, white after. */
+/* The row is white now, so the disc takes the deeper paper to stay a disc at
+   all, and goes white again on the navy it is inverted onto. Either way it
+   reads as a held shape rather than a hole. */
 .disc{
-  --d:40px;width:var(--d);height:var(--d);flex:none;border-radius:50%;background:#fff;
+  --d:40px;width:var(--d);height:var(--d);flex:none;border-radius:50%;background:var(--paper-deep);
   display:flex;align-items:center;justify-content:center;
 }
+.row.on .disc,.check-row.on .disc,.chip.on .disc{background:#fff}
 
 /* checkRow. The box comes first, then the disc, then the label, and any
    second line hangs under the lot rather than beside it. */
 .check-row{
-  display:block;width:100%;text-align:left;background:var(--paper-deep);border-radius:22px;
-  padding:15px 16px;border:1px solid transparent;transition:background .18s ease;
+  display:block;width:100%;text-align:left;background:var(--card);border-radius:22px;
+  padding:15px 16px;border:1px solid var(--line);transition:background .18s ease;
 }
 .check-row .check-head{display:flex;align-items:center;gap:12px}
 .check-row .label{flex:1;font-size:15px;font-weight:600}
@@ -203,17 +310,24 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .row.on .tick svg{opacity:1}
 
 /* chipBtn. Gap 9 on the answer grids, 10 on goals, exactly as the app sets it. */
-.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+.chips{display:flex;flex-wrap:wrap;
+  gap:calc(8px + var(--air) * .12);margin-top:calc(14px + var(--air) * .9)}
 .chips--goals{gap:10px;margin-top:0}
+/* The border is drawn inside rather than added, so turning the chips white
+   does not make every answer grid on the flow two pixels taller. */
 .chip{
-  display:flex;align-items:center;gap:10px;max-width:100%;background:var(--paper-deep);
+  display:flex;align-items:center;gap:10px;max-width:100%;background:var(--card);
+  box-shadow:inset 0 0 0 1px var(--line);
   border-radius:999px;padding:9px 18px 9px 9px;font-size:14.5px;font-weight:600;
-  transition:background .18s ease;
+  transition:background .18s ease,box-shadow .18s ease;
 }
 .chip .label{flex-shrink:1}
 .chip--plain{padding:15px 22px;font-size:17.5px}
-.chip.on{background:var(--navy);color:#fff}
-.chip.on .ink path{fill:#fff}
+.chip.on{background:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);color:#fff}
+/* Only a bare glyph inverts with the chip. A glyph on a disc keeps its ink,
+   because the disc stays white underneath it: turning both white is how a
+   selected goal ended up as an empty white circle. */
+.chip.on > .ink path{fill:#fff}
 
 /* allergyWarning */
 .allergy-warning{
@@ -249,11 +363,14 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
    faint shadow, because a hairline around a drawing that has its own lines
    reads as a box holding a box. */
 .chart{
-  background:var(--card);border-radius:28px;padding:18px 18px 14px;margin-top:22px;
+  background:var(--card);border-radius:calc(22px + var(--air) * .18);
+  padding:calc(11px + var(--air) * .2) calc(14px + var(--air) * .12) calc(8px + var(--air) * .18);
+  margin-top:calc(11px + var(--air) * .6);
   box-shadow:0 8px 22px rgba(26,34,56,.05);
 }
-.chart h2{font-size:17px;font-weight:700;letter-spacing:-.3px;margin:0 0 12px}
-.chart-caption{font-size:10px;line-height:15px;letter-spacing:.5px;text-align:center;margin-top:11px}
+.chart h2{font-size:17px;font-weight:700;letter-spacing:-.3px;margin:0 0 calc(7px + var(--air) * .3)}
+.chart-caption{font-size:10px;line-height:15px;letter-spacing:.5px;text-align:center;
+  margin-top:calc(6px + var(--air) * .4)}
 /* A caption that names a drawing waits until there is a drawing to name. */
 .chart-caption.late{animation:rise-short .26s cubic-bezier(.22,.61,.36,1) .95s both}
 /* SweepReveal: the plot sits under a panel in the card's own colour, and the
@@ -271,9 +388,10 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .legend-row span{font-size:12.5px;font-weight:500;color:var(--text-secondary)}
 .ring-working{font-size:14px;line-height:20px;color:var(--text-secondary);text-align:center;margin:16px 0 0}
 /* statRow: the figure and the unit it is in, read as one line. */
-.statrow{display:flex;align-items:center;gap:14px;margin:26px 0 0}
+.statrow{display:flex;align-items:center;gap:14px;margin:calc(14px + var(--air) * .9) 0 0}
 /* statBody, as the proof screens override it: one centred line under a chart. */
-.caveat{font-size:13.5px;line-height:20px;color:var(--text-muted);text-align:center;margin:16px 0 0}
+.caveat{font-size:13.5px;line-height:20px;color:var(--text-muted);text-align:center;
+  margin:calc(6px + var(--air) * .4) 0 0}
 .statrow b{font-size:62px;line-height:70px;font-weight:700;letter-spacing:-1.5px}
 .statrow span{flex:1;font-family:var(--mono);font-size:12px;color:var(--text-secondary);
   letter-spacing:1px;line-height:18px}
@@ -283,9 +401,13 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .statbody{font-size:15px;line-height:22px;color:var(--text-secondary);text-align:center;margin:22px 0 0}
 .statworking{font-family:var(--mono);font-size:11px;line-height:16px;color:var(--text-muted);
   letter-spacing:.5px;text-align:center;margin:22px 0 0}
-/* The week, one slot a meal, seven to a row. */
-.meal-grid{display:flex;flex-wrap:wrap;gap:5px;margin-top:18px}
-.meal-grid i{width:calc((100% - 30px)/7 - 2px);height:26px;border-radius:5px;background:var(--progress-bg)}
+/* The week, one slot a meal, seven to a row, across the whole column so it lines
+   up with the rule and the bar below it rather than stopping two thirds of the
+   way and leaving the right of the screen empty. Square marks, because a mark
+   wider than it is tall reads as a bar of something measured and these are
+   counted, not measured. */
+.meal-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.meal-grid i{width:calc((100% - 48px)/7);aspect-ratio:1;border-radius:8px;background:var(--progress-bg)}
 .meal-grid i.on{background:var(--red-text)}
 /* The published figure, set under a rule as its own sentence rather than
    stood up as a rival headline. */
@@ -294,6 +416,19 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .ref-body b{font-weight:700;color:var(--text)}
 .ref-bar{height:10px;border-radius:5px;overflow:hidden;background:var(--progress-bg);margin-top:18px}
 .ref-bar i{display:block;height:10px;border-radius:5px;background:var(--red-text)}
+/* Their own count, the week that produced it, and the published figure under a
+   rule. No card: a white box around a tally on beige paper reads as a panel that
+   has not finished loading, and every attempt at one left more blank inside it
+   than the void it was meant to cure. The room a taller phone gives goes into
+   the marks themselves, because the size of the tally is the argument and the
+   gap between the number and the rule is not. The working line is set left with
+   the rest of the screen rather than centred under nothing. */
+.step--upfshare .statworking{text-align:left;margin-top:calc(10px + var(--air) * .45)}
+.step--upfshare .ref-row{margin-top:calc(20px + var(--air) * 1.1);
+  padding-top:calc(16px + var(--air) * .5)}
+/* The bar reads as the figure drawn out, so it follows the figure; the line
+   explaining whose average it is follows both. */
+.step--upfshare .ref-body--lead{margin-top:calc(16px + var(--air) * .6)}
 /* Two columns of the same shape, so only their filled height differs. The
    corner radius is a plain number rather than a large one, because a large
    radius on a box this wide is clamped to half its height and rounds the
@@ -302,12 +437,20 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .bar-col{flex:1}
 .bar-value{font-size:26px;font-weight:700;letter-spacing:-.6px;text-align:center;margin:0 0 10px;
   animation:rise-short .26s cubic-bezier(.22,.61,.36,1) .87s both}
-/* Shorter than the app's track, which lives in a scroll view and can afford the
-   height. Here the chart, its source line and the button all have to be on
-   screen together, and the bar reads the same at either height. */
-.bar-track{width:64px;margin:0 auto;height:136px;border-radius:14px;background:var(--paper-deep);
+/* The floor is the height a 667pt handset can spare with the chart, its source
+   line and the button all on screen together. Above that the track takes the
+   room, because the smaller share is the point of the picture and 7% of a short
+   track is a sliver that has to be floored to stay visible, which quietly draws
+   it nearer 9%. A taller track pays for itself in honesty: at 200px the 7% fill
+   clears the floor on its own and is drawn at its real height. */
+.bar-track{width:clamp(64px, calc(64px + var(--air) * 3), 124px);
+  margin:0 auto;height:clamp(68px, calc(68px + var(--air) * 8), 300px);
+  border-radius:14px;background:var(--paper-deep);
   display:flex;align-items:flex-end;overflow:hidden}
-.bar-fill{display:block;width:100%;border-radius:14px;min-height:8px;background:var(--navy);
+/* Rounded at the top only. A fill rounded on all four corners reads as a second
+   card laid over the track rather than as the track filling up, and at 93% the
+   two sets of curves sat a few pixels apart and looked like a printing error. */
+.bar-fill{display:block;width:100%;border-radius:13px 13px 0 0;min-height:8px;background:var(--navy);
   animation:growh .95s cubic-bezier(.22,.61,.36,1) both}
 .bar-fill.alarm{background:var(--danger-text)}
 @keyframes growh{from{height:0}}
@@ -315,17 +458,30 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
    cannot shift its own column against the other one. */
 .bar-label{min-height:40px;margin:12px 0 0;font-size:13.5px;font-weight:500;line-height:18px;
   color:var(--text-secondary);text-align:center}
+/* On the one screen the chart is the argument, it takes the room the title and
+   the switch leave instead of standing at a fixed height with the remainder
+   blank underneath it. The centring spacers come off for the same reason: they
+   and the track would be bidding for the same space, and the track should win.
+   The track is the part that stretches, so a taller phone draws taller bars
+   rather than the same bars further apart. */
+.step--stakes::before,.step--stakes::after{content:none}
+.step--stakes .chart{flex:1;min-height:0;display:flex;flex-direction:column}
+.step--stakes .bar-row{flex:1;min-height:0}
+.step--stakes .bar-col{display:flex;flex-direction:column;min-height:0}
+.step--stakes .bar-track{flex:1;height:auto;min-height:68px}
+.step--stakes .flag-card{margin-top:calc(10px + var(--air) * .5)}
 /* The fortnight fills in a day at a time, the same pass the drawn charts are
    uncovered by. Every day is the same size: what arrives is the ink, not the
    height, because the strip counts days rather than measuring them. */
-.days{display:flex;gap:5px;margin-top:16px}
-.days i{flex:1;height:28px;background:var(--green);
+.days{display:flex;gap:5px;margin-top:calc(12px + var(--air) * .6)}
+.days i{flex:1;height:calc(22px + var(--air) * .6);background:var(--green);
   animation:inkin .32s cubic-bezier(.22,.61,.36,1) both}
 @keyframes inkin{from{opacity:0}to{opacity:var(--o)}}
 .day-ends{display:flex;justify-content:space-between;margin-top:8px}
 .day-ends span{font-family:var(--mono);font-size:10px;letter-spacing:.5px;color:var(--text-muted)}
 .outcomes{margin-top:14px}
-.outcome{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0}
+.outcome{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(9px + var(--air) * .45) 0}
 .outcome + .outcome{border-top:1px solid var(--rule)}
 .outcome .what{flex:1;font-size:16px;font-weight:500;color:var(--text);line-height:1.3}
 .outcome .val{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
@@ -377,44 +533,47 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 /* The app starts this screen 18px higher than the rest, which it can afford
    because its chrome is a solid bar the content scrolls under. Here the chrome
    is transparent, so the title keeps the funnel's usual clearance. */
-.proof-row{display:flex;align-items:flex-start;margin:22px 0 4px}
+.proof-row{display:flex;align-items:flex-start;margin:12px 0 0}
 .proof-col{flex:1;display:flex;flex-direction:column;align-items:center}
-.proof-rank{font-size:27px;line-height:33px;font-weight:700;letter-spacing:-.6px;color:var(--text)}
+.proof-rank{font-size:26px;line-height:32px;font-weight:700;letter-spacing:-.6px;color:var(--text)}
 .proof-caption{font-size:12.5px;line-height:17px;font-weight:500;color:var(--text-secondary);
-  text-align:center;margin:8px 0 0;padding:0 4px}
+  text-align:center;margin:3px 0 0;padding:0 4px}
 .wreath{display:flex;align-items:center}
 .wreath-mid{display:flex;flex-direction:column;align-items:center;padding:0 2px}
 .wreath-flip{display:flex;transform:scaleX(-1)}
 
 /* The discs overlap, so the second reads as standing behind the first and the
    count as the rest of them. */
-.avatar-cluster{display:flex;align-items:center;height:74px}
+.avatar-cluster{display:flex;align-items:center;height:58px}
 .cluster-disc{width:40px;height:40px;border-radius:20px;background:var(--accent-wash);
   border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;
   font-size:16px;font-weight:700;color:var(--accent-dark);box-sizing:border-box}
 .cluster-disc + .cluster-disc{margin-left:-16px}
 .cluster-count{width:auto;height:46px;border-radius:23px;padding:0 10px;margin-left:-14px}
 
-.review-card{background:var(--paper-deep);border-radius:20px;padding:16px;margin-top:12px}
+.review-card{background:var(--paper-deep);border-radius:20px;padding:14px;margin-top:9px}
 .review-head{display:flex;align-items:center;gap:10px}
-.review-avatar{flex:none;width:38px;height:38px;border-radius:19px;background:var(--accent-wash);
-  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--accent-dark)}
-.review-name{flex:1;font-size:16px;font-weight:700;color:var(--text)}
+.review-avatar{flex:none;width:34px;height:34px;border-radius:17px;background:var(--accent-wash);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-dark)}
+.review-name{flex:1;font-size:15.5px;font-weight:700;color:var(--text)}
 .star-row{display:flex;align-items:center;flex:none}
-.review-title{font-size:15px;line-height:20px;font-weight:700;color:var(--text);margin:12px 0 0}
-.review-quote{font-size:15px;line-height:22px;color:var(--text-secondary);margin:12px 0 0}
-.review-quote.tight{margin-top:6px}
-/* A second review costs about 190px, which a 667pt phone does not have once the
-   rating, the download count and the first review are on screen, so it shows
-   only where it fits whole: better one review read than two cut in half. The
-   two bands are the two sheets. Under 900 the phone design is in force and two
-   fit from 781 up; over 900 the roomier base sheet is, and two do not fit again
-   until 990. */
-@media (max-height:780px){
+.review-title{font-size:15px;line-height:20px;font-weight:700;color:var(--text);margin:9px 0 0}
+.review-quote{font-size:14.5px;line-height:21px;color:var(--text-secondary);margin:9px 0 0}
+.review-quote.tight{margin-top:5px}
+/* Each card shows only where it fits whole: better two reviews read than three
+   cut in half. The heights below are measured at 360px wide, the narrowest
+   phone, so a card never appears on a screen that cannot finish it. Two fit
+   from 700. Three fit from 844, but only while the compact design is in force:
+   over 900 the roomier base sheet takes back more height than the taller screen
+   gives, so the third waits until 1080. */
+@media (max-height:699px){
   .review-card + .review-card{display:none}
 }
-@media (min-height:901px) and (max-height:989px){
-  .review-card + .review-card{display:none}
+@media (max-height:843px){
+  .review-card + .review-card + .review-card{display:none}
+}
+@media (min-height:901px) and (max-height:1079px){
+  .review-card + .review-card + .review-card{display:none}
 }
 
 /* calibration. The figure leads, the sentence explains it, the bar carries it,
@@ -435,6 +594,17 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   display:flex;align-items:center;justify-content:center;transition:background .3s ease,opacity .3s ease;
 }
 .calib-row.done .calib-tick{background:var(--green);opacity:1}
+/* The rating, under the bar. Rules either side of the stars so the row reads
+   as a mark being awarded rather than as five loose shapes. */
+.calib-proof{width:100%;margin-top:calc(18px + var(--air) * .8);text-align:center}
+.calib-proof-count{font-size:13px;font-weight:700;letter-spacing:-.1px;margin:0}
+.calib-proof .star-row{display:inline-flex;margin-top:6px}
+.calib-proof .star-row::before,.calib-proof .star-row::after{
+  content:"";align-self:center;width:clamp(22px,9vw,54px);height:1px;background:var(--rule)}
+.calib-proof .star-row::before{margin-right:10px}
+.calib-proof .star-row::after{margin-left:10px}
+.calib-quote{font-size:13px;line-height:19px;color:var(--text-muted);margin:8px 0 0}
+.calib-name{font-size:12px;font-weight:600;color:var(--text);margin:6px 0 0}
 
 /* The fade over the top of the dock, so a scrolling body passes under the
    button rather than stopping dead against it. */
@@ -456,27 +626,6 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   margin-top:22px;text-align:left;box-shadow:0 4px 14px rgba(26,34,56,.04);
 }
 .flag-card .label{flex:1;font-size:14.5px;font-weight:500}
-
-/* the trial preview */
-.trial-pills{display:flex;gap:6px;margin-top:13px}
-.trial-pill{flex:1;padding:7px 4px;border-radius:10px;text-align:center;font-size:11px;font-weight:700}
-.trial-reveal{
-  margin-top:14px;background:var(--navy);border-radius:13px;padding:12px 14px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;
-}
-.scan{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px}
-.scan .head{display:flex;gap:12px;align-items:center}
-.scan .name{flex:1;font-size:16px;font-weight:700;line-height:1.25}
-.scan .brand{font-size:12.5px;color:var(--text-muted);margin-top:2px;font-weight:400}
-.scan .thumb{width:54px;height:54px;border-radius:12px;object-fit:cover;flex:none;border:1px solid var(--border)}
-.pills{display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 0}
-.tag{font-size:11.5px;font-weight:600;border-radius:999px;padding:5px 10px}
-.tag.bad{background:var(--red-bg);color:var(--red-text)}
-.tag.good{background:var(--green-bg);color:var(--green-text)}
-.ing-list{margin:10px 0 0;padding:0;list-style:none}
-.ing-list li{display:flex;align-items:center;gap:9px;font-size:13.5px;padding:6px 0;color:var(--text-secondary)}
-.ing-list li i{width:7px;height:7px;border-radius:4px;flex:none}
-.jump{text-align:center;font-size:14px;font-weight:600;color:var(--green-text);margin-top:16px}
 
 /* plan */
 .timeline{margin-top:24px;padding-left:6px}
@@ -507,10 +656,12 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .radio{width:20px;height:20px;border-radius:10px;border:2px solid var(--border);flex:none}
 .plan.on .radio{border-color:var(--accent);background:var(--accent)}
 .plan .pname{font-size:15px;font-weight:700}
-.plan .psub{font-size:12.5px;color:var(--text-secondary);margin-top:1px}
-.plan.on .psub{color:rgba(255,255,255,.7)}
-.plan .pweek{font-size:11.5px;color:var(--text-muted);margin-top:3px}
-.plan.on .pweek{color:rgba(255,255,255,.55)}
+/* The day rate is the number on the card, so it carries the weight the term
+   used to and the term drops back to a footnote under it. */
+.plan .psub{font-size:14px;font-weight:600;color:var(--text);margin-top:2px}
+.plan.on .psub{color:#fff}
+.plan .pweek{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.plan.on .pweek{color:rgba(255,255,255,.6)}
 .plan .tagline{display:inline-block;background:var(--yellow);border-radius:999px;padding:4px 9px;margin-top:10px;font-size:10px;font-weight:700;color:var(--text)}
 .legal{font-size:10.5px;line-height:15px;color:var(--text-muted);text-align:center;margin-top:11px}
 /* flex-start so on a translation that wraps the mark stays on the first line
@@ -575,30 +726,38 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .resend button:disabled{color:var(--text-muted);font-weight:500}
 
 /* hero and done */
-/* HERO. A drawn handset playing the real app, the same body, bezel, island and
-   side buttons the native screen draws, at the same proportions. */
+/* HERO. The promise, then the product answering it. The handset is drawn to
+   the same body, bezel, island and side buttons the native screen draws, at
+   the same proportions, so what sits under the headline is the app itself
+   rather than a picture of a phone. */
 .hero{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding-top:calc(var(--safe-top) + 48px);
+  flex:1;min-height:0;display:flex;flex-direction:column;
+  padding:calc(var(--safe-top) + 22px) 0 0;
 }
+.hero-head{flex:none;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 28px}
+/* Rise sets this at 30/33 and weight 400, which reads as a promise rather
+   than a shout. DM Sans is a narrower face, so it holds the same air at 600. */
+.hero h1{
+  font-size:30px;line-height:34px;font-weight:600;letter-spacing:-.6px;
+  margin:0;color:var(--text);max-width:15ch;
+}
+/* The app writes the handset as height 100% of the room left over, with the
+   width falling out of the ratio and a 58% clamp then pulling the height back
+   down with it. CSS will not read a percentage height off a box that is only
+   sized by flex, and it holds the height when max-width bites instead of
+   reshaping the box, so the handset is taken out of flow: the offsets give it
+   the same definite height, the max-height restates the clamp in the one axis
+   that keeps the ratio, and the auto margins centre it exactly as
+   justifyContent does. */
 .hero-phone-wrap{
-  position:relative;
-  flex:1;width:100%;min-height:0;display:flex;align-items:center;justify-content:center;
-  padding:4px 0 44px;
+  position:relative;flex:1;width:100%;min-height:0;
+  display:flex;align-items:center;justify-content:center;padding:20px 0 8px;
 }
-/* The app writes this as height 100% of the room left over, with the width falling
-   out of the ratio and the 60% clamp then pulling the height back down with it.
-   CSS will not read a percentage height off a box that is only sized by flex, and
-   it holds the height when max-width bites instead of reshaping the box, so the
-   handset is taken out of flow: the offsets give it the same definite height, the
-   max-height restates the 60% clamp in the one axis that keeps the ratio, and the
-   auto margins centre it exactly as justifyContent does. Lands at 234 x 501, the
-   same box Yoga measures. */
 .hero-phone{
-  position:absolute;top:4px;bottom:44px;left:50%;transform:translateX(-50%);
+  position:absolute;top:20px;bottom:8px;left:50%;transform:translateX(-50%);
   height:auto;margin-top:auto;margin-bottom:auto;
-  aspect-ratio:.467;max-width:60%;
-  max-height:calc(min(100vw, var(--col)) * 0.6 / 0.467);
+  aspect-ratio:.467;max-width:58%;
+  max-height:calc(min(100vw, var(--col)) * 0.58 / 0.467);
   border-radius:38px;padding:6px;background:var(--phone-body);
   display:flex;flex-direction:column;
 }
@@ -610,12 +769,33 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .hero-phone-island{width:32%;aspect-ratio:125/37;border-radius:999px;background:#000}
 .hero-phone-video{flex:1;min-height:0;position:relative}
 .hero-phone-video video,.hero-phone-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero-copy{width:100%;display:flex;justify-content:center;padding:0 20px 18px}
-.hero h1{
-  font-size:29px;line-height:34px;font-weight:700;letter-spacing:-.7px;
-  margin:0;text-align:center;white-space:pre-line;color:var(--text);
+/* Two cards, equal halves, drawn to Rise's own 157x175 at 390 wide: a 12px
+   corner, a real edge, and a photograph wider than it is tall so the face
+   sits in it rather than filling it. */
+.pick-cards{display:flex;gap:13px;margin-top:30px}
+.pick-card{
+  flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0;
+  transition:border-color .18s ease,box-shadow .18s ease;
 }
-.hero-dock{width:100%;padding:0 24px 30px}
+.pick-card.on{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+.pick-photo{display:block;width:100%;aspect-ratio:155/127;background:var(--paper-deep)}
+.pick-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.pick-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px 0 14px;height:46px;flex:none}
+.pick-label{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.pick-go{
+  width:30px;height:30px;flex:none;border-radius:15px;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+}
+.pick-card.on .pick-go{background:var(--accent)}
+/* The answer that is not a picture. It is a real answer, so it stays on the
+   screen, but it is not the one being asked for, so it is a link. */
+.pick-skip{margin-top:18px;text-align:center}
+.pick-skip .link{margin-top:0}
+/* The button and the way past it. The account link sits under the button
+   rather than beside it: a reader who already has one is not browsing. */
+.hero-dock{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;padding:6px 24px 26px}
+.hero-dock .link{margin-top:10px}
 .hero-lang{
   position:absolute;top:8px;right:20px;padding:6px 12px;border-radius:999px;
   border:1px solid var(--border);background:#fff;
@@ -650,7 +830,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 @media (max-width:360px){
   h1.title{font-size:25px}
   .big-number{font-size:56px}
-  .hero h1{font-size:31px}
+  .hero h1{font-size:26px;line-height:31px}
   .step{padding-left:20px;padding-right:20px}
   .chrome,.dock{padding-left:20px;padding-right:20px}
 }
@@ -658,25 +838,16 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 /* Short viewports.
    Every screen here has to end at the button, because a funnel that asks the
    reader to scroll to find the button is a funnel that loses the ones who do
-   not. On a tall handset the app's own spacing fits; on a short one it does
-   not, and the honest answer is to tighten the whole page by a fixed amount
-   rather than to let one screen quietly cut its last line off. So the same
-   design is drawn smaller: the air between things goes first, then the
-   figures that were set large for effect, and the copy sizes last and least.
-   The cut-off sits above every handset rather than between them: the app's own
-   spacing needs about 890px of viewport before its longest screen stops being
-   scrollable, which no phone has, so in practice this is the phone design and
-   the one above is the one a desktop window gets. Verified scroll-free from
-   375 x 667, the shortest phone still in circulation, up to the threshold.
-   The two drawn charts carry their height in JS, not here: see
-   shortViewport(). */
+   not, so the design is drawn smaller rather than allowed to cut its last line
+   off. What is left in here is only what --air cannot carry: type sizes, and
+   the handful of paddings that are the same on every screen. Everything that
+   is room between things, or the height of a figure, now grows with the
+   viewport in the base rules above, so it has no step at this threshold.
+   Verified scroll-free from 375 x 667, the shortest phone still in
+   circulation. The two drawn charts carry their height in JS: chartHeight(). */
 @media (max-height:900px){
   /* structure: the gutter above the title, the room under the button, the
      legal strip. None of it is content, so all of it gives first. */
-  /* The bar and the back button come down with everything else, and the title
-     starts a clear 12px below the button rather than tucked under it. */
-  .step{padding-top:calc(var(--safe-top) + 76px);padding-bottom:8px}
-  .step.chromeless{padding-top:calc(var(--safe-top) + 18px)}
   .chrome{padding-top:calc(var(--safe-top) + 24px);padding-bottom:10px}
   .dock{padding-top:8px;padding-bottom:calc(var(--safe-bottom) + 10px)}
   .cta-source{margin:8px 0 10px}
@@ -689,52 +860,49 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .step--feel h1.title,.step--habits h1.title,.step--upffreq h1.title,
   .step--additives h1.title{font-size:22px}
   .step--plan h1.title{font-size:22px}
-  .step--trial h1.title{font-size:24px}
   .step--account h1.title,.step--email h1.title{font-size:25px}
   .step--about h1.title{font-size:25px;line-height:31px}
   .step--reviews h1.title{font-size:25px;line-height:32px}
-  .step--referral h1.title{font-size:26px;line-height:32px}
-  .sub{font-size:14px;line-height:20px;margin-top:10px}
+  .step--sym h1.title{font-size:24px;line-height:30px}
+  .sub{font-size:14px;line-height:20px}
   .hint{margin-top:6px}
   .group-label{margin:10px 0 6px}
   .field-label{margin:14px 0 6px}
   .body-copy{margin-top:12px}
 
-  /* answers */
-  .rows{gap:8px;margin-top:14px}
-  .row{min-height:58px;padding:10px 14px;border-radius:18px}
+  /* answers. Their heights and the air between them now ride --air, which is
+     already at its floor here, so only what does not scale is left. */
+  .thumbs{gap:20px}
+  .thumbs .thumb{gap:10px}
+  .sym-counter{margin-bottom:8px}
+  .count-ring{margin-top:16px}
   .disc{--d:34px}
   .check-row{padding:11px 14px;border-radius:18px}
   .check-sub{padding-top:6px}
-  .chips{gap:8px;margin-top:14px}
   .chips--goals{gap:6px}
   .chip{padding:7px 15px 7px 7px}
   .chip--plain{padding:9px 16px;font-size:16px}
   .allergy-warning{padding:11px 13px;margin-top:14px}
 
   /* charts and figures */
-  .chart{padding:11px 14px 8px;margin-top:11px;border-radius:22px}
-  .chart h2{margin-bottom:7px}
-  .chart-caption{margin-top:6px}
+  /* There is no height to give a bar on a short handset, so the width goes
+     instead: at the floor a 64 wide track next to a 68 tall one is a square,
+     and a square does not read as a measurement of anything. */
+  .bar-track{width:54px}
   .legend-row{margin-top:6px}
   .ring-working{margin-top:10px}
-  .statrow{gap:12px;margin-top:14px}
+  .statrow{gap:12px}
   .statrow b{font-size:46px;line-height:54px;letter-spacing:-1.1px}
   .statbody{font-size:14px;line-height:20px;margin-top:14px}
   .statworking{margin-top:12px}
-  .caveat{font-size:12.5px;line-height:18px;margin-top:6px}
+  .caveat{font-size:12.5px;line-height:18px}
   .figure{margin-top:12px}
   .meal-grid{margin-top:12px}
-  .meal-grid i{height:20px}
   .ref-row{margin-top:14px;padding-top:12px}
   .ref-body{font-size:15px;line-height:21px}
   .ref-bar{margin-top:12px}
-  .days{margin-top:12px}
-  .days i{height:22px}
   .outcomes{margin-top:8px}
-  .outcome{padding:9px 0}
   .bar-value{font-size:22px;margin-bottom:6px}
-  .bar-track{height:70px}
   .bar-label{min-height:30px;margin-top:7px;font-size:12.5px;line-height:17px}
   .axis-block{margin-bottom:12px}
   .axis-track{margin-top:6px}
@@ -748,11 +916,11 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
      screen the photographs give up their height first and the modern list stays
      whole rather than ending mid-ingredient. */
   .slab img{flex:1 1 92px;min-height:40px}
-  .proof-row{margin-top:12px}
-  .avatar-cluster{height:62px}
-  .review-card{padding:13px;margin-top:8px;border-radius:17px}
-  .review-title{margin-top:8px}
-  .review-quote{font-size:14px;line-height:20px;margin-top:8px}
+  .proof-row{margin-top:5px}
+  .avatar-cluster{height:58px}
+  .review-card{padding:10px 13px;margin-top:6px;border-radius:17px}
+  .review-title{margin-top:6px}
+  .review-quote{font-size:13.5px;line-height:18px;margin-top:6px}
   .timeline{margin-top:14px}
   .tl .txt{padding-bottom:7px}
   .tl .txt span{line-height:17px}
@@ -760,6 +928,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .values{margin-top:16px;gap:10px}
   .plans{margin-top:12px}
   .plan{padding:11px}
+  /* The day rate can lose a point and stay the biggest number on the card. */
+  .plan .psub{font-size:13px;margin-top:1px}
+  .plan .pweek{margin-top:1px}
   .plan .tagline{margin-top:7px}
   .legal{margin-top:6px}
   .reassure.under{margin-top:6px}
@@ -780,12 +951,17 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .resend{margin-top:14px}
 
   /* hero, calibration, done */
-  .hero{padding-top:calc(var(--safe-top) + 28px)}
-  .hero-phone-wrap{padding-bottom:30px}
-  .hero-phone{bottom:30px}
-  .hero-copy{padding-bottom:12px}
-  .hero h1{font-size:25px;line-height:30px}
-  .hero-dock{padding-bottom:16px}
+  .hero{padding-top:calc(var(--safe-top) + 14px)}
+  .hero-head{padding-left:24px;padding-right:24px}
+  .hero h1{font-size:26px;line-height:31px}
+  .hero-phone-wrap{padding:14px 0 6px}
+  .hero-phone{top:14px;bottom:6px}
+  .hero-dock{padding:4px 22px 14px}
+  .hero-dock .link{margin-top:8px}
+  .pick-cards{gap:11px;margin-top:22px}
+  .pick-foot{height:42px;padding:0 9px 0 12px}
+  .pick-go{width:27px;height:27px;border-radius:14px}
+  .pick-skip{margin-top:14px}
   .calib-pct{font-size:54px;line-height:62px}
   .calib-bar{margin-top:16px}
   .calib-list{margin-top:18px}
@@ -1033,19 +1209,6 @@ const ICON_PATHS = {
   ],
 };
 
-const BRAND_MARKS = {
-  tiktok: { color: "#010101", fill: "M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.1v12.4a2.59 2.59 0 1 1-2.6-2.59c.26 0 .52.04.77.12V9.66a5.7 5.7 0 0 0-.77-.05 5.66 5.66 0 1 0 5.65 5.66V8.9a7.3 7.3 0 0 0 4.28 1.37V7.17a4.28 4.28 0 0 1-3.17-1.35z" },
-  instagram: {
-    color: "#E1306C",
-    stroke: [
-      "M17.4 3.2H6.6A3.4 3.4 0 0 0 3.2 6.6v10.8a3.4 3.4 0 0 0 3.4 3.4h10.8a3.4 3.4 0 0 0 3.4-3.4V6.6a3.4 3.4 0 0 0-3.4-3.4z",
-      "M12 7.9a4.1 4.1 0 1 0 0 8.2 4.1 4.1 0 0 0 0-8.2z",
-      "M17.35 6.65h.01",
-    ],
-  },
-  youtube: { color: "#FF0000", fill: "M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z" },
-  apple: { color: "#111111", fill: "M17.05 12.72c-.03-2.63 2.15-3.9 2.25-3.96-1.23-1.8-3.14-2.04-3.82-2.07-1.62-.16-3.17.96-4 .96-.83 0-2.1-.94-3.45-.91-1.77.02-3.4 1.03-4.31 2.62-1.84 3.19-.47 7.9 1.32 10.49.88 1.27 1.92 2.69 3.29 2.64 1.32-.05 1.82-.85 3.41-.85 1.59 0 2.04.85 3.43.83 1.42-.03 2.31-1.29 3.17-2.56.6-.88.94-1.79 1.09-2.24-.03-.01-2.36-.9-2.38-3.95zM14.5 5.02c.73-.88 1.22-2.11 1.09-3.33-1.05.04-2.32.7-3.07 1.58-.67.78-1.26 2.02-1.1 3.22 1.17.09 2.36-.6 3.08-1.47z" },
-};
 
 /** A glyph: solid, one ink, drawn inside the same optical square. */
 function icon(name, size) {
@@ -1053,23 +1216,15 @@ function icon(name, size) {
   const d = paths.map((p) => `<path d="${p}" fill="${INK}" fill-rule="evenodd"/>`).join("");
   return `<svg class="ink" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 }
-function brandMark(name, size) {
-  const m = BRAND_MARKS[name];
-  if (!m) return "";
-  const fill = m.fill ? `<path d="${m.fill}" fill="${m.color}" fill-rule="evenodd"/>` : "";
-  const stroke = (m.stroke || [])
-    .map((p) => `<path d="${p}" stroke="${m.color}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`)
-    .join("");
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${fill}${stroke}</svg>`;
-}
 /** The white disc a glyph sits on. It stays white when its row inverts.
     The glyph is 0.52 of the disc, the ratio the app's Disc uses. */
-function disc(name, brand, size) {
+function disc(name, size) {
   const d = size || 40;
   const g = Math.round(d * 0.52 * 10) / 10;
   const style = d === 40 ? "" : ` style="--d:${d}px"`;
-  return `<span class="disc"${style}>${brand ? brandMark(brand, g) : icon(name, g)}</span>`;
+  return `<span class="disc"${style}>${icon(name, g)}</span>`;
 }
+const ARROW_RIGHT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M12.5 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHECK = '<svg width="15" height="15" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M1.8 6.2l2.6 2.8L10.2 2.4" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const WARN_TRIANGLE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#A86A14" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#A86A14"/></svg>';
 
@@ -1077,16 +1232,43 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 
 /* ---- copy, verbatim from src/i18n/en.ts ---------------------------- */
 const T = {
-  "onboarding.hero.title": "Know what's ACTUALLY\nin your food.",
-  "onboarding.hero.cta": "Get started",
+  "onboarding.hero.title": "Know what's actually in your food.",
+  "onboarding.hero.cta": "Start quiz",
   "onboarding.hero.haveAccount": "I already have an account",
 
-  "onboarding.aboutYou.title": "A little about you.",
+  "onboarding.sex.title": "Who are we building this for?",
+
+  "onboarding.aboutYou.title": "How old are you?",
+  "onboarding.aboutYou.sub": "What you eat costs you different amounts of time at different ages.",
   "onboarding.aboutYou.ageLabel": "Your age",
   "onboarding.aboutYou.sexLabel": "Your sex",
   "onboarding.aboutYou.female": "Female",
   "onboarding.aboutYou.male": "Male",
   "onboarding.aboutYou.unspecified": "Prefer not to say",
+
+  /* Twelve yes or no questions about the body, asked plainly. There is no
+     explanatory line under any of them on purpose: a question that arrives
+     with its own justification reads as a sales argument, and the reader
+     stops answering honestly and starts answering the pitch. */
+  /* Statements, not questions. A question has to be parsed before it can be
+     answered, and this run is timed by its own countdown: the whole point is
+     that a reader recognises themselves in the line and hits a thumb. */
+  "onboarding.symptoms.tired": "I feel tired through the day",
+  "onboarding.symptoms.morning": "Mornings are hard",
+  "onboarding.symptoms.crash": "I crash in the afternoon",
+  "onboarding.symptoms.coffee": "I need coffee before I feel human",
+  "onboarding.symptoms.bloated": "I get bloated and I don't know why",
+  "onboarding.symptoms.meals": "Some meals leave my stomach worse than others",
+  "onboarding.symptoms.acne": "I break out",
+  "onboarding.symptoms.puffy": "I wake up puffy",
+  "onboarding.symptoms.foggy": "It is hard to think clearly",
+  "onboarding.symptoms.anxious": "I feel anxious or on edge",
+  "onboarding.symptoms.sugar": "I crave sugar at night",
+  "onboarding.symptoms.weight": "I have gained weight without eating differently",
+
+  "onboarding.lightning.title": "Lightning round",
+  "onboarding.lightning.sub": "Answer quick, go with your gut.",
+  "onboarding.lightning.counter": "{n} of {total}",
 
   "onboarding.years.title": "Years you could save by eating better.",
   "onboarding.years.unit": "YEARS, ON AVERAGE,\nFOR PEOPLE YOUR AGE",
@@ -1128,15 +1310,21 @@ const T = {
   "onboarding.upfShare.title": "Over a year that is a lot of meals.",
   "onboarding.upfShare.titleUnsure": "Most people eat more of it than they think.",
   "onboarding.upfShare.unit": "ULTRA-PROCESSED MEALS A YEAR",
-  "onboarding.upfShare.working": "{meals} a week · 52 weeks",
-  "onboarding.upfShare.chartCaption": "{meals} OF {total} MEALS IN ONE WEEK",
+  /* Legend and working in one line: what the block above counts, and the
+     multiplication that turns it into the figure at the top. */
+  "onboarding.upfShare.working": "{meals} of {total} meals a week · 52 weeks",
   "onboarding.upfShare.refUs": "of the average American adult's daily calories come from ultra-processed food.",
   "onboarding.upfShare.refEurope": "of the average European adult's daily calories come from ultra-processed food.",
+  /* When they could not put a number on it there is no count of their own, so
+     the published one stops being a footnote and becomes the screen. */
+  "onboarding.upfShare.refUnit": "OF DAILY CALORIES",
+  "onboarding.upfShare.refLeadUs": "That is the average American adult. With no count of your own, it is the number to go on.",
+  "onboarding.upfShare.refLeadEurope": "That is the average European adult. With no count of your own, it is the number to go on.",
   "onboarding.upfShare.sourceUs": "National Center for Health Statistics, Data Brief, August 2021 to August 2023.",
   "onboarding.upfShare.sourceEurope": "Mertens et al., European Journal of Nutrition 2022, pooled across 22 countries.",
 
-  "onboarding.standing.title": "Where your health goes from here.",
-  "onboarding.standing.titleAverage": "Where average health goes from here.",
+  "onboarding.standing.title": "This is how much you can improve.",
+  "onboarding.standing.cta": "Try for free",
   "onboarding.standing.chartTitle": "Your next {years} years",
   "onboarding.standing.legendWith": "With Underneath",
   "onboarding.standing.legendWithout": "Without",
@@ -1145,8 +1333,6 @@ const T = {
   "onboarding.standing.working": "It starts at {start}. A better choice every couple of months puts on {gain} points by year eight.",
   "onboarding.standing.chartCaption": "YOUR HEALTH SCORE, OUT OF 100",
   "onboarding.standing.captionAverage": "AN AVERAGE HEALTH SCORE, OUT OF 100",
-  "onboarding.standing.averageUs": "Your answer is too clean to place, so this is the American average: about {meals} ultra-processed meals in 21.",
-  "onboarding.standing.averageEurope": "Your answer is too clean to place, so this is the European average: about {meals} ultra-processed meals in 21.",
   "onboarding.standing.note": "A diet score, not a measurement of your body. Both lines are models.",
   "onboarding.standing.source": "Source: JAMA Neurology 2022.",
 
@@ -1203,11 +1389,12 @@ const T = {
   "onboarding.cred.chartTitle": "What a score is made of",
   "onboarding.cred.chartCaption": "HOW EVERY SCORE IS WEIGHTED",
 
-  "onboarding.prior.title": "Have you used a food scanner before?",
-  "onboarding.heard.title": "Where did you hear about Underneath?",
 
-  "onboarding.reviews.title": "Built for people who read the back of the box.",
-  "onboarding.reviews.count": "downloads so far",
+  /* The figure comes from the same constant the cluster under it shows, so the
+     headline and the number beneath it can never end up disagreeing. What the
+     help was for finishes the second line, which a bare "people." left almost
+     empty, and it is the literal thing the app does rather than a promise. */
+  "onboarding.reviews.title": "Underneath has helped {users} people read the label.",
   "onboarding.reviews.ratingValue": "4.9",
   "onboarding.reviews.rating": "App Store rating",
 
@@ -1218,32 +1405,13 @@ const T = {
   "onboarding.calib.diet": "Your dietary filters",
   "onboarding.calib.allergens": "Allergen watchlist",
   "onboarding.calib.engine": "Scoring engine",
+  /* Downloads, not reviews. Fifty thousand people have the app; fifty
+     thousand people have not written about it, and the wait is not worth
+     a number we would have to defend. */
+  "onboarding.calib.proof": "{users} downloads",
 
-  "onboarding.referral.title": "Do you have a referral code?",
-  "onboarding.referral.sub": "You can skip this step.",
-  "onboarding.referral.placeholder": "Referral code",
-  "onboarding.referral.disclaimer": "Days land the moment your friend creates an account with your code.",
-  "onboarding.referral.codeApplied": "Code applied",
-
-  "onboarding.trial.title": "Try Underneath for free.",
-  "onboarding.trial.badProduct": "Pop-Tarts Frosted Strawberry",
-  "onboarding.trial.badBrand": "Kellogg's",
-  "onboarding.trial.badPill1": "Ultra-processed",
-  "onboarding.trial.badPill2": "4 flagged",
-  "onboarding.trial.badIng1": "High-fructose corn syrup",
-  "onboarding.trial.badIng2": "Red 40 (artificial color)",
-  "onboarding.trial.badIng3": "TBHQ (preservative)",
-  "onboarding.trial.badIng4": "Soy lecithin",
-  "onboarding.trial.reveal": "Reveal a better alternative",
-  "onboarding.trial.goodProduct": "Toaster Pastries, Berry Strawberry",
-  "onboarding.trial.goodBrand": "Nature's Path",
-  "onboarding.trial.goodPill1": "Organic",
-  "onboarding.trial.goodPill2": "No artificial colors",
-  "onboarding.trial.goodIng1": "Organic wheat flour",
-  "onboarding.trial.goodIng2": "Organic cane sugar",
-  "onboarding.trial.goodIng3": "Organic strawberry filling",
-  "onboarding.trial.jump": "Score jumped from 22 to 81",
-  "onboarding.trial.noPayment": "No payment due now.",
+  /* Still named for the trial because that is what the button buys, even
+     though the screen that used to carry it is gone. */
   "onboarding.trial.cta": "Try for free",
 
   "onboarding.plan.title": "How your free trial works.",
@@ -1329,8 +1497,11 @@ const T = {
   "onboarding.error.generic": "Something went wrong. Please try again.",
   "onboarding.error.badCode": "That code is not correct.",
   "onboarding.error.enterCode": "Enter the 6-digit code.",
-  "onboarding.error.referralCode": "That code could not be applied.",
 
+  /* Under a thumb, spoken rather than formal. Yes and No label a form field;
+     Yup and Nope label a reflex, which is what the lightning round asks for. */
+  "common.yes": "Yup",
+  "common.no": "Nope",
   "common.continue": "Continue",
   "common.back": "Back",
   "common.next": "Next",
@@ -1366,19 +1537,6 @@ const SHOP_FOR = [
   { key: "family", label: "Me and my partner", icon: "layers" },
   { key: "kids", label: "My kids too", icon: "star" },
   { key: "someone", label: "Someone I care for", icon: "shield" },
-];
-const PRIOR_SCANNER = [
-  { key: "yes_still", label: "Yes, still using one", icon: "viewfinder" },
-  { key: "yes_stopped", label: "Yes, but I stopped", icon: "clock" },
-  { key: "no", label: "No, this is the first", icon: "minus" },
-];
-const ATTRIBUTION = [
-  { key: "tiktok", label: "TikTok", icon: "lens", brand: "tiktok" },
-  { key: "instagram", label: "Instagram", icon: "star", brand: "instagram" },
-  { key: "youtube", label: "YouTube", icon: "viewfinder", brand: "youtube" },
-  { key: "friend", label: "A friend", icon: "layers" },
-  { key: "appstore", label: "App Store", icon: "bag", brand: "apple" },
-  { key: "other", label: "Somewhere else", icon: "minus" },
 ];
 const HABITS = [
   { key: "Daily", label: "Daily", icon: "calendar" },
@@ -1429,6 +1587,30 @@ const SEXES = [
   { key: "male", labelKey: "onboarding.aboutYou.male" },
   { key: "unspecified", labelKey: "onboarding.aboutYou.unspecified" },
 ];
+
+/* The symptom run, in the order a person would scan their own body: energy,
+   then gut, then face, then head, then appetite. Grouping them that way is
+   what stops twelve identical screens feeling like a list; each pair reads
+   as a continuation of the one before it.
+
+   Every answer is kept, including No. A run of Nos is a real result about
+   a reader, and a quiz that only records the Yeses is one that decided its
+   answer before it asked. */
+const SYMPTOMS = [
+  { key: "tired", labelKey: "onboarding.symptoms.tired" },
+  { key: "morning", labelKey: "onboarding.symptoms.morning" },
+  { key: "crash", labelKey: "onboarding.symptoms.crash" },
+  { key: "coffee", labelKey: "onboarding.symptoms.coffee" },
+  { key: "bloated", labelKey: "onboarding.symptoms.bloated" },
+  { key: "meals", labelKey: "onboarding.symptoms.meals" },
+  { key: "acne", labelKey: "onboarding.symptoms.acne" },
+  { key: "puffy", labelKey: "onboarding.symptoms.puffy" },
+  { key: "foggy", labelKey: "onboarding.symptoms.foggy" },
+  { key: "anxious", labelKey: "onboarding.symptoms.anxious" },
+  { key: "sugar", labelKey: "onboarding.symptoms.sugar" },
+  { key: "weight", labelKey: "onboarding.symptoms.weight" },
+];
+const SYMPTOM_IDS = SYMPTOMS.map((s) => "sym-" + s.key);
 
 /* ---- the model, verbatim from src/services/onboardingProfile.ts ----
    Every number the personalised screens show comes out of here, so the
@@ -1557,9 +1739,10 @@ const REVIEWS = [
   { name: "mm sap", quote: "Very helpful app. Started using it 2 weeks ago and my diet changed instanlty, now its a habit to always check the products i buy with the underneath foos scanning app." },
 ];
 /* The app can show all four because it scrolls. Here the screen has to end at
-   the button, so it shows the two that fit whole rather than four in pieces: a
-   shortened review is a review you edited. */
-const WEB_REVIEWS = 2;
+   the button, so it shows as many as fit whole rather than four in pieces: a
+   shortened review is a review you edited. The cards past the first are dropped
+   by height in CSS, so this is the ceiling, not the count. */
+const WEB_REVIEWS = 3;
 
 /** The trial the app sells. Migration 20260731000001 made it three days. */
 const TRIAL_DAYS = 3;
@@ -1571,29 +1754,45 @@ const TRIAL_DAYS = 3;
    A screen is REMOVED from the flow rather than skipped at the call
    site, so forward and back can never disagree about where they are. */
 const S = {
-  HERO: "hero", ABOUT: "about", YEARS: "years", FEEL: "feel", SHOPFOR: "shopfor",
+  HERO: "hero", SEX: "sex", ABOUT: "about", YEARS: "years", FEEL: "feel", SHOPFOR: "shopfor",
   HABITS: "habits", BADNEWS: "badnews", UPFFREQ: "upffreq", UPFSHARE: "upfshare",
   STANDING: "standing", GOALS: "goals", ADDITIVES: "additives", STAKES: "stakes",
   COMPARE: "compare", DIET: "diet", ALLERGIES: "allergies", CRED: "cred",
-  PRIOR: "prior", HEARD: "heard", REVIEWS: "reviews", CALIB: "calib",
-  REFERRAL: "referral", TRIAL: "trial", ACCOUNT: "account", PLAN: "plan", DONE: "done",
+  LIGHTNING: "lightning", REVIEWS: "reviews", CALIB: "calib",
+  ACCOUNT: "account", PLAN: "plan", DONE: "done",
 };
+/* The symptoms are the last thing asked, run together as one timed block
+   behind a countdown, the way Rise runs its lightning round. Spread through
+   the quiz they were twelve screens that each looked like a question and
+   each cost a beat of patience. Collected at the end, after every considered
+   answer has been given, they stop being twelve screens and become one fast
+   section a reader can feel themselves finishing. */
 const FLOW = [
-  S.HERO, S.ABOUT, S.YEARS, S.FEEL, S.SHOPFOR, S.HABITS, S.BADNEWS, S.UPFFREQ,
-  S.UPFSHARE, S.STANDING, S.GOALS, S.ADDITIVES, S.STAKES, S.COMPARE, S.DIET,
-  S.ALLERGIES, S.CRED, S.PRIOR, S.HEARD, S.REVIEWS, S.CALIB, S.REFERRAL,
-  S.TRIAL, S.PLAN, S.ACCOUNT, S.DONE,
+  S.HERO, S.SEX, S.ABOUT, S.YEARS, S.FEEL, S.SHOPFOR, S.HABITS,
+  S.BADNEWS, S.UPFFREQ, S.UPFSHARE, S.GOALS, S.ADDITIVES, S.STAKES, S.COMPARE, S.DIET,
+  S.ALLERGIES, S.LIGHTNING, ...SYMPTOM_IDS, S.CRED, S.REVIEWS, S.CALIB,
+  /* The two lines are the last thing before the price, because they are the
+     argument for paying: the gap between them is what the subscription is
+     being sold to close. Asked earlier, mid-quiz, they were a fact; asked
+     here, under a button that says try for free, they are the offer. */
+  S.STANDING, S.PLAN, S.ACCOUNT, S.DONE,
 ];
-/** The ten the progress bar counts, matching the app's QUESTION_FLOW. */
+/** What the progress bar counts: the questions, plus the twelve symptoms.
+    A bar that sat still through twelve screens would read as a broken bar,
+    and a reader watching it stop moving stops believing the end is near. */
 const PROGRESS_STEPS = [
-  S.ABOUT, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
-  S.DIET, S.ALLERGIES, S.PRIOR, S.HEARD,
+  S.SEX, S.ABOUT, ...SYMPTOM_IDS, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
+  S.DIET, S.ALLERGIES,
 ];
 /** No back button, no progress bar. */
-const CHROMELESS = [S.HERO, S.CALIB, S.DONE];
+const CHROMELESS = [S.HERO, S.LIGHTNING, S.CALIB, S.DONE];
+/** Screens that move on by themselves. Stepping back onto one of these lands
+    on a timer that immediately pushes forward again, which reads as a back
+    button that does not work, so back steps over them. */
+const AUTO_ADVANCE = [S.LIGHTNING, S.CALIB];
 
 /* ---- where they stop ----------------------------------------------
-   Twenty three screens stand between the ad and the card, and until now
+   Twenty one screens stand between the ad and the card, and until now
    the only thing reported from any of them was the first. An ad that
    sent four hundred readers and sold nothing looked exactly like an ad
    that sent four hundred readers who all left on the hero, and there
@@ -1666,10 +1865,9 @@ function deviceId() {
 const state = {
   i: 0,
   ageBand: null, sex: null, shopFor: null, habit: null, upfFrequency: null,
-  goals: {}, additives: {}, diet: {}, allergies: {},
+  goals: {}, additives: {}, diet: {}, allergies: {}, symptoms: {},
   flagUltraProcessed: true,
-  priorScanner: null, heardFrom: null,
-  referralCode: "", plan: "annual",
+  plan: "annual",
   authMode: "signup", authStage: "methods", email: "", password: "",
   countryCode: guessCountry(), language: "en",
   prefsSaved: false, purchased: false, purchasedTrial: true,
@@ -1793,11 +1991,15 @@ function wreath(height, inner) {
 function chartWidth() {
   return Math.min(window.innerWidth, 420) - 48 - 36;
 }
-/* The two drawn charts carry their height in script rather than in the sheet,
-   because the plot is laid out against it. Same threshold as the short
-   viewport media query, kept in step with it by hand. */
-function shortViewport() {
-  return window.innerHeight <= 900;
+/* A chart is the one thing on these screens that can honestly take whatever
+   room is left, so it is measured off the room rather than picked from two
+   numbers. 118 is the height verified to fit a 667pt handset, and the surplus
+   above 700 is shared with it at a third, so the shortest phone is unchanged
+   by construction and everything taller stops leaving a chart stranded in the
+   top half of an empty card. The cap is where a line chart stops reading as
+   a trend and starts reading as a wall. */
+function chartHeight(base, max) {
+  return Math.round(Math.min(max, base + Math.max(0, window.innerHeight - 700) * 0.3));
 }
 /**
  * A curve through the given points rather than a run of straight segments.
@@ -1840,7 +2042,7 @@ function chartCard(title, inner, caption) {
  */
 function lifeYearsChart(curve, markerAge, markerYears) {
   const W = chartWidth();
-  const H = shortViewport() ? 118 : 190;
+  const H = chartHeight(118, 250);
   const padL = 4, padR = 4, padB = 26, padT = 16;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
@@ -1899,7 +2101,7 @@ function lifeYearsChart(curve, markerAge, markerYears) {
  */
 function scoreProjectionChart(declining, improving, labelNow, labelEnd) {
   const W = chartWidth();
-  const H = shortViewport() ? 118 : 188;
+  const H = chartHeight(118, 248);
   const padL = 4;
   /* Room at the right for each line to carry its own end score. */
   const padR = 50, padT = 14, padB = 26;
@@ -2012,8 +2214,8 @@ function formatCount(n) {
   catch (e) { return String(n); }
 }
 
-function link(label, act) {
-  return `<button class="link" type="button" data-act="${act}">${esc(label)}</button>`;
+function link(label, act, attrs) {
+  return `<button class="link" type="button" data-act="${act}" ${attrs || ""}>${esc(label)}</button>`;
 }
 function chip(label, on, field, value) {
   return `<button class="chip${on ? " on" : ""}" type="button" role="radio" aria-checked="${on}" data-act="pick" data-field="${field}" data-value="${esc(value)}">${esc(label)}</button>`;
@@ -2021,7 +2223,7 @@ function chip(label, on, field, value) {
 /** One option. Single-select shows itself by inverting; multi adds a tick. */
 function optionRow(o, on, attrs, multi) {
   return `<button class="row${on ? " on" : ""}" type="button" role="${multi ? "checkbox" : "radio"}" aria-checked="${on}" ${attrs}>
-      ${disc(o.icon, o.brand)}
+      ${disc(o.icon)}
       <span class="label">${esc(o.label)}${o.sub ? `<span class="sublabel">${esc(o.sub)}</span>` : ""}</span>
       ${multi ? `<span class="tick">${CHECK}</span>` : ""}
     </button>`;
@@ -2041,7 +2243,7 @@ function singleScreen(titleKey, subKey, list, field) {
     and bare ink turns white when the chip is selected. */
 function optionChip(o, on, attrs, bubble) {
   return `<button class="chip${on ? " on" : ""}" type="button" role="checkbox" aria-checked="${on}" ${attrs}>
-      ${bubble ? disc(o.icon, o.brand, 32) : icon(o.icon, 16)}
+      ${bubble ? disc(o.icon, 32) : icon(o.icon, 16)}
       <span class="label">${esc(o.label)}</span>
     </button>`;
 }
@@ -2062,7 +2264,7 @@ function checkRow(o, on, attrs) {
   return `<button class="check-row${on ? " on" : ""}" type="button" role="checkbox" aria-checked="${on}" ${attrs}>
       <span class="check-head">
         <span class="checkbox">${CHECK}</span>
-        ${disc(o.icon, o.brand, 32)}
+        ${disc(o.icon, 32)}
         <span class="label">${esc(o.label)}</span>
       </span>
       ${o.sub ? `<span class="check-sub">${esc(o.sub)}</span>` : ""}
@@ -2072,9 +2274,19 @@ function checkRow(o, on, attrs) {
 const SCREENS = {};
 
 Object.assign(SCREENS, {
-  /* The opening. No chrome, because there is nothing yet to go back to. */
+  /* The opening. No chrome, because there is nothing yet to go back to, and
+     no wordmark either: a reader who arrived from an ad has just been told
+     the name, and repeating it costs the room the product itself wants.
+
+     What the screen does instead is show the thing working. The handset is
+     drawn rather than photographed, to the same body, bezel, island and side
+     buttons the native screen draws, so the promise above it is answered by
+     the app running under it before a single question is asked. */
   [S.HERO]: () => ({
     html: `<section class="hero">
+        <div class="hero-head">
+          <h1>${esc(t("onboarding.hero.title"))}</h1>
+        </div>
         <div class="hero-phone-wrap">
           <div class="hero-phone">
             <div class="hero-phone-btn l" style="top:17.3%;height:5.9%"></div>
@@ -2089,11 +2301,41 @@ Object.assign(SCREENS, {
             </div>
           </div>
         </div>
-        <div class="hero-copy"><h1>${esc(t("onboarding.hero.title"))}</h1></div>
-        <div class="hero-dock">${cta(t("onboarding.hero.cta")) + link(t("onboarding.hero.haveAccount"), "signin")}</div>
+        <div class="hero-dock">
+          ${cta(t("onboarding.hero.cta"))}
+          ${link(t("onboarding.hero.haveAccount"), "signin")}
+        </div>
       </section>`,
     dock: "",
   }),
+
+  /* Sex, asked as two photographs. A picture is a cheaper thing to answer
+     than a form, and this answer is one the flow needs anyway: it picks the
+     curve the life-years screen reads from. Tapping a card sets it and moves
+     on, so the screen after it has only age left to ask. */
+  [S.SEX]: () => {
+    const card = (key, photo, pos) => `<button class="pick-card${state.sex === key ? " on" : ""}" type="button"
+        data-act="choose" data-field="sex" data-value="${key}">
+        <span class="pick-photo">
+          <img src="assets/${photo}" alt="" style="object-position:${pos}" loading="eager" decoding="async">
+        </span>
+        <span class="pick-foot">
+          <span class="pick-label">${esc(t("onboarding.aboutYou." + key))}</span>
+          <span class="pick-go">${ARROW_RIGHT}</span>
+        </span>
+      </button>`;
+    return {
+      html: `<h1 class="title">${esc(t("onboarding.sex.title"))}</h1>
+        <div class="pick-cards" role="radiogroup" aria-label="${esc(t("onboarding.sex.title"))}">
+          ${card("female", "start-female.webp", "52% center")}
+          ${card("male", "start-male.webp", "44% center")}
+        </div>
+        <div class="pick-skip">
+          ${link(t("onboarding.aboutYou.unspecified"), "choose", 'data-field="sex" data-value="unspecified"')}
+        </div>`,
+      dock: "",
+    };
+  },
 
   /* Years. The line is the model read at every age from twenty to eighty, so
      the figure printed above it can be checked against the shape it came from,
@@ -2168,16 +2410,24 @@ Object.assign(SCREENS, {
     const us = ref.region === "us";
     /* The count above is this screen's number. The published share counts
        calories where that counts meals, so it is set in its own sentence under
-       a rule rather than stood up as a rival headline in the same size. */
-    const refRow = `<div class="ref-row">
+       a rule rather than stood up as a rival headline in the same size.
+       With nothing above it the rule divides nothing, so on the unsure answer
+       the same figure is promoted to the headline it now has to be. */
+    const refRow = meals === null
+      ? `<p class="statrow"><b style="color:var(--red-text)">${ref.percent}%</b><span>${esc(t("onboarding.upfShare.refUnit"))}</span></p>
+         <div class="ref-bar"><i style="width:${ref.percent}%"></i></div>
+         <p class="ref-body ref-body--lead">${esc(t(us ? "onboarding.upfShare.refLeadUs" : "onboarding.upfShare.refLeadEurope"))}</p>`
+      : `<div class="ref-row">
         <p class="ref-body"><b>${ref.percent}% </b>${esc(t(us ? "onboarding.upfShare.refUs" : "onboarding.upfShare.refEurope"))}</p>
         <div class="ref-bar"><i style="width:${ref.percent}%"></i></div>
       </div>`;
+    /* One working line, not two. The old pair said "7 a week · 52 weeks" over
+       the grid and "7 of 21 meals in one week" under it, which is the same 7
+       explained twice and reads as a caption that has lost its picture. */
     const own = meals === null ? "" :
-      `<p class="statrow" style="margin-top:18px"><b style="color:var(--red-text)">${esc(formatCount(upfMealsPerYear(meals)))}</b><span>${esc(t("onboarding.upfShare.unit"))}</span></p>
-       <p class="statworking" style="margin-top:8px;text-align:left">${esc(t("onboarding.upfShare.working", { meals: meals }))}</p>
+      `<p class="statrow"><b style="color:var(--red-text)">${esc(formatCount(upfMealsPerYear(meals)))}</b><span>${esc(t("onboarding.upfShare.unit"))}</span></p>
        <div class="meal-grid">${Array.from({ length: MEALS_PER_WEEK }, (_, k) => `<i${k < meals ? ' class="on"' : ""}></i>`).join("")}</div>
-       <p class="chart-caption">${esc(t("onboarding.upfShare.chartCaption", { meals: meals, total: MEALS_PER_WEEK }))}</p>`;
+       <p class="statworking">${esc(t("onboarding.upfShare.working", { meals: meals, total: MEALS_PER_WEEK }))}</p>`;
     return {
       html: `<h1 class="title">${esc(t(meals === null ? "onboarding.upfShare.titleUnsure" : "onboarding.upfShare.title"))}</h1>
         ${own}
@@ -2203,7 +2453,7 @@ Object.assign(SCREENS, {
         <i style="background:var(--red);margin-left:18px"></i><span>${esc(t("onboarding.standing.legendWithout"))}</span>
       </div>`;
     return {
-      html: `<h1 class="title">${esc(t(p.average ? "onboarding.standing.titleAverage" : "onboarding.standing.title"))}</h1>
+      html: `<h1 class="title">${esc(t("onboarding.standing.title"))}</h1>
         ${chartCard(
           t("onboarding.standing.chartTitle", { years: PROJECTION_YEARS }),
           scoreProjectionChart(
@@ -2214,9 +2464,8 @@ Object.assign(SCREENS, {
           `<p class="ring-working">${esc(t("onboarding.standing.working", { start: p.start, gain: gain }))}</p>`,
           t(p.average ? "onboarding.standing.captionAverage" : "onboarding.standing.chartCaption"),
         )}
-        ${p.average ? `<p class="caveat" style="margin-top:20px;font-size:14.5px;line-height:21px;color:var(--text-secondary)">${esc(t(ref.region === "us" ? "onboarding.standing.averageUs" : "onboarding.standing.averageEurope", { meals: upfMealsAtShare(ref.percent) }))}</p>` : ""}
         <p class="caveat" style="margin-top:18px">${esc(t("onboarding.standing.note"))}</p>`,
-      dock: cta(t("common.continue"), false, "next", t("onboarding.standing.source")),
+      dock: cta(t("onboarding.standing.cta"), false, "next", t("onboarding.standing.source")),
     };
   },
 
@@ -2319,10 +2568,10 @@ Object.assign(SCREENS, {
      store says, and how many people have downloaded it. A number nobody framed
      is a number, and a number in a wreath is a placing. */
   [S.REVIEWS]: () => ({
-    html: `<h1 class="title">${esc(t("onboarding.reviews.title"))}</h1>
+    html: `<h1 class="title">${esc(t("onboarding.reviews.title", { users: REVIEW_USERS }))}</h1>
       <div class="proof-row">
         ${REVIEW_RATING ? `<div class="proof-col">
-            ${wreath(74, `<span class="proof-rank">${esc(t("onboarding.reviews.ratingValue"))}</span>`)}
+            ${wreath(58, `<span class="proof-rank">${esc(t("onboarding.reviews.ratingValue"))}</span>`)}
             <p class="proof-caption">${esc(t("onboarding.reviews.rating"))}</p>
           </div>` : ""}
         <div class="proof-col">
@@ -2331,7 +2580,6 @@ Object.assign(SCREENS, {
               `<span class="cluster-disc">${esc(r.name.slice(0, 1).toUpperCase())}</span>`).join("")}
             <span class="cluster-disc cluster-count"><span class="proof-rank">${esc(REVIEW_USERS)}</span></span>
           </div>
-          <p class="proof-caption">${esc(t("onboarding.reviews.count"))}</p>
         </div>
       </div>
       ${REVIEWS.slice(0, WEB_REVIEWS).map((r) => `<article class="review-card">
@@ -2356,7 +2604,11 @@ Object.assign(SCREENS, {
 /* The app quotes the annual plan by the week. The web quotes it by the day,
    because a day is the unit the price stops sounding like a subscription in.
    The app still says per week, so the two paywalls differ on this line. */
-T["plan.perDayEquivalent"] = "about {price} per day";
+/* Slashed like the term under it, so the two lines read as one price in two
+   units rather than as two prices. The exact figure is a division that rounds
+   to the nearest penny, and the term it divides is printed directly below,
+   which is where anyone checking the arithmetic would look anyway. */
+T["plan.perDayEquivalent"] = "{price}/day";
 T["onboarding.done.iosSmall"] = "Download on the";
 T["onboarding.done.iosStore"] = "App Store";
 T["onboarding.done.androidSmall"] = "Get it on";
@@ -2377,7 +2629,7 @@ const ui = {
   msg: null, msgOk: false, busy: false,
   /* newPw lives here rather than in state, because state is written to
      localStorage and a password has no business surviving the tab. */
-  otp: "", newPw: "", cooldown: 0, revealed: false, calibPct: 0,
+  otp: "", newPw: "", cooldown: 0, calibPct: 0, countdown: 0,
   packages: null,
 };
 function setMsg(text, ok) { ui.msg = text || null; ui.msgOk = !!ok; }
@@ -2403,6 +2655,27 @@ const CALIB_ROWS = [
   ["allergens", "bell"], ["engine", "gauge"],
 ];
 
+/* The rating, under the loader, the way Rise puts it under theirs. A wait is
+   the one moment in the funnel with nothing to read and nothing to tap, and
+   somebody else's sentence is the best thing to hand a person who is sitting
+   still wondering whether this was worth starting.
+
+   The quotes are whatever the reviews screen had no room for, so nobody is
+   shown the same review twice. That is one review at the moment, so it sits;
+   the rotation is kept because the ceiling above it is a number that moves. */
+const CALIB_REVIEWS = REVIEWS.slice(WEB_REVIEWS);
+function calibProof() {
+  if (CALIB_REVIEWS.length === 0) return "";
+  const r = CALIB_REVIEWS[Math.min(CALIB_REVIEWS.length - 1,
+    Math.floor(ui.calibPct / (100 / CALIB_REVIEWS.length)))];
+  return `<div class="calib-proof">
+      <p class="calib-proof-count">${esc(t("onboarding.calib.proof", { users: REVIEW_USERS }))}</p>
+      ${starRow(15, 3)}
+      <p class="calib-quote">${esc(r.quote)}</p>
+      <p class="calib-name">${esc(r.name)}</p>
+    </div>`;
+}
+
 /* ---- prices, read off the store rather than typed in ---------------
    A price in the markup is a price that goes stale in a currency we
    never tested. Everything below reads what RevenueCat returns and says
@@ -2422,7 +2695,11 @@ function pkgPerPeriod(pkg, periods) {
   const currency = c.currency || c.currencyCode;
   if (typeof micros !== "number" || !currency) return null;
   try {
-    return new Intl.NumberFormat(navigator.language || "en", {
+    /* Formatted in the language of the copy around it, not the browser's,
+       for the same reason the trial date is: the store hands back "€49.99"
+       and a Greek browser was rendering our slice of it as "0,14 €", two
+       spellings of the same currency stacked one on top of the other. */
+    return new Intl.NumberFormat(document.documentElement.lang || "en-US", {
       style: "currency", currency: currency,
     }).format(micros / 1e6 / periods);
   } catch (e) { return null; }
@@ -2456,27 +2733,68 @@ function pkgTrialDays(pkg) {
   return days > 0 ? days : null;
 }
 
+/* One hand, pointed up or down. Drawn rather than typed as an emoji: the
+   emoji renders in the system's own skin tone and cartoon style on every
+   platform, which is three different pictures of a hand and none of them
+   ours. Stroked in currentColor so the navy state needs no second copy. */
+function thumbMark(down) {
+  return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+    ${down ? 'style="transform:rotate(180deg)"' : ""}>
+    <path d="M6.9 10.6v8.2H4.8a1 1 0 0 1-1-1v-6.2a1 1 0 0 1 1-1Z"
+      stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6.9 10.6 11.6 3.6a2.1 2.1 0 0 1 1.9 2.2v3.1h4.4a1.7 1.7 0 0 1 1.7 2l-1.1 6.4a1.7 1.7 0 0 1-1.7 1.5H6.9Z"
+      stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+/* Twelve screens built from one shape. They share a class so they share a
+   look, and the tap that answers is the tap that moves on, exactly as the
+   age screen works: a Continue button under a two-answer question is a
+   second tap that decides nothing.
+
+   The counter above the line is the only chrome on the screen, and it is
+   there because the progress bar is hidden through the round: a reader
+   going this fast wants to know how much faster there is left to go. */
+SYMPTOMS.forEach((s, n) => {
+  SCREENS["sym-" + s.key] = () => {
+    const answer = state.symptoms[s.key];
+    const hand = (value, down) => `<button class="thumb${answer === (value === "yes") ? " on" : ""}" type="button"
+        role="radio" aria-checked="${answer === (value === "yes")}"
+        data-act="yesno" data-key="${esc(s.key)}" data-value="${value}">
+        <span class="thumb-disc">${thumbMark(down)}</span>
+        <span class="thumb-label">${esc(t("common." + value))}</span>
+      </button>`;
+    return {
+      cls: "sym",
+      html: `<p class="sym-counter">${esc(t("onboarding.lightning.counter", { n: n + 1, total: SYMPTOMS.length }))}</p>
+        <h1 class="title">${esc(t(s.labelKey))}</h1>
+        <div class="thumbs" role="radiogroup" aria-label="${esc(t(s.labelKey))}">
+          ${hand("yes", false)}${hand("no", true)}
+        </div>`,
+      dock: "",
+    };
+  };
+});
+
 Object.assign(SCREENS, {
-  /* Age and sex, the two inputs the life-years model needs. Both are
-     required, which is why the button stays dead until both are set. */
+  /* Age. Sex is already answered on the landing, so the one input left gets
+     the whole screen: six boxes, one question, and the tap that answers it is
+     also the tap that moves on. A Continue button under a single-answer
+     question is a second tap that decides nothing. */
   [S.ABOUT]: () => ({
     html: `<h1 class="title">${esc(t("onboarding.aboutYou.title"))}</h1>
-      <p class="field-label" id="age-label">${esc(t("onboarding.aboutYou.ageLabel"))}</p>
-      <div class="chips" role="radiogroup" aria-labelledby="age-label">
-        ${AGE_BANDS.map((b) => chip(b, state.ageBand === b, "ageBand", b)).join("")}
-      </div>
-      <p class="field-label" id="sex-label">${esc(t("onboarding.aboutYou.sexLabel"))}</p>
-      <div class="chips" role="radiogroup" aria-labelledby="sex-label">
-        ${SEXES.map((s) => chip(t(s.labelKey), state.sex === s.key, "sex", s.key)).join("")}
+      <p class="sub">${esc(t("onboarding.aboutYou.sub"))}</p>
+      <div class="rows rows--plain" role="radiogroup" aria-label="${esc(t("onboarding.aboutYou.ageLabel"))}">
+        ${AGE_BANDS.map((b) => `<button class="row${state.ageBand === b ? " on" : ""}" type="button"
+            role="radio" aria-checked="${state.ageBand === b}"
+            data-act="choose" data-field="ageBand" data-value="${esc(b)}"><span class="label">${esc(b)}</span></button>`).join("")}
       </div>`,
-    dock: cta(t("common.continue"), !(state.ageBand && state.sex)),
+    dock: "",
   }),
 
   [S.SHOPFOR]: () => singleScreen("onboarding.shopFor.title", null, SHOP_FOR, "shopFor"),
   [S.HABITS]: () => singleScreen("onboarding.habits.title", null, HABITS, "habit"),
   [S.UPFFREQ]: () => singleScreen("onboarding.upfFreq.title", "onboarding.upfFreq.sub", UPF_FREQ, "upfFrequency"),
-  [S.PRIOR]: () => singleScreen("onboarding.prior.title", null, PRIOR_SCANNER, "priorScanner"),
-  [S.HEARD]: () => singleScreen("onboarding.heard.title", null, ATTRIBUTION, "heardFrom"),
 
   /* Goals are the one multi-select the app splits into two headed
      groups, because "more protein" and "less sugar" are not the same
@@ -2507,6 +2825,24 @@ Object.assign(SCREENS, {
   [S.DIET]: () => chipScreen("onboarding.diet.title", DIET, "diet", "common.next"),
   [S.ALLERGIES]: () => chipScreen("onboarding.allergies.title", ALLERGIES, "allergies", "common.next", "onboarding.allergies.warning"),
 
+  [S.LIGHTNING]: () => {
+    /* Set here rather than in the timer, because `after` runs inside render
+       and a render from inside render is a loop. The first frame has to be
+       drawn holding the full count, so the count starts here. */
+    if (!countTimer) ui.countdown = COUNTDOWN_FROM;
+    return {
+      html: `<div class="lightning">
+          <h1 class="title">${esc(t("onboarding.lightning.title"))}</h1>
+          <p class="sub">${esc(t("onboarding.lightning.sub"))}</p>
+          <div class="count-ring" aria-hidden="true">
+            <span class="count-num">${ui.countdown}</span>
+          </div>
+        </div>`,
+      dock: "",
+      after: runCountdown,
+    };
+  },
+
   /* Calibration. No chrome and no button: it advances itself. The work
      it names is real work, already done by the answers above. */
   [S.CALIB]: () => ({
@@ -2519,64 +2855,16 @@ Object.assign(SCREENS, {
           ${CALIB_ROWS.map(([key, glyph], k) => {
             const done = ui.calibPct >= (k + 1) * 20;
             return `<div class="calib-row${done ? " done" : ""}">
-              ${disc(glyph, null, 32)}
+              ${disc(glyph, 32)}
               <span class="label">${esc(t("onboarding.calib." + key))}</span>
               <span class="calib-tick">${done ? CALIB_CHECK : ""}</span>
             </div>`;
           }).join("")}
         </div>
+        ${calibProof()}
       </div>`,
     after: runCalibration,
   }),
-
-  /* A code is optional, so the skip is a button and not a small link
-     someone has to hunt for. */
-  [S.REFERRAL]: () => ({
-    html: `<h1 class="title">${esc(t("onboarding.referral.title"))}</h1>
-      ${msgHtml()}
-      <p class="field-label">${esc(t("onboarding.referral.placeholder"))}</p>
-      <input class="input" type="text" name="referral" value="${esc(state.referralCode)}"
-        placeholder="${esc(t("onboarding.referral.placeholder"))}"
-        autocomplete="off" autocapitalize="characters" spellcheck="false"
-        inputmode="text" enterkeyhint="done" data-bind="referralCode"
-        aria-label="${esc(t("onboarding.referral.placeholder"))}">
-      <p class="note">${esc(t("onboarding.referral.disclaimer"))}</p>`,
-    dock: cta(t("common.continue")) + link(t("onboarding.referral.sub"), "skipref"),
-  }),
-
-  /* One scan, then the swap. It is the product's whole argument in two
-     cards, which is why it sits immediately before the price. */
-  [S.TRIAL]: () => {
-    const card = (kind, tone) => {
-      const ings = kind === "bad"
-        ? ["badIng1", "badIng2", "badIng3", "badIng4"]
-        : ["goodIng1", "goodIng2", "goodIng3"];
-      const dot = tone === "bad" ? "#E5564E" : "#3E9C6D";
-      return `<div class="scan"${kind === "good" ? ' style="margin-top:14px"' : ""}>
-        <div class="head">
-          <img class="thumb" src="assets/${kind === "bad" ? "poptarts.jpg" : "naturespath.jpg"}" alt="" loading="lazy" width="54" height="54">
-          <div class="name">${esc(t("onboarding.trial." + kind + "Product"))}
-            <span class="brand">${esc(t("onboarding.trial." + kind + "Brand"))}</span>
-          </div>
-        </div>
-        <div class="pills">
-          <span class="tag ${tone}">${esc(t("onboarding.trial." + kind + "Pill1"))}</span>
-          <span class="tag ${tone}">${esc(t("onboarding.trial." + kind + "Pill2"))}</span>
-        </div>
-        <ul class="ing-list">
-          ${ings.map((k) => `<li><i style="background:${dot}"></i>${esc(t("onboarding.trial." + k))}</li>`).join("")}
-        </ul>
-      </div>`;
-    };
-    return {
-      html: `<h1 class="title">${esc(t("onboarding.trial.title"))}</h1>
-        ${card("bad", "bad")}
-        ${ui.revealed ? card("good", "good") + `<p class="jump">${esc(t("onboarding.trial.jump"))}</p>` : ""}`,
-      dock: ui.revealed
-        ? cta(t("common.continue")) + `<p class="legal">${esc(t("onboarding.trial.noPayment"))}</p>`
-        : cta(t("onboarding.trial.reveal"), false, "reveal"),
-    };
-  },
 
   /* The plan is picked before this screen, which is the one place the web
      diverges from the app's order: the reader sees what they are buying while
@@ -2786,17 +3074,23 @@ Object.assign(SCREENS, {
       null,
     ]);
 
+    /* The day rate leads and the term follows. Nobody decides between fifty
+       pounds and ten; they decide whether a thing is worth the coin it costs
+       today, and the yearly card only ever wins on that comparison. The term
+       stays underneath rather than going away, because a per-day figure with
+       no billing period attached is the shape of a trick. */
     const planCard = (key, pkg, labelKey, per, days, tag) => {
       const price = pkgPrice(pkg);
       const daily = pkgPerPeriod(pkg, days);
+      const term = price ? price + t(per) : unavailable;
       return `<button class="plan${state.plan === key ? " on" : ""}" type="button" role="radio"
           aria-checked="${state.plan === key}" data-act="plan" data-value="${key}">
         <span class="top">
           <span class="radio"></span>
           <span class="col">
             <span class="pname">${esc(t(labelKey))}</span>
-            <span class="psub">${esc(price ? price + t(per) : unavailable)}</span>
-            ${daily ? `<span class="pweek">${esc(t("plan.perDayEquivalent", { price: daily }))}</span>` : ""}
+            <span class="psub">${esc(daily ? t("plan.perDayEquivalent", { price: daily }) : term)}</span>
+            ${daily ? `<span class="pweek">${esc(term)}</span>` : ""}
           </span>
         </span>
         ${tag ? `<span class="tagline">${esc(t(tag))}</span>` : ""}
@@ -2972,23 +3266,56 @@ function goBack() {
     render();
     return;
   }
-  go(-1);
+  const f = flow();
+  let n = 1;
+  while (state.i - n > 0 && AUTO_ADVANCE.indexOf(f[state.i - n]) !== -1) n += 1;
+  go(-n);
+}
+
+/* Rise counts five. Five whole seconds of a reader watching a number is five
+   seconds they could spend leaving, so the count is Rise's and the clock is
+   ours: the same five beats, run fast enough to read as urgency rather than
+   as a wait. */
+const COUNTDOWN_FROM = 5;
+const COUNTDOWN_TICK = 620;
+let countTimer = null;
+function runCountdown() {
+  if (countTimer) return;
+  countTimer = setInterval(() => {
+    if (flow()[state.i] !== S.LIGHTNING) {
+      clearInterval(countTimer);
+      countTimer = null;
+      return;
+    }
+    ui.countdown -= 1;
+    if (ui.countdown <= 0) {
+      clearInterval(countTimer);
+      countTimer = null;
+      go(1);
+      return;
+    }
+    render();
+  }, COUNTDOWN_TICK);
 }
 
 let calibTimer = null;
 function runCalibration() {
   if (calibTimer) return;
   ui.calibPct = 0;
+  /* A point a tick rather than two, and a slower tick: the bar is the only thing
+     holding the reviews on screen, and at two seconds a review is a thing that
+     flashed past rather than a thing that was read. Roughly two and a half
+     seconds each, which is a short quote read once. */
   calibTimer = setTimeout(() => {
     calibTimer = setInterval(() => {
-      ui.calibPct = Math.min(100, ui.calibPct + 2);
+      ui.calibPct = Math.min(100, ui.calibPct + 1);
       if (ui.calibPct >= 100) {
         clearInterval(calibTimer);
         calibTimer = null;
         setTimeout(() => { if (flow()[state.i] === S.CALIB) go(1); }, 420);
       }
       if (flow()[state.i] === S.CALIB) render();
-    }, 40);
+    }, 48);
   }, 400);
 }
 
@@ -3023,6 +3350,16 @@ const ACTIONS = {
     render();
     setTimeout(() => { advancing = false; go(1); }, 240);
   },
+  /* Yes or no, then move on. Stored as a boolean rather than by presence in
+     a set, so a No is recorded as an answer given instead of as a question
+     skipped. The two are not the same thing to read back. */
+  yesno: (el) => {
+    if (advancing) return;
+    state.symptoms[el.dataset.key] = el.dataset.value === "yes";
+    advancing = true;
+    render();
+    setTimeout(() => { advancing = false; go(1); }, 240);
+  },
   multi: (el) => {
     const set = state[el.dataset.set];
     const key = el.dataset.key;
@@ -3041,8 +3378,6 @@ const ACTIONS = {
     render();
   },
   flagtoggle: () => { state.flagUltraProcessed = !state.flagUltraProcessed; render(); },
-  reveal: () => { ui.revealed = true; render(); },
-  skipref: () => { state.referralCode = ""; go(1); },
   plan: (el) => { state.plan = el.dataset.value; render(); },
   signin: () => {
     state.authMode = "signin";
@@ -3167,8 +3502,7 @@ function preferencesPayload() {
       ageBand: state.ageBand || "",
       sex: state.sex || "",
       shopFor: state.shopFor || "",
-      priorScanner: state.priorScanner || "",
-      heardFrom: state.heardFrom || "",
+      symptoms: state.symptoms,
     },
   };
 }
@@ -3193,10 +3527,6 @@ async function afterAuth(user, resume) {
   currentUser = user;
   await bindBillingToUser(user);
   await savePreferences(user.id);
-  const code = (state.referralCode || "").trim();
-  if (code) {
-    try { await db.rpc("apply_referral_code", { p_code: code }); } catch (e) {}
-  }
   state.prefsSaved = true;
   state.password = "";
   state.authStage = "methods";
@@ -3543,7 +3873,8 @@ manageLink.addEventListener("click", async (ev) => {
 /* Older preview links used these names. */
 const STEP_ALIASES = {
   worry: S.ABOUT, bread: S.COMPARE, relate: S.FEEL, stat: S.STAKES,
-  quiz: S.YEARS, how: S.CRED, anchor: S.TRIAL, timeline: S.REFERRAL,
+  quiz: S.YEARS, how: S.CRED, anchor: S.STANDING,
+  symptoms: SYMPTOM_IDS[0],
 };
 
 async function boot() {
