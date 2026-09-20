@@ -561,15 +561,23 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .review-quote{font-size:14.5px;line-height:21px;color:var(--text-secondary);margin:9px 0 0}
 .review-quote.tight{margin-top:5px}
 /* Each card shows only where it fits whole: better two reviews read than three
-   cut in half. The heights below are measured at 360px wide, the narrowest
-   phone, so a card never appears on a screen that cannot finish it. Two fit
-   from 700. Three fit from 844, but only while the compact design is in force:
-   over 900 the roomier base sheet takes back more height than the taller screen
-   gives, so the third waits until 1080. */
+   cut in half. A narrow screen wraps the headline onto another line, so what
+   fits depends on width as well as height and the gates carry both: three fit
+   from 844 on any phone 375 wide or more, but a 360 wraps the headline onto a
+   third line and has to reach 890 to buy the same card back. Above 900 the
+   roomier base sheet takes back more height than the taller screen gives, so
+   the third waits again until 1080. Re-measure all of this whenever the
+   headline changes length: it sits above the cards and spends their budget. */
 @media (max-height:699px){
   .review-card + .review-card{display:none}
 }
+@media (max-height:735px) and (max-width:374px){
+  .review-card + .review-card{display:none}
+}
 @media (max-height:843px){
+  .review-card + .review-card + .review-card{display:none}
+}
+@media (max-height:889px) and (max-width:374px){
   .review-card + .review-card + .review-card{display:none}
 }
 @media (min-height:901px) and (max-height:1079px){
@@ -1393,8 +1401,9 @@ const T = {
   /* The figure comes from the same constant the cluster under it shows, so the
      headline and the number beneath it can never end up disagreeing. What the
      help was for finishes the second line, which a bare "people." left almost
-     empty, and it is the literal thing the app does rather than a promise. */
-  "onboarding.reviews.title": "Underneath has helped {users} people read the label.",
+     empty, and it names the outcome the visitor came for rather than the
+     mechanism, which they do not want for its own sake. */
+  "onboarding.reviews.title": "Underneath has helped {users} people fix their nutrition.",
   "onboarding.reviews.ratingValue": "4.9",
   "onboarding.reviews.rating": "App Store rating",
 
@@ -1728,7 +1737,7 @@ function upfReference(countryCode) {
    Two from the App Store and two from Google Play, copied down to the
    typos. The figure under the cluster is downloads across both stores,
    which is why the caption says downloads and not users. */
-const REVIEW_USERS = "50k+";
+const REVIEW_USERS = "50k";
 /* The store placing is shown only where it is true, so the wreath never has to
    hold a claim that has gone stale. */
 const REVIEW_RATING = true;
