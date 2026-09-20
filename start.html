@@ -3957,6 +3957,23 @@ async function startCheckout() {
       if (currentUser && currentUser.email) attrs["$email"] = currentUser.email;
       await purchases.setAttributes(attrs);
     } catch (e) { /* attribution is best effort, the sale is not */ }
+    /* The card sheet is about to open, which is the whole of what Meta means
+       by InitiateCheckout. Until now the page fired only PageView, so Meta was
+       inferring this event from browsing behaviour and counting ten of them on
+       a day that produced one trial. Reporting it from the one place that
+       knows it happened replaces a guess with a fact. Wrapped because a
+       blocked pixel must never be able to refuse someone the card. */
+    try {
+      const prod = pkg.webBillingProduct || pkg.rcBillingProduct || pkg.product || {};
+      const price = prod.currentPrice || prod.price || {};
+      const micros = price.amountMicros;
+      const currency = price.currency || price.currencyCode;
+      if (window.fbq) {
+        fbq("track", "InitiateCheckout", (typeof micros === "number" && currency)
+          ? { value: micros / 1e6, currency: currency }
+          : {});
+      }
+    } catch (e) { /* a pixel that cannot report is not a reason to refuse a sale */ }
     /* Undefined on the way in means the sheet asks for the address itself,
        which is the usual case now that the card comes before the account. */
     await purchases.purchase({
