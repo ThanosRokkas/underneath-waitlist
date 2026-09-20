@@ -1338,10 +1338,17 @@ const T = {
   "onboarding.standing.legendWithout": "Without",
   "onboarding.standing.now": "NOW",
   "onboarding.standing.years": "YEAR {years}",
-  "onboarding.standing.working": "It starts at {start}. A better choice every couple of months puts on {gain} points by year eight.",
+  /* Two workings, because the average branch is not drawing the reader. The
+     first says "you", the second cannot and does not. */
+  "onboarding.standing.workingAverage": "An average week there starts at {start}. At the rate you shop, {swaps} better choices a year reach {target} by year {years}, so {gain} points up on that start and {gap} above the same week left alone.",
+  "onboarding.standing.working": "You are at {start} today. At the rate you shop, {swaps} better choices a year reach {target} by year {years}, so {gain} points up on where you stand and {gap} above the same week left alone.",
   "onboarding.standing.chartCaption": "YOUR HEALTH SCORE, OUT OF 100",
   "onboarding.standing.captionAverage": "AN AVERAGE HEALTH SCORE, OUT OF 100",
-  "onboarding.standing.note": "A diet score, not a measurement of your body. Both lines are models.",
+  "onboarding.standing.note": "Built from how often you eat ultra-processed food, how often you shop and your age. A diet score, not a measurement of your body. Both lines are models.",
+  /* Said plainly, because the number moved on answers about a body and the
+     screen has to own that. Nothing here claims food caused anything. */
+  "onboarding.standing.noneOfThem": "none",
+  "onboarding.standing.noteSymptoms": "Built from how often you eat ultra-processed food, how often you shop, your age, and your answers to the {total} quick questions, {yes} of them a yes. Those answers only nudge the week inside the frequency you picked. Read off what you told us, not off a test. Both lines are models.",
   "onboarding.standing.source": "Source: JAMA Neurology 2022.",
 
   "onboarding.goals.title": "What do you want to get out of this?",
@@ -1699,6 +1706,55 @@ const UPF_DECLINE_MULTIPLIER = 1.28; // JAMA Neurology 2022, ELSA-Brasil
 const UPF_DECLINE_MIN_MEALS = MEALS_PER_WEEK * 0.2;
 const UPF_DECLINE_AGE_LIMIT = 60;
 const SWAPS_PER_YEAR = 6;
+/* The same figure re-read as a rate. A swap only happens where a product is
+   picked up, so the opportunity is a shopping trip, not a month on a calendar.
+   Six a year was written against the default habit of 156 trips, so dividing
+   by that recovers the rate it always implied rather than inventing a new one,
+   and the median answer still lands on exactly six. */
+const SWAPS_PER_TRIP = SWAPS_PER_YEAR / DEFAULT_TRIPS;
+/* Floored because a reader changes meals they did not shop for too, and capped
+   because what limits a swap is a better product being on that shelf, not the
+   number of times the door opens. One a month is the most that is claimed. */
+const SWAPS_PER_YEAR_MIN = 2;
+const SWAPS_PER_YEAR_MAX = 12;
+/* How often the shopping happens is already asked, and until now it only fed
+   the count of items handled. It is the one other answer that bears on this
+   chart honestly: it does not change how the week scores today, it changes how
+   quickly the week can be changed. */
+function swapsPerYear(habit) {
+  const raw = shoppingTripsPerYear(habit) * SWAPS_PER_TRIP;
+  return Math.min(SWAPS_PER_YEAR_MAX, Math.max(SWAPS_PER_YEAR_MIN, Math.round(raw)));
+}
+
+/* ---- the lightning round, read back ------------------------------------
+   The frequency answer is one coarse band: "Once a day" is the same 7 meals
+   whether the reader meant a sandwich or meant most of what they eat. The
+   twelve yes and no answers are a second account of the same week from the
+   same person, and the round already records a No as an answer given rather
+   than a question skipped, so both directions can be read.
+
+   They move the week WITHIN its band and no further. Two meals either way is
+   narrower than the gap between any two frequency answers, so the round can
+   sharpen where someone sits and can never move them into a band they did not
+   pick. It is still their own report being read back, not a diagnosis: nothing
+   here says a symptom was caused by food, and the screen says so too. */
+const SYMPTOM_MEAL_SHIFT = 2;
+/* Share of the round answered yes, or null when the round was not run. The
+   denominator is the questions ANSWERED, so a reader who leaves partway
+   through is read on what they gave rather than marked down for the rest. */
+function symptomLoad(symptoms) {
+  const answered = SYMPTOMS.filter((s) => typeof symptoms[s.key] === "boolean");
+  if (answered.length === 0) return null;
+  return answered.filter((s) => symptoms[s.key] === true).length / answered.length;
+}
+function symptomYesCount(symptoms) {
+  return SYMPTOMS.filter((s) => symptoms[s.key] === true).length;
+}
+/* Centred on half, so an even split moves nothing and the round has to lean
+   one way before it counts for anything. */
+function symptomMealShift(load) {
+  return load === null ? 0 : (load - 0.5) * 2 * SYMPTOM_MEAL_SHIFT;
+}
 /* Whole points. The projection is drawn AND read out, and a score is a whole
    number everywhere else in the product, so it is rounded at the source rather
    than at each of the places that prints it. */
@@ -1709,21 +1765,39 @@ function weekScore(upfPerWeek) {
   const upfScore = UPF_MEAL_WORST + (UPF_MEAL_BEST - UPF_MEAL_WORST) * (1 - share);
   return upfScore * share + ORDINARY_MEAL_SCORE * (1 - share);
 }
-function healthScoreProjection({ upfPerWeek, age, averageUpfPerWeek, years = PROJECTION_YEARS }) {
-  const own = weekScore(upfPerWeek);
+function healthScoreProjection({ upfPerWeek, age, averageUpfPerWeek, swaps = SWAPS_PER_YEAR, mealShift = 0, years = PROJECTION_YEARS }) {
+  /* The frequency answer as the lightning round leaves it, before the ceiling
+     is tested, so the round can move a reader across that line in either
+     direction rather than being applied to a verdict already reached. */
+  const reported = Math.max(0, Math.min(MEALS_PER_WEEK, upfPerWeek + mealShift));
+  const own = weekScore(reported);
   const average = own > OWN_SCORE_CEILING;
-  const meals = average ? averageUpfPerWeek : upfPerWeek;
+  const meals = average ? averageUpfPerWeek : reported;
   const start = weekScore(meals);
   const fasterFall = meals >= UPF_DECLINE_MIN_MEALS && age < UPF_DECLINE_AGE_LIMIT;
   const fall = DECLINE_PER_YEAR * (fasterFall ? UPF_DECLINE_MULTIPLIER : 1);
-  const closedPerYear = Math.min(1, SWAPS_PER_YEAR / MEALS_PER_WEEK);
+  const closedPerYear = Math.min(1, swaps / MEALS_PER_WEEK);
   const declining = [];
   const improving = [];
   for (let y = 0; y <= years; y++) {
     declining.push(clampScore(start - fall * y));
     improving.push(clampScore(CHOSEN_MEAL_SCORE - (CHOSEN_MEAL_SCORE - start) * Math.pow(1 - closedPerYear, y)));
   }
-  return { start: clampScore(start), declining, improving, average };
+  const last = years;
+  /* Both readings of "how much you can improve", named rather than left to the
+     screen to pick: against where the reader stands today, and against the
+     same week left alone. They are different numbers and the copy says which
+     is which. */
+  return {
+    start: clampScore(start),
+    declining,
+    improving,
+    average,
+    swaps,
+    target: improving[last],
+    gain: improving[last] - clampScore(start),
+    gap: improving[last] - declining[last],
+  };
 }
 function upfMealsAtShare(percent) { return Math.round((percent / 100) * MEALS_PER_WEEK); }
 
@@ -2482,13 +2556,26 @@ Object.assign(SCREENS, {
   [S.STANDING]: () => {
     const meals = upfMealsPerWeek(state.upfFrequency);
     const ref = upfReference(state.countryCode);
+    const load = symptomLoad(state.symptoms);
     const p = healthScoreProjection({
       upfPerWeek: meals === null ? upfMealsAtShare(ref.percent) : meals,
       age: ageForBand(state.ageBand),
       averageUpfPerWeek: upfMealsAtShare(ref.percent),
+      swaps: swapsPerYear(state.habit),
+      mealShift: symptomMealShift(load),
     });
-    const n = p.declining.length - 1;
-    const gain = p.improving[n] - p.declining[n];
+    /* The note names what the number was read off. When the round was run it
+       says so and counts it, so the reader can see their own answers in the
+       figure instead of being handed one that moved for reasons it will not
+       name. */
+    const note = load === null
+      ? t("onboarding.standing.note")
+      : t("onboarding.standing.noteSymptoms", {
+          /* Counted in words at zero, because "0 of them a yes" is not how a
+             person says it. */
+          yes: symptomYesCount(state.symptoms) || t("onboarding.standing.noneOfThem"),
+          total: SYMPTOMS.length,
+        });
     /* The key names two lines, so it waits until there are two lines. */
     const legend = `<div class="legend-row">
         <i style="background:var(--green)"></i><span>${esc(t("onboarding.standing.legendWith"))}</span>
@@ -2503,10 +2590,10 @@ Object.assign(SCREENS, {
             t("onboarding.standing.now"),
             t("onboarding.standing.years", { years: PROJECTION_YEARS }),
           ) + legend +
-          `<p class="ring-working">${esc(t("onboarding.standing.working", { start: p.start, gain: gain }))}</p>`,
+          `<p class="ring-working">${esc(t(p.average ? "onboarding.standing.workingAverage" : "onboarding.standing.working", { start: p.start, target: p.target, gain: p.gain, gap: p.gap, swaps: p.swaps, years: PROJECTION_YEARS }))}</p>`,
           t(p.average ? "onboarding.standing.captionAverage" : "onboarding.standing.chartCaption"),
         )}
-        <p class="caveat" style="margin-top:18px">${esc(t("onboarding.standing.note"))}</p>`,
+        <p class="caveat" style="margin-top:18px">${esc(note)}</p>`,
       dock: cta(t("onboarding.standing.cta"), false, "next", t("onboarding.standing.source")),
     };
   },
