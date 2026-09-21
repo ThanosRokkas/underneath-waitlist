@@ -1844,27 +1844,26 @@ const S = {
   LIGHTNING: "lightning", REVIEWS: "reviews", CALIB: "calib",
   ACCOUNT: "account", PLAN: "plan", DONE: "done",
 };
-/* The symptoms are the last thing asked, run together as one timed block
-   behind a countdown, the way Rise runs its lightning round. Spread through
-   the quiz they were twelve screens that each looked like a question and
-   each cost a beat of patience. Collected at the end, after every considered
-   answer has been given, they stop being twelve screens and become one fast
-   section a reader can feel themselves finishing. */
+/* The lightning round used to run after ALLERGIES: a countdown, then twelve
+   yes and no symptom screens. It is out of the flow, not out of the file. The
+   questions are still in SYMPTOMS, the screens still render, and the standing
+   projection still reads any answers it finds, so putting it back is adding
+   S.LIGHTNING, ...SYMPTOM_IDS here and SYMPTOM_IDS to PROGRESS_STEPS. Thirteen
+   screens at the end of a quiz that had already been answered were thirteen
+   more chances to close the tab. */
 const FLOW = [
   S.HERO, S.SEX, S.ABOUT, S.YEARS, S.FEEL, S.SHOPFOR, S.HABITS,
   S.BADNEWS, S.UPFFREQ, S.UPFSHARE, S.GOALS, S.ADDITIVES, S.STAKES, S.COMPARE, S.DIET,
-  S.ALLERGIES, S.LIGHTNING, ...SYMPTOM_IDS, S.CRED, S.REVIEWS, S.CALIB,
+  S.ALLERGIES, S.CRED, S.REVIEWS, S.CALIB,
   /* The two lines are the last thing before the price, because they are the
      argument for paying: the gap between them is what the subscription is
      being sold to close. Asked earlier, mid-quiz, they were a fact; asked
      here, under a button that says try for free, they are the offer. */
   S.STANDING, S.PLAN, S.ACCOUNT, S.DONE,
 ];
-/** What the progress bar counts: the questions, plus the twelve symptoms.
-    A bar that sat still through twelve screens would read as a broken bar,
-    and a reader watching it stop moving stops believing the end is near. */
+/** What the progress bar counts: the questions. */
 const PROGRESS_STEPS = [
-  S.SEX, S.ABOUT, ...SYMPTOM_IDS, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
+  S.SEX, S.ABOUT, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
   S.DIET, S.ALLERGIES,
 ];
 /** No back button, no progress bar. */
