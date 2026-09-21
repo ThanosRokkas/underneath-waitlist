@@ -4091,9 +4091,21 @@ function paintSheet() {
 }
 
 /* Nobody is made to open a sheet to find out there was only ever one way to
-   pay. With no wallet to offer, the button goes where it always went. */
-function openPay() {
+   pay. With no wallet to offer, the button goes where it always went.
+
+   The answer takes a second or two to come back, and a reader who taps inside
+   that second is not a reader without a wallet: they are a reader who was
+   quick. Waiting briefly before deciding is the difference between offering
+   Apple Pay and never mentioning it. */
+async function openPay() {
   if (ui.busy) return;
+  if (!ui.wallets) {
+    ui.busy = true;
+    render();
+    await Promise.race([walletAnswered, new Promise((r) => setTimeout(r, WALLET_WAIT_MS))]);
+    ui.busy = false;
+    render();
+  }
   if (!ui.wallets) { startCheckout(); return; }
   paintSheet();
   sheetEl.classList.remove("off");
@@ -4116,6 +4128,11 @@ function closePay() {
    are paying for could have paid in one tap and what share were always going
    to be handed a form. */
 let expressPromise = null;
+/* Settled once the browser has said whether it holds a card, so a tap that
+   lands before the answer can wait for it instead of assuming the worst. */
+const WALLET_WAIT_MS = 2500;
+let markWalletAnswered = () => {};
+const walletAnswered = new Promise((resolve) => { markWalletAnswered = resolve; });
 function mountExpressButton() {
   if (expressPromise) return expressPromise;
   expressPromise = (async () => {
@@ -4125,7 +4142,10 @@ function mountExpressButton() {
       const pkg = selectedPackage();
       /* An older SDK on a cached page has no such method. Saying so quietly
          and leaving the card form alone is the right failure here. */
-      if (!purchases || !pkg || typeof purchases.presentExpressPurchaseButton !== "function") return;
+      if (!purchases || !pkg || typeof purchases.presentExpressPurchaseButton !== "function") {
+        markWalletAnswered();
+        return;
+      }
       await setAttribution(purchases);
       /* Resolves when the purchase goes through, which is the only way this
          SDK tells you it did: the listener reports starts, errors and backing
@@ -4141,7 +4161,8 @@ function mountExpressButton() {
           /* Recorded at the plan screen's own position, read off the live
              flow rather than written down, because one screen before it drops
              out for readers the standing question does not apply to. */
-          reportStep(walletsAvailable ? "plan_wallet_yes" : "plan_wallet_no", flow().indexOf(S.PLAN));
+          reportStep(walletsAvailable ? "plan-wallet-yes" : "plan-wallet-no", flow().indexOf(S.PLAN));
+          markWalletAnswered();
           if (flow()[state.i] === S.PLAN) render();
         },
         listener: {
@@ -4159,6 +4180,7 @@ function mountExpressButton() {
       ui.busy = false;
       expressPromise = null;
       ui.express = null;
+      markWalletAnswered();
       xdockEl.innerHTML = "";
       closePay();
       const cancelled = e && (e.errorCode === 1 || /cancel/i.test(String(e.message || "")));
