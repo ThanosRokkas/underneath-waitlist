@@ -378,7 +378,12 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   font-size:19px;line-height:25px;font-weight:700;letter-spacing:-.3px;
   margin:0 34px 0 0;color:var(--text);
 }
-.sheet-price{font-size:14px;line-height:20px;color:var(--text-secondary);margin:6px 0 16px}
+/* The same two cards the screen behind it shows, so the price can still be
+   changed after the question of how to pay has been asked. Tighter, because a
+   sheet that has to be scrolled to reach the wallet is a sheet nobody uses. */
+.sheet-plans{margin:14px 0 16px}
+.sheet-plans .plan{padding:11px}
+.sheet-plans .tagline{margin-top:7px}
 /* A rule either side of the word, so the wallet above it and the card form
    below it read as two ways of doing the same thing rather than a list. */
 .sheet-or{
@@ -1066,7 +1071,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
       </svg>
     </button>
     <h2 class="sheet-title" id="paytitle"></h2>
-    <p class="sheet-price" id="payprice"></p>
+    <div class="plans sheet-plans" id="payplans" role="radiogroup"></div>
     <div class="xdock" id="xdock"></div>
     <div class="sheet-or"><span id="payor"></span></div>
     <button class="cta outline" type="button" data-act="buy" id="paycard"></button>
@@ -1517,7 +1522,6 @@ const T = {
   "plan.perWeekEquivalent": "about {price} per week",
   "plan.priceUnavailable": "Price unavailable",
   "plan.payTitle": "How would you like to pay?",
-  "plan.payFor": "{plan}, {price}",
   "plan.payOr": "or",
   "plan.payCard": "Pay by card",
 
@@ -2079,7 +2083,7 @@ const dockBodyEl = document.getElementById("dockbody");
 const xdockEl = document.getElementById("xdock");
 const sheetEl = document.getElementById("paysheet");
 const payTitleEl = document.getElementById("paytitle");
-const payPriceEl = document.getElementById("payprice");
+const payPlansEl = document.getElementById("payplans");
 const payOrEl = document.getElementById("payor");
 const payCardEl = document.getElementById("paycard");
 const payLegalEl = document.getElementById("paylegal");
@@ -3244,7 +3248,6 @@ Object.assign(SCREENS, {
     const monthly = ui.packages && ui.packages.monthly;
     const chosen = state.plan === "annual" ? annual : monthly;
     const chosenPrice = pkgPrice(chosen);
-    const unavailable = t("plan.priceUnavailable");
     /* The trial the store is actually offering this customer, which is null
        for anyone who has already spent one, here or in the App Store. Until
        the offering loads we show the trial we intend to give, so the screen
@@ -3285,29 +3288,6 @@ Object.assign(SCREENS, {
       null,
     ]);
 
-    /* The day rate leads and the term follows. Nobody decides between fifty
-       pounds and ten; they decide whether a thing is worth the coin it costs
-       today, and the yearly card only ever wins on that comparison. The term
-       stays underneath rather than going away, because a per-day figure with
-       no billing period attached is the shape of a trick. */
-    const planCard = (key, pkg, labelKey, per, days, tag) => {
-      const price = pkgPrice(pkg);
-      const daily = pkgPerPeriod(pkg, days);
-      const term = price ? price + t(per) : unavailable;
-      return `<button class="plan${state.plan === key ? " on" : ""}" type="button" role="radio"
-          aria-checked="${state.plan === key}" data-act="plan" data-value="${key}">
-        <span class="top">
-          <span class="radio"></span>
-          <span class="col">
-            <span class="pname">${esc(t(labelKey))}</span>
-            <span class="psub">${esc(daily ? t("plan.perDayEquivalent", { price: daily }) : term)}</span>
-            ${daily ? `<span class="pweek">${esc(term)}</span>` : ""}
-          </span>
-        </span>
-        ${tag ? `<span class="tagline">${esc(t(tag))}</span>` : ""}
-      </button>`;
-    };
-
     const legal = trialDays && chosenPrice
       ? t(trialDays === 1 ? "paywall.legal.trial_one" : "paywall.legal.trial_other", { count: trialDays, price: chosenPrice })
       : t("paywall.legal");
@@ -3333,8 +3313,7 @@ Object.assign(SCREENS, {
         ${msgHtml()}
         ${body}
         <div class="plans" role="radiogroup" aria-label="${esc(t("onboarding.plan.title"))}">
-          ${planCard("annual", annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue")}
-          ${planCard("monthly", monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null)}
+          ${planCardsHtml()}
         </div>
         ${trialDays ? reassure(t("onboarding.plan.noChargeToday"), "under") : ""}`,
       /* The cancellation promise is pinned to the button rather than left at
@@ -4065,6 +4044,39 @@ function selectedPackage() {
   return ui.packages && (state.plan === "annual" ? ui.packages.annual : ui.packages.monthly);
 }
 
+/* The day rate leads and the term follows. Nobody decides between fifty
+   pounds and ten; they decide whether a thing is worth the coin it costs
+   today, and the yearly card only ever wins on that comparison. The term
+   stays underneath rather than going away, because a per-day figure with no
+   billing period attached is the shape of a trick.
+
+   Written once and drawn twice: on the plan screen, and again inside the
+   payment sheet, so the two can never drift apart. */
+function planCardHtml(key, pkg, labelKey, per, days, tag) {
+  const price = pkgPrice(pkg);
+  const daily = pkgPerPeriod(pkg, days);
+  const term = price ? price + t(per) : t("plan.priceUnavailable");
+  return `<button class="plan${state.plan === key ? " on" : ""}" type="button" role="radio"
+      aria-checked="${state.plan === key}" data-act="plan" data-value="${key}">
+    <span class="top">
+      <span class="radio"></span>
+      <span class="col">
+        <span class="pname">${esc(t(labelKey))}</span>
+        <span class="psub">${esc(daily ? t("plan.perDayEquivalent", { price: daily }) : term)}</span>
+        ${daily ? `<span class="pweek">${esc(term)}</span>` : ""}
+      </span>
+    </span>
+    ${tag ? `<span class="tagline">${esc(t(tag))}</span>` : ""}
+  </button>`;
+}
+
+/* The two cards, in the one order they are ever shown in. */
+function planCardsHtml() {
+  const p = ui.packages || {};
+  return planCardHtml("annual", p.annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue")
+    + planCardHtml("monthly", p.monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null);
+}
+
 /* The sheet's words. They are written one element at a time rather than as
    markup, because the wallet button is a sibling of them inside the same card
    and rebuilding the card would reload its iframe. */
@@ -4072,16 +4084,11 @@ function paintSheet() {
   const pkg = selectedPackage();
   const price = pkgPrice(pkg);
   const days = pkgTrialDays(pkg);
-  const annual = state.plan === "annual";
   payTitleEl.textContent = t("plan.payTitle");
-  /* What is being bought, said once. The promise about the trial belongs to
-     the small print underneath and is not worth saying twice. */
-  payPriceEl.textContent = price
-    ? t("plan.payFor", {
-        plan: t(annual ? "onboarding.plan.annual" : "onboarding.plan.monthly"),
-        price: price + t(annual ? "plan.perYear" : "plan.perMonth"),
-      })
-    : t("plan.priceUnavailable");
+  /* The cards are a sibling of the wallet button, never a parent of it, so
+     redrawing them on every plan change leaves the iframe alone. */
+  payPlansEl.setAttribute("aria-label", t("onboarding.plan.title"));
+  payPlansEl.innerHTML = planCardsHtml();
   payOrEl.textContent = t("plan.payOr");
   payCardEl.textContent = t("plan.payCard");
   payCardEl.disabled = ui.busy || !pkg;
