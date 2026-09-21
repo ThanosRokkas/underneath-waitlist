@@ -3434,6 +3434,20 @@ function render() {
      current while it is closed so it opens already right, and leaving the plan
      screen shuts it rather than leaving it hanging over whatever came next. */
   if (id === S.PLAN) paintSheet(); else closePay();
+  /* Asking the browser whether it holds a card takes about three seconds: the
+     prices, then the checkout, then Stripe's own script, then a pair of hidden
+     frames that do the asking. Started on arrival at the plan screen, that is
+     three seconds of spinner for anyone who taps straight away, and the wrong
+     answer for anyone who taps sooner still.
+
+     So it is started a few screens out instead. The button it draws lives in
+     the payment sheet, which exists from the first paint and is off screen
+     until it is opened, so there is nothing to see and nothing to move: by the
+     time the plan screen arrives the answer is already in and the tap opens
+     the sheet at once. A reader who leaves before getting near the plan never
+     pays for any of it. */
+  const planAt = f.indexOf(S.PLAN);
+  if (idx >= 0 && planAt >= 0 && idx >= planAt - WALLET_LEAD_SCREENS) mountExpressButton();
   chromeEl.hidden = bare;
   backEl.dataset.hidden = idx === 0 ? "1" : "0";
   paintBar(f, idx);
@@ -4136,8 +4150,11 @@ function closePay() {
    to be handed a form. */
 let expressPromise = null;
 /* Settled once the browser has said whether it holds a card, so a tap that
-   lands before the answer can wait for it instead of assuming the worst. */
+   lands before the answer can wait for it instead of assuming the worst. The
+   wait is the safety net for a reader who arrived at the plan screen directly;
+   the lead is what stops anybody else ever meeting it. */
 const WALLET_WAIT_MS = 2500;
+const WALLET_LEAD_SCREENS = 5;
 let markWalletAnswered = () => {};
 const walletAnswered = new Promise((resolve) => { markWalletAnswered = resolve; });
 function mountExpressButton() {
@@ -4191,10 +4208,15 @@ function mountExpressButton() {
       xdockEl.innerHTML = "";
       closePay();
       const cancelled = e && (e.errorCode === 1 || /cancel/i.test(String(e.message || "")));
-      if (!cancelled) setMsg(t("onboarding.error.generic"));
-      /* The plan screen builds it again on its way in, so a re-render is the
-         whole of the retry. */
-      if (flow()[state.i] === S.PLAN) render();
+      /* Only the reader who is standing on the plan screen is told. This runs
+         several screens early now, and a reader answering a question about
+         their diet has no use for the news that a payment button they cannot
+         see failed to draw; the plan screen builds it again on its way in, so
+         they may well never find out at all. */
+      if (flow()[state.i] === S.PLAN) {
+        if (!cancelled) setMsg(t("onboarding.error.generic"));
+        render();
+      }
     }
   })();
   return expressPromise;
