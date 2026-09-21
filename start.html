@@ -349,19 +349,44 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .cta[disabled]{opacity:.35;cursor:default;box-shadow:none}
 .cta.outline{background:#fff;border:1px solid var(--border);color:var(--text);font-weight:600}
 /* The wallet button is drawn by Stripe inside an iframe, so it is given the
-   height and the width and nothing else. When it is showing, paying by card
-   drops to a plain line of text underneath it: still one tap away, no longer
-   the thing being asked for. */
-.xdock{min-height:58px}
-/* Out of sight, still measurable: no height, no ink, no taps, but the same
-   width as the dock it lives in. */
-.xdock.off{min-height:0;height:0;overflow:hidden;opacity:0;pointer-events:none}
-.altpay{
-  width:100%;height:44px;margin-top:4px;background:none;border:0;
-  font-size:15px;font-weight:600;color:var(--text-secondary);
-  text-decoration:underline;text-underline-offset:3px;
+   width and a height to hold and nothing else. */
+.xdock{min-height:48px}
+
+/* How to pay. The card is pushed off the bottom of the window rather than
+   hidden, because Stripe measures the box it was handed and a box that has
+   been display:none is a box with no width: the wallet button would mount
+   into nothing and never appear. Closed, it still has the full width of the
+   column it will open into. */
+.sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.sheet.off{pointer-events:none}
+.sheet .scrim{position:absolute;inset:0;background:rgba(26,34,56,.45);transition:opacity .22s ease}
+.sheet.off .scrim{opacity:0}
+.sheet .card{
+  position:relative;width:100%;max-width:var(--col);
+  background:var(--bg);border-radius:22px 22px 0 0;
+  padding:22px 22px calc(var(--safe-bottom) + 20px);
+  box-shadow:0 -14px 40px rgba(26,34,56,.18);
+  transition:transform .26s cubic-bezier(.22,.61,.36,1);
 }
-.altpay:active{opacity:.6}
+.sheet.off .card{transform:translateY(110%)}
+.sheet-x{
+  position:absolute;top:13px;right:15px;width:30px;height:30px;border-radius:15px;
+  background:none;border:0;display:flex;align-items:center;justify-content:center;
+}
+.sheet-x:active{opacity:.5}
+.sheet-title{
+  font-size:19px;line-height:25px;font-weight:700;letter-spacing:-.3px;
+  margin:0 34px 0 0;color:var(--text);
+}
+.sheet-price{font-size:14px;line-height:20px;color:var(--text-secondary);margin:6px 0 16px}
+/* A rule either side of the word, so the wallet above it and the card form
+   below it read as two ways of doing the same thing rather than a list. */
+.sheet-or{
+  display:flex;align-items:center;gap:10px;margin:14px 0;
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--text-muted);
+}
+.sheet-or::before,.sheet-or::after{content:"";flex:1;height:1px;background:var(--border)}
 /* The store buttons wear the badge the landing page wears, so the handoff
    looks like the same company. Same two-line lockup, sat inside the dock's
    full-width pill rather than the landing page's inline one. */
@@ -1018,14 +1043,34 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
     <div class="layer" id="layer">
       <main class="step" id="step"></main>
       <div class="dock" id="dock" hidden>
-        <!-- The wallet button gets a slot of its own that the render never
-             writes to. Stripe draws it inside an iframe, and an iframe that is
-             rebuilt or moved in the document reloads, so it is mounted once on
-             the plan screen and then only told which package it is buying. -->
-        <div class="xdock off" id="xdock"></div>
         <div id="dockbody"></div>
       </div>
     </div>
+  </div>
+</div>
+<!-- How to pay. A sheet of our own rather than the checkout's, because the
+     checkout only takes a typed card number and the whole point of asking is
+     to offer the wallet first.
+
+     It sits outside the app, because the layer the screens live in is animated
+     and a fixed child of a transformed box is fixed to the box, not the window.
+     It is written once and never rebuilt: Stripe draws the wallet inside an
+     iframe, and an iframe that is rewritten or moved in the document reloads,
+     so only its words are ever changed. -->
+<div class="sheet off" id="paysheet" role="dialog" aria-label="Payment options">
+  <div class="scrim" data-act="closepay"></div>
+  <div class="card">
+    <button class="sheet-x" type="button" data-act="closepay" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 2l10 10M12 2L2 12" stroke="#1A2238" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <h2 class="sheet-title" id="paytitle"></h2>
+    <p class="sheet-price" id="payprice"></p>
+    <div class="xdock" id="xdock"></div>
+    <div class="sheet-or"><span id="payor"></span></div>
+    <button class="cta outline" type="button" data-act="buy" id="paycard"></button>
+    <p class="legal" id="paylegal"></p>
   </div>
 </div>
 <footer class="foot">
@@ -1471,7 +1516,10 @@ const T = {
   "plan.perWeek": "/wk",
   "plan.perWeekEquivalent": "about {price} per week",
   "plan.priceUnavailable": "Price unavailable",
-  "plan.otherMethod": "Use another payment method",
+  "plan.payTitle": "How would you like to pay?",
+  "plan.payFor": "{plan}, {price}",
+  "plan.payOr": "or",
+  "plan.payCard": "Pay by card",
 
   "paywall.title.neutral": "Subscribe to keep scanning.",
   "paywall.subtitle": "Subscribe to keep unlimited scans, better alternatives, additive alerts, and full score breakdowns.",
@@ -2029,6 +2077,12 @@ const stepEl = document.getElementById("step");
 const dockEl = document.getElementById("dock");
 const dockBodyEl = document.getElementById("dockbody");
 const xdockEl = document.getElementById("xdock");
+const sheetEl = document.getElementById("paysheet");
+const payTitleEl = document.getElementById("paytitle");
+const payPriceEl = document.getElementById("payprice");
+const payOrEl = document.getElementById("payor");
+const payCardEl = document.getElementById("paycard");
+const payLegalEl = document.getElementById("paylegal");
 const chromeEl = document.getElementById("chrome");
 const backEl = document.getElementById("back");
 const barEl = document.getElementById("bar");
@@ -3287,14 +3341,12 @@ Object.assign(SCREENS, {
          the end of the scroll, because it is the answer to the question the
          button asks. The legal line closes underneath it.
 
-         When the browser says it holds a card, the wallet button above this is
-         the offer and the card form steps back to a line of text. One tap by
-         Apple Pay or Google Pay beats a form nobody fills in on a phone, and
-         the form is still one tap away for the reader who wants it. */
+         The button asks for the trial, not for a payment method. Which methods
+         there are is the next question, and it is asked in a sheet of ours so
+         the wallet can be offered first. A reader whose browser holds no card
+         never sees the sheet at all. */
       dock: (trialDays ? reassure(t("onboarding.plan.cancelAnytime"), "docked") : "")
-        + (ui.wallets
-          ? `<button class="altpay" type="button" data-act="buy"${ui.busy || !chosen ? " disabled" : ""}>${esc(t("plan.otherMethod"))}</button>`
-          : cta(t(trialDays ? "onboarding.trial.cta" : "paywall.subscribe"), ui.busy || !chosen, "buy"))
+        + cta(t(trialDays ? "onboarding.trial.cta" : "paywall.subscribe"), ui.busy || !chosen, "pay")
         + `<p class="legal">${esc(legal)}</p>`,
       after: () => { loadOfferings(); mountExpressButton(); },
     };
@@ -3399,13 +3451,10 @@ function render() {
   stepEl.innerHTML = screen.html;
   dockBodyEl.innerHTML = screen.dock || "";
   dockEl.hidden = !screen.dock;
-  /* The wallet button belongs to the plan screen and nowhere else, and it
-     stays mounted while it is out of sight so coming back to the plan does
-     not pay to build it a second time. It is collapsed rather than removed,
-     because Stripe measures the width of the box it is handed, and a box that
-     has been display:none is a box with no width: the button would mount into
-     nothing and never appear. */
-  xdockEl.classList.toggle("off", id !== S.PLAN || !ui.wallets);
+  /* The sheet belongs to the plan screen and nowhere else. Its words are kept
+     current while it is closed so it opens already right, and leaving the plan
+     screen shuts it rather than leaving it hanging over whatever came next. */
+  if (id === S.PLAN) paintSheet(); else closePay();
   chromeEl.hidden = bare;
   backEl.dataset.hidden = idx === 0 ? "1" : "0";
   paintBar(f, idx);
@@ -3559,6 +3608,8 @@ const ACTIONS = {
     if (ui.express) { try { ui.express.updatePurchase(selectedPackage()); } catch (e) {} }
     render();
   },
+  pay: () => openPay(),
+  closepay: () => closePay(),
   signin: () => {
     state.authMode = "signin";
     state.authStage = "methods";
@@ -3592,7 +3643,7 @@ const ACTIONS = {
     if (state.authStage === "resetcode") startReset(true); else startEmail(true);
   },
   google: () => startGoogle(),
-  buy: () => startCheckout(),
+  buy: () => { closePay(); startCheckout(); },
 };
 
 document.addEventListener("click", (ev) => {
@@ -3999,6 +4050,7 @@ async function setAttribution(purchases) {
    a shopper who came through the card without an account still has to make
    one to use the trial. */
 function afterPurchase(pkg) {
+  closePay();
   state.purchased = true;
   /* Whether it was a trial or a charge, remembered here because the screens
      after this one talk about it and the offering is gone by then. */
@@ -4011,6 +4063,44 @@ function afterPurchase(pkg) {
 
 function selectedPackage() {
   return ui.packages && (state.plan === "annual" ? ui.packages.annual : ui.packages.monthly);
+}
+
+/* The sheet's words. They are written one element at a time rather than as
+   markup, because the wallet button is a sibling of them inside the same card
+   and rebuilding the card would reload its iframe. */
+function paintSheet() {
+  const pkg = selectedPackage();
+  const price = pkgPrice(pkg);
+  const days = pkgTrialDays(pkg);
+  const annual = state.plan === "annual";
+  payTitleEl.textContent = t("plan.payTitle");
+  /* What is being bought, said once. The promise about the trial belongs to
+     the small print underneath and is not worth saying twice. */
+  payPriceEl.textContent = price
+    ? t("plan.payFor", {
+        plan: t(annual ? "onboarding.plan.annual" : "onboarding.plan.monthly"),
+        price: price + t(annual ? "plan.perYear" : "plan.perMonth"),
+      })
+    : t("plan.priceUnavailable");
+  payOrEl.textContent = t("plan.payOr");
+  payCardEl.textContent = t("plan.payCard");
+  payCardEl.disabled = ui.busy || !pkg;
+  payLegalEl.textContent = days && price
+    ? t(days === 1 ? "paywall.legal.trial_one" : "paywall.legal.trial_other", { count: days, price: price })
+    : t("paywall.legal");
+}
+
+/* Nobody is made to open a sheet to find out there was only ever one way to
+   pay. With no wallet to offer, the button goes where it always went. */
+function openPay() {
+  if (ui.busy) return;
+  if (!ui.wallets) { startCheckout(); return; }
+  paintSheet();
+  sheetEl.classList.remove("off");
+}
+
+function closePay() {
+  sheetEl.classList.add("off");
 }
 
 /* Which wallet a reader can use is not something this page is allowed to
@@ -4070,6 +4160,7 @@ function mountExpressButton() {
       expressPromise = null;
       ui.express = null;
       xdockEl.innerHTML = "";
+      closePay();
       const cancelled = e && (e.errorCode === 1 || /cancel/i.test(String(e.message || "")));
       if (!cancelled) setMsg(t("onboarding.error.generic"));
       /* The plan screen builds it again on its way in, so a re-render is the
