@@ -218,9 +218,10 @@ img{max-width:100%}
    line that has only just stopped moving. */
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes rise-short{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes mark-in{from{opacity:0;transform:translateY(10px) scale(.86)}to{opacity:1;transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.layer{animation:none}*{transition:none!important;animation-duration:.01ms!important}}
+@media (prefers-reduced-motion:reduce){.layer{animation:none}*{transition:none!important;animation-duration:.01ms!important;animation-delay:0ms!important}}
 
 .dock{
   position:sticky;bottom:0;z-index:20;padding:12px 22px calc(var(--safe-bottom) + 30px);
@@ -770,7 +771,7 @@ img.ink{display:block;object-fit:contain;flex:none}
    the wide ones running the full width while the compact ones looked stranded.
    Width is what the eye reads as "same size" in a stack. --w is that share. */
 .cred-logo{display:block;flex:none;height:auto;width:calc(var(--w) * var(--wf, 1) * 1%);
-  animation:rise-short .3s cubic-bezier(.22,.61,.36,1) both}
+  animation:mark-in .44s cubic-bezier(.2,.9,.25,1.12) both}
 .flag-card{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
   text-align:left;background:var(--card);border:1px solid var(--border);border-radius:18px;
   padding:15px 16px;margin-top:22px;box-shadow:0 4px 14px rgba(26,34,56,.04)}
@@ -1454,6 +1455,45 @@ fetch("/api/ip", { cache: "no-store" })
    caption that names it and a figure that arrives beneath it are all reading
    off the same clock. These are the app's, to the millisecond. */
 const MOTION = { fade: 260, rise: 12, slide: 300, draw: 950, drawDelay: 180, stagger: 55 };
+
+/* The nine marks behind the science screen, and the clock they land on.
+
+   Each width is a percentage of the column, tuned per mark so a row or a stack
+   reads as one size. They cannot share a number: the FAO lockup is five times
+   wider than tall where the NIH one is barely wider than square, so an equal
+   width would leave NIH towering over everything beside it.
+
+   The second tier splits by shape, not by rank. FDA, NIH and CDC publish their
+   names stacked under the mark, so those three run compact and group together;
+   the two wide lockups would dwarf them on the same line. */
+const CRED_HERO = [
+  ["who", 66, "onboarding.cred.who"],
+  ["harvard", 66, "onboarding.cred.harvard"],
+  ["imperial", 59, "onboarding.cred.imperial"],
+];
+const CRED_REST_A = [
+  ["fda", 20, "onboarding.cred.fda"],
+  ["nih", 13, "onboarding.cred.nih"],
+  ["cdc", 14, "onboarding.cred.cdc"],
+  ["inserm", 18, "onboarding.cred.inserm"],
+];
+const CRED_REST_B = [
+  ["efsa", 32, "onboarding.cred.efsa"],
+  ["fao", 38, "onboarding.cred.fao"],
+];
+/* Long enough after the title that the title has stopped moving, and far
+   enough apart that nine marks read as nine and not as a shimmer. */
+const CRED_START = 160;
+const CRED_STEP = 110;
+/* Fetched while the reader is still answering questions. A quarter of a
+   megabyte, asked for once the page has nothing else to do, so the sequence
+   runs off the clock rather than off the network. */
+(function warmCredMarks() {
+  const go = () => [].concat(CRED_HERO, CRED_REST_A, CRED_REST_B)
+    .forEach(([file]) => { new Image().src = "assets/logos/" + file + ".webp"; });
+  if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 4000 });
+  else setTimeout(go, 1500);
+})();
 
 const db = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 
@@ -3181,36 +3221,20 @@ Object.assign(SCREENS, {
      rather than findings, and the screen must not imply anyone checked our
      numbers. */
   [S.CRED]: () => {
-    // Each width is a percentage of the column, tuned per mark so a row or a
-    // stack reads as one size. They cannot share a number: the FAO lockup is
-    // five times wider than tall where the NIH one is barely wider than square,
-    // so an equal width would leave NIH towering over everything beside it.
-    const hero = [
-      ["who", 66, "onboarding.cred.who"],
-      ["harvard", 66, "onboarding.cred.harvard"],
-      ["imperial", 59, "onboarding.cred.imperial"],
-    ];
-    // The second tier splits by shape, not by rank. FDA, NIH and CDC publish
-    // their names stacked under the mark, so those three run compact and group
-    // together; the two wide lockups would dwarf them on the same line.
-    const restA = [
-      ["fda", 20, "onboarding.cred.fda"],
-      ["nih", 13, "onboarding.cred.nih"],
-      ["cdc", 14, "onboarding.cred.cdc"],
-      ["inserm", 18, "onboarding.cred.inserm"],
-    ];
-    const restB = [
-      ["efsa", 32, "onboarding.cred.efsa"],
-      ["fao", 38, "onboarding.cred.fao"],
-    ];
-    const mark = (delay) => ([file, w, name], i) =>
-      `<img class="cred-logo" src="assets/logos/${file}.webp" alt="${esc(t(name))}" style="--w:${w};animation-delay:${delay + i * MOTION.stagger}ms" loading="lazy">`;
+    /* One index across all nine, counted as the markup is built, so each mark
+       lands strictly after the one before it. Two rows on their own timers
+       were overlapping: the second row's first mark arrived between the first
+       row's second and third, which is what made the sequence read as a
+       scatter rather than as a list being read out. */
+    let n = 0;
+    const mark = ([file, w, name]) =>
+      `<img class="cred-logo" src="assets/logos/${file}.webp" alt="${esc(t(name))}" style="--w:${w};animation-delay:${CRED_START + n++ * CRED_STEP}ms" decoding="async">`;
     return {
       html: `<h1 class="title">${esc(t("onboarding.cred.title"))}</h1>
-        <div class="cred-hero">${hero.map(mark(120)).join("")}</div>
+        <div class="cred-hero">${CRED_HERO.map(mark).join("")}</div>
         <div class="cred-grid">
-          <div class="cred-row">${restA.map(mark(280)).join("")}</div>
-          <div class="cred-row">${restB.map(mark(340)).join("")}</div>
+          <div class="cred-row">${CRED_REST_A.map(mark).join("")}</div>
+          <div class="cred-row">${CRED_REST_B.map(mark).join("")}</div>
         </div>`,
       dock: cta(t("common.continue")),
     };
