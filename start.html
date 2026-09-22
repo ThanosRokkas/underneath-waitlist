@@ -969,6 +969,7 @@ img.ink{display:block;object-fit:contain;flex:none}
 .plan.on .psub{color:#fff}
 .plan .pweek{font-size:11.5px;color:var(--text-muted);margin-top:2px}
 .plan.on .pweek{color:rgba(255,255,255,.6)}
+.plan .pwas{opacity:.7}
 .plan .tagline{display:inline-block;background:var(--yellow);border-radius:999px;padding:4px 9px;margin-top:10px;font-size:10px;font-weight:700;color:var(--text)}
 .legal{font-size:10.5px;line-height:15px;color:var(--text-muted);text-align:center;margin-top:11px}
 /* flex-start so on a translation that wraps the mark stays on the first line
@@ -3366,6 +3367,28 @@ function pkgPerPeriod(pkg, periods) {
     }).format(micros / 1e6 / periods);
   } catch (e) { return null; }
 }
+/* The standing price the saving is measured against. Derived from the real
+   one rather than typed in, for the same reason nothing else here is typed
+   in: a "$69.99" in the markup reads as gibberish to anyone billed in euro.
+   Rounded to the .99 the price beside it already ends in, so the pair reads
+   as two prices rather than one price and one arithmetic result. */
+function pkgAnchor(pkg, multiple) {
+  if (!pkg || !multiple) return null;
+  const p = pkg.webBillingProduct || pkg.rcBillingProduct || pkg.product || {};
+  const c = p.currentPrice || p.price || {};
+  const micros = c.amountMicros;
+  const currency = c.currency || c.currencyCode;
+  if (typeof micros !== "number" || !currency) return null;
+  const real = micros / 1e6;
+  const was = Math.round(real * multiple) - 0.01;
+  /* Never quote an anchor that is not above the price it sits over. */
+  if (!(was > real)) return null;
+  try {
+    return new Intl.NumberFormat(document.documentElement.lang || "en-US", {
+      style: "currency", currency: currency,
+    }).format(was);
+  } catch (e) { return null; }
+}
 /* How many free days this package actually offers, which is not a constant.
    RevenueCat prices offerings per customer, so the trial phase comes back
    null for anyone the eligibility rules have already spent it on, and that
@@ -4506,18 +4529,23 @@ function selectedPackage() {
 
    Written once and drawn twice: on the plan screen, and again inside the
    payment sheet, so the two can never drift apart. */
-function planCardHtml(key, pkg, labelKey, per, days, tag) {
+function planCardHtml(key, pkg, labelKey, per, days, tag, anchor) {
   const price = pkgPrice(pkg);
   const daily = pkgPerPeriod(pkg, days);
+  const was = price ? pkgAnchor(pkg, anchor) : null;
   const term = price ? price + t(per) : t("plan.priceUnavailable");
+  /* The struck figure leads and the real one follows, which is the order the
+     eye reads a discount in. It rides with the term wherever the term lands,
+     so a card with no day rate still carries it. */
+  const termHtml = (was ? `<s class="pwas">${esc(was)}</s> ` : "") + esc(term);
   return `<button class="plan${state.plan === key ? " on" : ""}" type="button" role="radio"
       aria-checked="${state.plan === key}" data-act="plan" data-value="${key}">
     <span class="top">
       <span class="radio"></span>
       <span class="col">
         <span class="pname">${esc(t(labelKey))}</span>
-        <span class="psub">${esc(daily ? t("plan.perDayEquivalent", { price: daily }) : term)}</span>
-        ${daily ? `<span class="pweek">${esc(term)}</span>` : ""}
+        <span class="psub">${daily ? esc(t("plan.perDayEquivalent", { price: daily })) : termHtml}</span>
+        ${daily ? `<span class="pweek">${termHtml}</span>` : ""}
       </span>
     </span>
     ${tag ? `<span class="tagline">${esc(t(tag))}</span>` : ""}
@@ -4527,8 +4555,8 @@ function planCardHtml(key, pkg, labelKey, per, days, tag) {
 /* The two cards, in the one order they are ever shown in. */
 function planCardsHtml() {
   const p = ui.packages || {};
-  return planCardHtml("annual", p.annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue")
-    + planCardHtml("monthly", p.monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null);
+  return planCardHtml("annual", p.annual, "onboarding.plan.annual", "plan.perYear", 365, "onboarding.plan.bestValue", 1.4)
+    + planCardHtml("monthly", p.monthly, "onboarding.plan.monthly", "plan.perMonth", 365 / 12, null, 2);
 }
 
 /* The sheet's words. They are written one element at a time rather than as
