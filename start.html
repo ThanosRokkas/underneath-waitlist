@@ -12,9 +12,11 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- The app's two faces: DM Sans for everything read, IBM Plex Mono for
-     everything measured. Same stack as src/constants/theme.ts. -->
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- One face for the whole funnel: DM Sans. Labels, ticks and units used to be
+     set in IBM Plex Mono, which read as a second typeface rather than a
+     register. They are still uppercase and letterspaced; they are no longer a
+     different font. -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Meta pixel. The trial and the sale are reported from the server, where
      they actually happen, so all this is here for is the arrival: PageView,
      and the _fbp and _fbc cookies it writes, which are what let Meta match a
@@ -37,19 +39,46 @@ src="https://www.facebook.com/tr?id=1483844846885965&ev=PageView&noscript=1"></n
 /* The app's palette, verbatim from src/constants/theme.ts. */
 :root{
   --bg:#FAF5EC; --card:#FFFFFF; --paper-deep:#F1EADC; --border:#ECE6DA; --rule:#ECE6DA;
+  /* The ground in its other two forms: what the chrome lays over the top of a
+     screen, and the same colour at zero alpha for the gradients that fade out
+     of it. Both used to be written out as the cream literal, which is why a
+     screen that changes the ground has to change all three together. Zero
+     alpha rather than `transparent` because Safari resolves that keyword to
+     transparent BLACK and a gradient fading from it greys as it goes. */
+  --chrome-bg:rgba(250,245,236,.97); --bg-clear:rgba(250,245,236,0);
   /* The drawn edge of an answer. --border is a hairline meant to sit on beige
      and all but disappears on white, which is what made the white answers read
      as floating blobs. Rise draws its options in #BDBDBD; this is that weight
      of grey warmed to the cream. */
   --line:#CFC5B3;
-  --text:#1A2238; --text-secondary:#6B7280; --text-muted:#9AA0AB; --text-faint:#C2BBAD;
+  /* The grey ramp is measured against the cream ground, not against white. On
+     #FAF5EC the old ramp read 4.45 / 2.42 / 1.76 to 1, so two of its three steps
+     were below legibility and the faintest was decoration. Each step is the same
+     hue darkened until it clears 4.5:1, which keeps secondary and muted slate
+     and faint warm, and keeps the ramp monotonic. */
+  --text:#1A2238; --text-secondary:#565B67; --text-muted:#63676E; --text-faint:#736F67;
   --navy:#1A2238; --accent:#F58A3C; --accent-dark:#F47B45; --accent-wash:#FDEEE2;
+  /* The orange at hairline weight. The full --accent as a 1px ring is too loud
+     for a row that is only being pressed, not chosen. */
+  --accent-line:#F6C9A4;
+  /* One curve for everything that reacts to a finger. Decelerating, so a press
+     lands hard and lets go softly. */
+  --ease:cubic-bezier(.22,.61,.36,1);
+  /* Settling into an answer is a different move from reacting to a finger, and
+     the reference recording measures it as a different curve. Sampled frame by
+     frame at 60fps, its rows take 26 frames to fill and are only 39% of the way
+     there a quarter of the way through: the change starts gently and arrives on
+     a long tail. --ease is 40% done by then, which is a snap. Twice the length
+     and a soft start is the whole difference, and it is why nothing on that
+     screen reads as switching. Kept off :active, where a finger needs an answer
+     inside a frame, so a press is still hard and only the letting go is slow. */
+  --settle:.43s;
+  --ease-settle:cubic-bezier(.24,0,.24,.9);
   --green:#3E9C6D; --green-bg:#E6F4EC; --green-text:#2E7D52;
   --amber:#F5A623; --amber-bg:#FCEFD6; --amber-text:#A86A14;
   --red:#E5564E; --red-bg:#FBE3E1; --red-text:#C0392F; --danger-text:#D8453D;
   --progress-bg:#E7DFCF; --handle-bar:#D8CFBE; --yellow:#FFC93C; --phone-body:#14161F;
   --sans:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   --col:420px;
   /* The vertical air, as one dial.
      The design used to switch between two fixed spacings at 900px of viewport,
@@ -76,6 +105,33 @@ body{
   background:var(--bg);color:var(--text);font-family:var(--sans);
   font-size:16px;line-height:1.4;overscroll-behavior-y:none;
   height:100dvh;display:flex;flex-direction:column;
+  /* Slower than the slide that carries the screens, so the colour arrives
+     after the screen does and reads as the room changing rather than as part
+     of the move. */
+  transition:background-color .5s var(--ease);
+}
+/* One screen warms the whole room. The colour is --accent-wash, the brand
+   orange at paper weight: the palette already had it, so nothing here is a
+   colour invented for a single screen. Set on the body because the chrome and
+   the dock live outside .step and a screen that warmed only its own ground
+   would draw a seam across the top and the bottom of the wash. */
+body[data-tint="warm"]{
+  --bg:#FDEEE2; --chrome-bg:rgba(253,238,226,.97); --bg-clear:rgba(253,238,226,0);
+}
+/* And one cools it. The year screen is the only place the reader is handed a
+   number about themselves they did not expect, so it gets a room of its own:
+   the navy at paper weight, taken from the palette the same way the warm wash
+   takes the orange. Cool rather than warm because the count and the dots on
+   this screen are already red, and a warm ground would have them arguing with
+   the paper instead of with the reader. */
+body[data-tint="cool"]{
+  --bg:#E7EEF5; --chrome-bg:rgba(231,238,245,.97); --bg-clear:rgba(231,238,245,0);
+}
+/* And the shopping count gets its own, so the two counting screens are not the
+   same room twice. --green-bg, the palette's paper-weight green, the way the
+   warm wash is the paper-weight orange. */
+body[data-tint="leaf"]{
+  --bg:#E6F4EC; --chrome-bg:rgba(230,244,236,.97); --bg-clear:rgba(230,244,236,0);
 }
 button{font:inherit;color:inherit;margin:0;cursor:pointer;border:0;background:none}
 input{font:inherit;color:inherit}
@@ -88,7 +144,7 @@ img{max-width:100%}
   padding:calc(var(--safe-top) + 60px) 20px 14px;
   /* The chrome floats over the screen, so it needs its own ground to stand on:
      without it a title that runs long reads through the back button. */
-  background:rgba(250,245,236,0.97);
+  background:var(--chrome-bg);
 }
 .chrome[hidden]{display:none}
 .back{
@@ -123,8 +179,17 @@ img{max-width:100%}
    rather than on it. */
 .step::before,.step::after{content:"";display:block;flex:1 1 0;min-height:0}
 .step::after{flex-grow:1.7}
+/* The two counting screens start high rather than at centre: their tallies are
+   tall enough that centring them left the title adrift with nothing over it,
+   and these are the screens where the reader is reading downward through a
+   figure rather than answering a question. Dropping the upper spacer outright
+   nailed them to the very top and left the whole lower half empty, so it keeps
+   a small share instead and the block settles just above the top third
+   (user, 2026-09-23). */
+.step--upfshare::before,.step--badnews::before{flex-grow:.45}
 .step--hero::before,.step--hero::after,
 .step--sym::before,.step--sym::after,
+.step--welcome::before,.step--welcome::after,
 .step--compare::before,.step--compare::after{content:none}
 /* The hero draws its own frame edge to edge, so the step gives up its gutter. */
 .step--hero{padding:0;display:flex;flex-direction:column}
@@ -159,7 +224,7 @@ img{max-width:100%}
 
 .dock{
   position:sticky;bottom:0;z-index:20;padding:12px 22px calc(var(--safe-bottom) + 30px);
-  background:linear-gradient(to bottom,rgba(250,245,236,0),var(--bg) 26%);
+  background:linear-gradient(to bottom,var(--bg-clear),var(--bg) 26%);
 }
 .dock[hidden]{display:none}
 
@@ -171,7 +236,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   margin:calc(10px + var(--air) * .3) 0 0}
 .hint{font-size:14px;line-height:20px;color:var(--text-secondary);margin:8px 0 0}
 .mono,.field-label,.group-label,.chart-caption,.big-unit{
-  font-family:var(--mono);text-transform:uppercase;color:var(--text-muted);
+  text-transform:uppercase;font-weight:500;color:var(--text-muted);
 }
 
 /* Per screen title sizes. The app sets these one screen at a time; so does this. */
@@ -263,48 +328,98 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 /* rows and chips */
 .rows{display:flex;flex-direction:column;
   gap:calc(8px + var(--air) * .3);margin-top:calc(14px + var(--air) * 1)}
+/* The edge is drawn inside rather than added, so a row does not change height
+   when it is selected and the ring can thicken without moving the text. The
+   lift underneath is what separates white from cream: with a shadow doing that
+   job the hairline can drop to the soft --border and stop looking drawn on. */
 .row{
   display:flex;align-items:center;gap:13px;width:100%;text-align:left;
   min-height:calc(58px + var(--air) * 1);
-  background:var(--card);border-radius:calc(18px + var(--air) * .15);
+  background:var(--card);border-radius:calc(20px + var(--air) * .15);
   padding:calc(10px + var(--air) * .25) calc(14px + var(--air) * .08);
-  border:1px solid var(--line);transition:background .18s ease,border-color .18s ease;
+  border:0;
+  box-shadow:inset 0 0 0 1px var(--border),
+             0 1px 2px rgba(26,34,56,.04),
+             0 5px 16px rgba(26,34,56,.055);
+  transition:box-shadow var(--settle) var(--ease-settle),
+             background-color var(--settle) var(--ease-settle),
+             transform .13s var(--ease);
+}
+/* Under the finger the row presses into the page: it shrinks, the lift
+   collapses, and the fill it is about to settle on arrives early. A transition
+   is read off the state being moved TO, so these durations govern the press and
+   the rule above governs the release: hard down, slow up. */
+.row:active{
+  transform:scale(.975);background:var(--accent-wash);
+  box-shadow:inset 0 0 0 1px var(--accent-line),0 1px 2px rgba(26,34,56,.05);
+  transition:box-shadow .1s var(--ease),background-color .1s var(--ease),
+             transform .11s var(--ease);
 }
 .row .label{flex:1;font-size:16px;font-weight:600;margin-left:2px}
 /* A row with no disc in front of it: the 2px that clears the disc has nothing
    to clear, and would read as an indent against the title above. */
 .rows--plain .row .label{margin-left:0}
 .row .sublabel{display:block;font-size:12.5px;font-weight:400;color:var(--text-muted);margin-top:1px}
-.row.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.row.on .sublabel{color:rgba(255,255,255,.62)}
-/* The row is white now, so the disc takes the deeper paper to stay a disc at
-   all, and goes white again on the navy it is inverted onto. Either way it
-   reads as a held shape rather than a hole. */
+/* Selected is a warm wash and a ring in the brand orange, not an inversion.
+   A row that flips to navy is the heaviest object on a cream screen and reads
+   as a mode rather than an answer; this reads as the one that is lit. */
+.row.on{
+  background:var(--accent-wash);
+  box-shadow:inset 0 0 0 2px var(--accent),0 6px 18px rgba(245,138,60,.16);
+}
+.row .sublabel,.check-sub{transition:color var(--settle) var(--ease-settle)}
+.row.on .sublabel{color:#9A6B43}
+/* The row is white, so the disc takes the deeper paper to stay a disc at all,
+   and goes white once the row behind it warms up. Either way it reads as a
+   held shape rather than a hole. */
 .disc{
   --d:40px;width:var(--d);height:var(--d);flex:none;border-radius:50%;background:var(--paper-deep);
   display:flex;align-items:center;justify-content:center;
+  transition:background var(--settle) var(--ease-settle);
 }
-.row.on .disc,.check-row.on .disc,.chip.on .disc{background:#fff}
+.row.on .disc,.check-row.on .disc,.chip.on .disc,
+.row:active .disc,.check-row:active .disc,.chip:active .disc{background:#fff}
+img.ink{display:block;object-fit:contain;flex:none}
 
 /* checkRow. The box comes first, then the disc, then the label, and any
    second line hangs under the lot rather than beside it. */
 .check-row{
   display:block;width:100%;text-align:left;background:var(--card);border-radius:22px;
-  padding:15px 16px;border:1px solid var(--line);transition:background .18s ease;
+  padding:15px 16px;border:0;
+  box-shadow:inset 0 0 0 1px var(--border),
+             0 1px 2px rgba(26,34,56,.04),
+             0 5px 16px rgba(26,34,56,.055);
+  transition:box-shadow var(--settle) var(--ease-settle),
+             background-color var(--settle) var(--ease-settle),
+             transform .13s var(--ease);
+}
+.check-row:active{
+  transform:scale(.985);background:var(--accent-wash);
+  box-shadow:inset 0 0 0 1px var(--accent-line),0 1px 2px rgba(26,34,56,.05);
+  transition:box-shadow .1s var(--ease),background-color .1s var(--ease),
+             transform .11s var(--ease);
 }
 .check-row .check-head{display:flex;align-items:center;gap:12px}
 .check-row .label{flex:1;font-size:15px;font-weight:600}
 .check-sub{display:block;padding-top:9px;padding-left:34px;font-size:12.5px;color:var(--text-secondary)}
-.check-row.on{background:var(--navy);color:#fff}
-.check-row.on .check-sub{color:rgba(255,252,245,.7)}
+.check-row.on{
+  background:var(--accent-wash);
+  box-shadow:inset 0 0 0 2px var(--accent),0 6px 18px rgba(245,138,60,.16);
+}
+.check-row.on .check-sub{color:#9A6B43}
 .checkbox{
   width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--handle-bar);
   display:flex;align-items:center;justify-content:center;
+  transition:border-color var(--settle) var(--ease-settle),
+             background var(--settle) var(--ease-settle);
 }
 .check-row.on .checkbox{border-color:var(--accent);background:var(--accent)}
+.checkbox svg,.tick svg{transition:opacity var(--settle) var(--ease-settle)}
 .checkbox svg{opacity:0}
 .check-row.on .checkbox svg{opacity:1}
-.tick{width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--handle-bar);display:flex;align-items:center;justify-content:center}
+.tick{width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--handle-bar);display:flex;align-items:center;justify-content:center;
+  transition:border-color var(--settle) var(--ease-settle),
+             background var(--settle) var(--ease-settle)}
 .row.on .tick{border-color:var(--accent);background:var(--accent)}
 .tick svg{opacity:0}
 .row.on .tick svg{opacity:1}
@@ -317,17 +432,26 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
    does not make every answer grid on the flow two pixels taller. */
 .chip{
   display:flex;align-items:center;gap:10px;max-width:100%;background:var(--card);
-  box-shadow:inset 0 0 0 1px var(--line);
+  box-shadow:inset 0 0 0 1px var(--border),
+             0 1px 2px rgba(26,34,56,.04),
+             0 4px 12px rgba(26,34,56,.05);
   border-radius:999px;padding:9px 18px 9px 9px;font-size:14.5px;font-weight:600;
-  transition:background .18s ease,box-shadow .18s ease;
+  transition:box-shadow var(--settle) var(--ease-settle),
+             background-color var(--settle) var(--ease-settle),
+             transform .13s var(--ease);
+}
+.chip:active{
+  transform:scale(.97);background:var(--accent-wash);
+  box-shadow:inset 0 0 0 1px var(--accent-line),0 1px 2px rgba(26,34,56,.05);
+  transition:box-shadow .1s var(--ease),background-color .1s var(--ease),
+             transform .11s var(--ease);
 }
 .chip .label{flex-shrink:1}
 .chip--plain{padding:15px 22px;font-size:17.5px}
-.chip.on{background:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);color:#fff}
-/* Only a bare glyph inverts with the chip. A glyph on a disc keeps its ink,
-   because the disc stays white underneath it: turning both white is how a
-   selected goal ended up as an empty white circle. */
-.chip.on > .ink path{fill:#fff}
+.chip.on{
+  background:var(--accent-wash);
+  box-shadow:inset 0 0 0 2px var(--accent),0 5px 14px rgba(245,138,60,.16);
+}
 
 /* allergyWarning */
 .allergy-warning{
@@ -343,9 +467,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   font-size:17px;font-weight:700;letter-spacing:-.2px;
   display:flex;align-items:center;justify-content:center;gap:9px;
   box-shadow:0 10px 26px rgba(26,34,56,.16);
-  transition:opacity .15s ease,transform .1s ease;
+  transition:opacity .18s var(--ease),transform .13s var(--ease),box-shadow .18s var(--ease);
 }
-.cta:active{transform:scale(.98);opacity:.92}
+.cta:active{transform:scale(.975);opacity:.94;box-shadow:0 4px 12px rgba(26,34,56,.14)}
 .cta[disabled]{opacity:.35;cursor:default;box-shadow:none}
 .cta.outline{background:#fff;border:1px solid var(--border);color:var(--text);font-weight:600}
 /* The wallet button is drawn by Stripe inside an iframe, so it is given the
@@ -388,7 +512,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
    below it read as two ways of doing the same thing rather than a list. */
 .sheet-or{
   display:flex;align-items:center;gap:10px;margin:14px 0;
-  font-family:var(--mono);font-size:11px;text-transform:uppercase;
+  font-size:11px;text-transform:uppercase;font-weight:500;
   letter-spacing:.6px;color:var(--text-muted);
 }
 .sheet-or::before,.sheet-or::after{content:"";flex:1;height:1px;background:var(--border)}
@@ -423,53 +547,147 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .sweep .curtain{position:absolute;top:0;left:0;display:block;background:var(--card);
   animation:sweep .95s cubic-bezier(.22,.61,.36,1) .18s both}
 @keyframes sweep{from{transform:translateX(0)}to{transform:translateX(100%)}}
-.axis-tick{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.5px;
+.axis-tick{position:absolute;font-size:10px;font-weight:500;letter-spacing:.5px;
   color:var(--text-muted);text-align:center;line-height:1}
-.line-end{position:absolute;width:46px;text-align:right;font-size:15px;font-weight:700;letter-spacing:-.3px}
-.legend-row{display:flex;align-items:center;justify-content:center;margin-top:8px;
-  animation:rise-short .26s cubic-bezier(.22,.61,.36,1) .91s both}
+/* standing. The one screen in the funnel that reads as a result rather than a
+   question, so it is ordered like one: the claim, the drawing that is the
+   evidence for it, the line that says what the drawing is worth, what that
+   buys, then who else is here. The title is centred rather than ranged left
+   like a question's, because it is answering rather than asking. */
+/* The two models drawn as two lines rather than stood in two columns (user,
+   2026-09-22): eight years is a run, and a run is a shape. Two columns could
+   only show where the run ended, where the lines show the whole of it parting,
+   which is the claim. On the page rather than in a card, because the rest of
+   this screen is prose and a card here would fence the argument off from it. */
+/* This screen is a result, not a question, so the block sits below centre
+   rather than above it (user, 2026-09-22): the step's default 1.7 bottom
+   spacer holds a question's title up near the top of the page, and what is up
+   there here is a verdict the reader should meet late, with the drawing under
+   it and the button already in view. */
+.step--standing::after{flex-grow:.55}
+/* The sweep is normally a panel in a white card's own colour. Here there is no
+   card, so it takes the paper instead, or it uncovers the drawing from behind
+   a white rectangle nobody else on the screen has. */
+.step--standing .sweep .curtain{background:var(--bg)}
+/* Out past the step's own gutters, to both edges of the column. The drawing is
+   the screen here, not a figure set into it. */
+.step--standing .sweep{margin:calc(10px + var(--air) * .6) -24px 0}
+/* The value of each rule, ranged right in the left gutter against the axis it
+   belongs to, which is the only reason the gutter is there. */
+.axis-value{position:absolute;left:0;text-align:right;font-size:10px;
+  font-weight:500;color:var(--text-faint);line-height:1}
+/* What the two numbers are counted in, set over the head of the axis it names
+   and squared up with it. It used to hang off the left edge of the sweep,
+   where it belonged to neither the title above nor the plot below (user,
+   2026-09-22). */
+.chart-scale{position:absolute;top:2px;font-size:10px;font-weight:500;
+  letter-spacing:.5px;color:var(--text-faint);line-height:1}
+/* The score each line ends on, level with the end of the line that earned it,
+   out in the right gutter, so it is read straight off its own curve. */
+.line-end{position:absolute;right:7px;text-align:right;font-size:17px;
+  font-weight:700;letter-spacing:-.3px;line-height:18px}
+/* Which line is which, said once, after the drawing has finished drawing. */
+.legend-row{display:flex;align-items:center;justify-content:center;gap:18px;
+  margin-top:8px;animation:rise-short .26s cubic-bezier(.22,.61,.36,1) .91s both}
+.legend-row b{display:flex;align-items:center;font-weight:500;
+  font-size:12.5px;color:var(--text-secondary)}
 .legend-row i{width:14px;height:3.4px;border-radius:2px;margin-right:7px;display:block}
-.legend-row span{font-size:12.5px;font-weight:500;color:var(--text-secondary)}
-.ring-working{font-size:14px;line-height:20px;color:var(--text-secondary);text-align:center;margin:16px 0 0}
+.step--standing h1.title{font-size:25px;line-height:31px;letter-spacing:-.5px;
+  text-align:center}
+/* The drawing's verdict, in the reader's own terms. Set below a headline and
+   above three benefit rows, so it is sized between them: plainly the sentence
+   that closes the chart, not a second heading competing with the first. */
+.gain-verdict{font-size:17px;line-height:23px;font-weight:600;letter-spacing:-.2px;
+  text-align:center;margin:calc(10px + var(--air) * .5) 0 0}
+/* Green because the number it colours is the improving line's, not the
+   brand's. */
+.gain-verdict .hl{color:var(--green-text);font-weight:700}
+.gain-list{display:flex;flex-direction:column;
+  gap:calc(9px + var(--air) * .3);margin-top:calc(13px + var(--air) * .8)}
+.gain-item{display:flex;align-items:center;gap:13px}
+.gain-name{font-size:15.5px;line-height:20px;font-weight:700;letter-spacing:-.2px;margin:0}
+.gain-sub{font-size:13.5px;line-height:18px;color:var(--text-secondary);margin:1px 0 0}
+/* The rating and the headcount, and deliberately no review total: five stars
+   with a number of reviews beside them invites the reader to divide one by the
+   other, and that is a figure this page cannot stand behind. */
+.gain-proof{text-align:center;margin-top:calc(13px + var(--air) * .9)}
+.gain-proof .star-row{display:inline-flex}
+.gain-join{font-size:13.5px;line-height:18px;font-weight:600;
+  color:var(--text-secondary);margin:6px 0 0}
 /* statRow: the figure and the unit it is in, read as one line. */
 .statrow{display:flex;align-items:center;gap:14px;margin:calc(14px + var(--air) * .9) 0 0}
-/* statBody, as the proof screens override it: one centred line under a chart. */
-.caveat{font-size:13.5px;line-height:20px;color:var(--text-muted);text-align:center;
-  margin:calc(6px + var(--air) * .4) 0 0}
 .statrow b{font-size:62px;line-height:70px;font-weight:700;letter-spacing:-1.5px}
-.statrow span{flex:1;font-family:var(--mono);font-size:12px;color:var(--text-secondary);
+.statrow span{flex:1;font-size:12px;font-weight:500;color:var(--text-secondary);
   letter-spacing:1px;line-height:18px}
 /* A figure that stands on the paper rather than in a card, so it is centred
    rather than boxed. */
 .figure{display:flex;justify-content:center;margin-top:22px}
-.statbody{font-size:15px;line-height:22px;color:var(--text-secondary);text-align:center;margin:22px 0 0}
-.statworking{font-family:var(--mono);font-size:11px;line-height:16px;color:var(--text-muted);
+.statworking{font-size:11px;font-weight:500;line-height:16px;color:var(--text-muted);
   letter-spacing:.5px;text-align:center;margin:22px 0 0}
-/* The week, one slot a meal, seven to a row, across the whole column so it lines
-   up with the rule and the bar below it rather than stopping two thirds of the
-   way and leaving the right of the screen empty. Square marks, because a mark
-   wider than it is tall reads as a bar of something measured and these are
-   counted, not measured. */
-.meal-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.meal-grid i{width:calc((100% - 48px)/7);aspect-ratio:1;border-radius:8px;background:var(--progress-bg)}
-.meal-grid i.on{background:var(--red-text)}
-/* The published figure, set under a rule as its own sentence rather than
-   stood up as a rival headline. */
-.ref-row{margin-top:24px;padding-top:18px;border-top:1px solid var(--rule)}
+/* A week of meals, one dot each: seven columns for the days, three rows for
+   the meals in them. Dots big enough to be counted rather than a texture to be
+   glanced at, and set wider apart across than down so the columns read as days
+   before the rows read as meals.
+   Two states over one lattice, which is the part of Brainrot's grid worth
+   taking: the cells are laid out once and not a single dot moves again. First
+   the whole week arrives a dot at a time, so it can be counted before anything
+   is claimed about it. Then one sweep runs the same reading order again and
+   each dot either takes the red or drops back to a remnant, which leaves the
+   ultra-processed meals standing in the days they fall on. Nothing reflows, so
+   there is no layout to watch, only a change of state.
+   A remnant rather than nothing at all. Erased outright, a light week is one
+   short row hanging off the left with the height of two empty ones reserved
+   under it, which reads as a drawing that failed rather than one that sorted
+   itself. Left faint, the week stays countable, so the working line under it
+   can be checked against the picture instead of taken on trust. */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);
+  gap:15px 22px;width:min(300px,86%)}
+/* The resting dot is the ink at paper weight rather than the beige track: the
+   track was mixed for the cream ground and turns invisible on any other, and
+   this screen is tinted. Ink at low alpha reads on whatever it is laid over. */
+.week-grid i{display:block;aspect-ratio:1;border-radius:50%;
+  background-color:rgba(26,34,56,.26);
+  animation:dot-in .26s var(--ease-settle) both}
+/* The sorted dots carry two animations and two delays. The second one fills
+   forwards rather than both, because a backwards fill holds its opening frame
+   all through the delay and would overwrite the fade the dot arrived on. */
+.week-grid i.on{animation:dot-in .26s var(--ease-settle) both,
+  dot-red .34s var(--ease-settle) forwards}
+.week-grid i.off{animation:dot-in .26s var(--ease-settle) both,
+  dot-out .34s var(--ease-settle) forwards}
+@keyframes dot-in{from{opacity:0}to{opacity:1}}
+@keyframes dot-red{from{background-color:rgba(26,34,56,.26)}
+  to{background-color:var(--red-text)}}
+/* The unsorted dots step back rather than leave. They are the denominator, and
+   a denominator you cannot count is not one you can check the fraction against,
+   so the recede stops well short of erasing them (user, 2026-09-23). */
+@keyframes dot-out{from{opacity:1}to{opacity:.8}}
+/* Without motion both states land on the same picture, so the staggering is
+   only waiting. Drop the waiting rather than making them sit through it. */
+@media (prefers-reduced-motion:reduce){.week-grid i{animation-delay:0ms!important}}
+/* The published figure, set as its own sentence under the bar that draws it. */
 .ref-body{font-size:16px;line-height:24px;color:var(--text-secondary);margin:0}
-.ref-body b{font-weight:700;color:var(--text)}
 .ref-bar{height:10px;border-radius:5px;overflow:hidden;background:var(--progress-bg);margin-top:18px}
 .ref-bar i{display:block;height:10px;border-radius:5px;background:var(--red-text)}
-/* Their own count, the week that produced it, and the published figure under a
-   rule. No card: a white box around a tally on beige paper reads as a panel that
+/* Their own count and the week that produced it. No card: a white box around a
+   tally on beige paper reads as a panel that
    has not finished loading, and every attempt at one left more blank inside it
    than the void it was meant to cure. The room a taller phone gives goes into
    the marks themselves, because the size of the tally is the argument and the
    gap between the number and the rule is not. The working line is set left with
    the rest of the screen rather than centred under nothing. */
-.step--upfshare .statworking{text-align:left;margin-top:calc(10px + var(--air) * .45)}
-.step--upfshare .ref-row{margin-top:calc(20px + var(--air) * 1.1);
-  padding-top:calc(16px + var(--air) * .5)}
+.step--upfshare .statworking{margin-top:calc(10px + var(--air) * .45);
+  animation:rise-short .26s cubic-bezier(.22,.61,.36,1) 1.95s both}
+/* This screen is read rather than answered, so it is set on the centre line
+   instead of the left margin the question screens share: there is no row of
+   options below it for a left edge to line up with, and a tally hung off the
+   left of a wide sheet reads as the corner of something bigger. The unit label
+   gives up its flex:1 so the number and its name centre as one object rather
+   than the number centring against a column of text. */
+.step--upfshare .title,.step--badnews .title,
+.step--upfshare .ref-body{text-align:center}
+.step--upfshare .statrow,.step--badnews .statrow{justify-content:center}
+.step--upfshare .statrow span,.step--badnews .statrow span{flex:none}
 /* The bar reads as the figure drawn out, so it follows the figure; the line
    explaining whose average it is follows both. */
 .step--upfshare .ref-body--lead{margin-top:calc(16px + var(--air) * .6)}
@@ -522,7 +740,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   animation:inkin .32s cubic-bezier(.22,.61,.36,1) both}
 @keyframes inkin{from{opacity:0}to{opacity:var(--o)}}
 .day-ends{display:flex;justify-content:space-between;margin-top:8px}
-.day-ends span{font-family:var(--mono);font-size:10px;letter-spacing:.5px;color:var(--text-muted)}
+.day-ends span{font-size:10px;font-weight:500;letter-spacing:.5px;color:var(--text-muted)}
 .outcomes{margin-top:14px}
 .outcome{display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:calc(9px + var(--air) * .45) 0}
@@ -530,22 +748,29 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .outcome .what{flex:1;font-size:16px;font-weight:500;color:var(--text);line-height:1.3}
 .outcome .val{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
   letter-spacing:.2px;white-space:nowrap}
-/* An axis is a block, not a row: name and weight over the full-width track,
-   then the body whose guidance it follows underneath. The bar is a literal
-   share of the whole track, so the three of them add up to one track and 40%
-   cannot look like everything. */
-.axis-block{margin-bottom:20px}
-.axis-header{display:flex;align-items:baseline;justify-content:space-between}
-.axis-name{flex-shrink:1;font-size:18px;font-weight:700;color:var(--text)}
-.axis-weight{font-size:16px;font-weight:700;color:var(--text)}
-.axis-track{height:9px;border-radius:999px;background:var(--progress-bg);margin-top:9px;overflow:hidden}
-.axis-fill{display:block;height:100%;border-radius:999px;background:var(--navy);
-  animation:groww .95s cubic-bezier(.22,.61,.36,1) both}
-@keyframes groww{from{width:0}}
-.axis-source{display:flex;align-items:center;gap:8px;margin-top:9px}
-.axis-badge{flex:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:2px 8px;
-  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--text)}
-.axis-source-text{flex:1;font-size:12px;line-height:17px;color:var(--text-secondary)}
+/* The institutions behind the research, in their own marks. No cards under
+   them: a white tile turns a logo into a badge the page is handing out, and
+   these marks are borrowed, not awarded.
+
+   Every mark is a full lockup, name included, in both tiers. A bare crest is a
+   puzzle at a glance, and the glance is all this screen gets. The three most
+   recognisable stack one per line; the rest follow smaller, in two shorter rows,
+   set well below them so the break between the tiers is the thing that tells the
+   reader the list runs longer than three without asking them to read it. */
+.cred-hero{display:flex;flex-direction:column;align-items:center;
+  gap:calc(22px + var(--air) * .9);margin-top:calc(30px + var(--air))}
+/* Two fixed rows rather than one wrapping row: these lockups sit close enough in
+   width that the wrap point lands differently on every handset, and a row that
+   reflows between 375 and 428 reads as a bug. */
+.cred-grid{display:flex;flex-direction:column;align-items:center;
+  gap:calc(18px + var(--air) * .6);margin-top:calc(52px + var(--air) * 1.4)}
+.cred-row{display:flex;align-items:center;justify-content:center;gap:24px;width:100%}
+/* Sized to a share of the column, not to a shared height, because these are
+   lockups of very different proportions and matching their heights would leave
+   the wide ones running the full width while the compact ones looked stranded.
+   Width is what the eye reads as "same size" in a stack. --w is that share. */
+.cred-logo{display:block;flex:none;height:auto;width:calc(var(--w) * var(--wf, 1) * 1%);
+  animation:rise-short .3s cubic-bezier(.22,.61,.36,1) both}
 .flag-card{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
   text-align:left;background:var(--card);border:1px solid var(--border);border-radius:18px;
   padding:15px 16px;margin-top:22px;box-shadow:0 4px 14px rgba(26,34,56,.04)}
@@ -566,10 +791,33 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   display:flex;flex-direction:column;min-height:0}
 .slab img{display:block;width:100%;flex:1 1 136px;min-height:64px;object-fit:cover}
 .slab .body{flex:none;padding:14px 16px 16px}
-.pill{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:1.3px;text-transform:uppercase;background:var(--paper-deep);color:var(--text-secondary);border-radius:999px;padding:5px 10px;margin-bottom:8px}
+.pill{display:inline-block;font-size:10px;font-weight:500;letter-spacing:1.3px;text-transform:uppercase;background:var(--paper-deep);color:var(--text-secondary);border-radius:999px;padding:5px 10px;margin-bottom:8px}
 .slab .ing{font-size:13.5px;line-height:1.6;color:var(--text-secondary)}
 .slab .ing b{font-weight:600;color:var(--red-text);background:var(--red-bg);border-radius:4px;padding:1px 3px}
 .footnote{text-align:center;font-size:13px;color:var(--text-muted);margin-top:2px}
+
+/* welcome. Not an argument: the screen before the proof, where the reader is
+   told they have arrived. Centred, because there is nothing to answer and a
+   line ranged left reads as the start of a form. The art is the app doing the
+   thing the headline says fifty thousand people do, and it is CROPPED by its
+   box rather than shrunk into it: a phone small enough to stand whole on a
+   667pt screen would be too small to read on any screen. */
+.step--welcome{text-align:center}
+.step--welcome .eyebrow{font-size:16px;line-height:22px;color:var(--text-secondary);
+  margin:0;animation:rise .36s var(--ease) both}
+.step--welcome h1.title{font-size:28px;line-height:35px;
+  margin-top:calc(10px + var(--air) * .3);
+  animation:rise .36s var(--ease) both;animation-delay:90ms}
+/* Orange, not green or red: the count is neither good news nor bad, it is the
+   brand saying how many. */
+.step--welcome .hl{color:var(--accent-dark)}
+.welcome-art{flex:1 1 auto;min-height:0;margin-top:calc(16px + var(--air) * .9);
+  animation:rise-short .42s var(--ease) both;animation-delay:200ms}
+/* The art is given the room and told to fit inside it, rather than given a
+   width and left to land where it lands: contain can neither distort it nor
+   push the screen into a scroll, and bottom sets it down on the dock so the
+   crop already in the asset reads as the phone running off the screen. */
+.welcome-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:bottom}
 
 /* reviews. Two proofs side by side above the reviews themselves: the placing,
    in a wreath because that is what a wreath means, and the download count as a
@@ -577,56 +825,64 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 /* The app starts this screen 18px higher than the rest, which it can afford
    because its chrome is a solid bar the content scrolls under. Here the chrome
    is transparent, so the title keeps the funnel's usual clearance. */
-.proof-row{display:flex;align-items:flex-start;margin:12px 0 0}
-.proof-col{flex:1;display:flex;flex-direction:column;align-items:center}
-.proof-rank{font-size:26px;line-height:32px;font-weight:700;letter-spacing:-.6px;color:var(--text)}
-.proof-caption{font-size:12.5px;line-height:17px;font-weight:500;color:var(--text-secondary);
-  text-align:center;margin:3px 0 0;padding:0 4px}
-.wreath{display:flex;align-items:center}
-.wreath-mid{display:flex;flex-direction:column;align-items:center;padding:0 2px}
+.proof-row{display:flex;justify-content:center;margin:calc(26px + var(--air) * .55) 0 0}
+.proof-rank{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.6px;color:var(--text)}
+/* The stars sit on the rating's own line and are the accent rather than the
+   gold the rest of the funnel's stars are, which is how the reference draws
+   them: one orange for the leaves and the stars, so the lockup reads as a
+   single mark and not as a wreath with something borrowed inside it. */
+.proof-top{display:flex;align-items:center;gap:7px}
+.proof-users{font-size:15px;line-height:20px;font-weight:500;color:var(--text-secondary);
+  margin:2px 0 0;white-space:nowrap}
+.wreath{display:flex;align-items:center;justify-content:center}
+/* The halves close in on the text rather than sitting off it, which is what
+   makes this a wreath around something instead of two brackets beside it. The
+   gap is small but it is not nothing: at -6px the longer of the two lines ran
+   its last letter into the leaves, and a wreath that clips the claim is worse
+   than one that sits a little wide of it. */
+.wreath-mid{display:flex;flex-direction:column;align-items:center;margin:0 3px}
 .wreath-flip{display:flex;transform:scaleX(-1)}
+.laurel{display:block;flex:none}
 
-/* The discs overlap, so the second reads as standing behind the first and the
-   count as the rest of them. */
-.avatar-cluster{display:flex;align-items:center;height:58px}
-.cluster-disc{width:40px;height:40px;border-radius:20px;background:var(--accent-wash);
-  border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;
-  font-size:16px;font-weight:700;color:var(--accent-dark);box-sizing:border-box}
-.cluster-disc + .cluster-disc{margin-left:-16px}
-.cluster-count{width:auto;height:46px;border-radius:23px;padding:0 10px;margin-left:-14px}
-
-.review-card{background:var(--paper-deep);border-radius:20px;padding:14px;margin-top:9px}
+/* The reviews run past rather than stack (user, 2026-09-22, with a reference
+   showing a row of cards sliding right to left and bleeding off both edges).
+   Two things this buys beyond the look: the cards bleed to the edges, which is
+   the only thing on this screen that says there are more of them than fit, and
+   the whole height-gating apparatus below can go, because one row costs the
+   same on a 667 as on a 1000. */
+.review-marquee{margin:calc(24px + var(--air) * .55) -24px 0;overflow:hidden}
+/* The track holds the cards TWICE and travels exactly one copy, so the moment
+   it wraps is the moment the second copy is standing where the first was and
+   nothing appears to happen. That only holds if a copy is exactly half the
+   track, which is why the spacing is a margin on each card and NOT a flex
+   `gap`: a gap of g across 2n cards leaves (2n-1) gaps, so half the track
+   misses by g/2 and the loop visibly stutters every lap. */
+.review-track{display:flex;align-items:stretch;width:max-content;
+  animation:review-scroll 38s linear infinite}
+@keyframes review-scroll{
+  from{transform:translate3d(0,0,0)}
+  to{transform:translate3d(-50%,0,0)}
+}
+/* Motion nobody asked for and cannot stop is the one kind this screen must not
+   insist on. Stopped, it is still a legible row of cards. */
+@media (prefers-reduced-motion:reduce){.review-track{animation:none}}
+.review-card{flex:none;width:264px;margin-right:16px;box-sizing:border-box;
+  background:var(--paper-deep);border-radius:20px;padding:14px}
 .review-head{display:flex;align-items:center;gap:10px}
-.review-avatar{flex:none;width:34px;height:34px;border-radius:17px;background:var(--accent-wash);
-  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent-dark)}
+/* No initial disc in front of the name (user, 2026-09-22). It was a letter
+   standing in for a face nobody has, and at 264px wide it was spending a
+   sixth of the card's width to say nothing the name does not already say. */
 .review-name{flex:1;font-size:15.5px;font-weight:700;color:var(--text)}
 .star-row{display:flex;align-items:center;flex:none}
 .review-title{font-size:15px;line-height:20px;font-weight:700;color:var(--text);margin:9px 0 0}
 .review-quote{font-size:14.5px;line-height:21px;color:var(--text-secondary);margin:9px 0 0}
 .review-quote.tight{margin-top:5px}
-/* Each card shows only where it fits whole: better two reviews read than three
-   cut in half. A narrow screen wraps the headline onto another line, so what
-   fits depends on width as well as height and the gates carry both: three fit
-   from 844 on any phone 375 wide or more, but a 360 wraps the headline onto a
-   third line and has to reach 890 to buy the same card back. Above 900 the
-   roomier base sheet takes back more height than the taller screen gives, so
-   the third waits again until 1080. Re-measure all of this whenever the
-   headline changes length: it sits above the cards and spends their budget. */
-@media (max-height:699px){
-  .review-card + .review-card{display:none}
-}
-@media (max-height:735px) and (max-width:374px){
-  .review-card + .review-card{display:none}
-}
-@media (max-height:843px){
-  .review-card + .review-card + .review-card{display:none}
-}
-@media (max-height:889px) and (max-width:374px){
-  .review-card + .review-card + .review-card{display:none}
-}
-@media (min-height:901px) and (max-height:1079px){
-  .review-card + .review-card + .review-card{display:none}
-}
+/* The nine height-and-width gates that used to drop the second and third card
+   are GONE, and deliberately: they existed because the cards stacked, so each
+   one spent height the screen might not have and a card that did not fit whole
+   had to be hidden rather than cut. Side by side they all cost the same single
+   row, and the row is as wide as it likes. Do not reintroduce a
+   `.review-card + .review-card` rule, it would now blank half the marquee. */
 
 /* calibration. The figure leads, the sentence explains it, the bar carries it,
    and the list of what is being switched on sits under the lot. */
@@ -663,7 +919,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .dock{position:relative}
 .scroll-fade{
   position:absolute;left:-22px;right:-22px;bottom:100%;height:28px;pointer-events:none;
-  background:linear-gradient(to bottom,rgba(250,245,236,0),var(--bg));
+  background:linear-gradient(to bottom,var(--bg-clear),var(--bg));
 }
 /* The citation sits above the button, set smaller than the body it cites. */
 .cta-source{
@@ -690,7 +946,6 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .tl .txt span{display:block;font-size:13px;color:var(--text-secondary);margin-top:2px;line-height:18px}
 /* What the plan screen shows instead of the timeline when the store has no
    trial to give: the app's own subtitle and value list, ported as-is. */
-.plan-sub{font-size:15px;line-height:22px;color:var(--text-secondary);text-align:center;margin:12px auto 0;max-width:300px}
 .values{margin-top:28px;display:flex;flex-direction:column;gap:14px}
 .values div{display:flex;align-items:center;gap:12px}
 .values i{width:28px;height:28px;border-radius:14px;background:var(--green);display:flex;align-items:center;justify-content:center;flex:none}
@@ -754,7 +1009,7 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .auth-btn.dark{background:#000;border-color:#000;color:#fff}
 .divider{display:flex;align-items:center;gap:12px;margin:26px 0}
 .divider i{flex:1;height:1px;background:var(--rule)}
-.divider span{flex-shrink:1;font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--text-muted)}
+.divider span{flex-shrink:1;font-size:11px;font-weight:500;letter-spacing:1px;color:var(--text-muted)}
 .msg{background:var(--red-bg);color:var(--red-text);border-radius:12px;padding:11px 14px;font-size:13.5px;line-height:1.4;margin-bottom:14px}
 .msg.ok{background:var(--green-bg);color:var(--green-text)}
 
@@ -778,15 +1033,18 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .resend button:disabled{color:var(--text-muted);font-weight:500}
 
 /* hero and done */
-/* HERO. The promise, then the product answering it. The handset is drawn to
+/* HERO. The product, then the promise it answers. The handset is drawn to
    the same body, bezel, island and side buttons the native screen draws, at
-   the same proportions, so what sits under the headline is the app itself
-   rather than a picture of a phone. */
+   the same proportions, so the first thing on the screen is the app itself
+   rather than a picture of a phone. The headline sits UNDER it (user, 2026-09-22):
+   the video is the argument and the line is the caption on it, and the line
+   lands a thumb away from the button that acts on it. */
 .hero{
   flex:1;min-height:0;display:flex;flex-direction:column;
   padding:calc(var(--safe-top) + 22px) 0 0;
 }
-.hero-head{flex:none;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 28px}
+.hero-head{flex:none;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:0 28px;margin:6px 0 16px}
 /* Rise sets this at 30/33 and weight 400, which reads as a promise rather
    than a shout. DM Sans is a narrower face, so it holds the same air at 600. */
 .hero h1{
@@ -821,29 +1079,6 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 .hero-phone-island{width:32%;aspect-ratio:125/37;border-radius:999px;background:#000}
 .hero-phone-video{flex:1;min-height:0;position:relative}
 .hero-phone-video video,.hero-phone-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-/* Two cards, equal halves, drawn to Rise's own 157x175 at 390 wide: a 12px
-   corner, a real edge, and a photograph wider than it is tall so the face
-   sits in it rather than filling it. */
-.pick-cards{display:flex;gap:13px;margin-top:30px}
-.pick-card{
-  flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;
-  background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0;
-  transition:border-color .18s ease,box-shadow .18s ease;
-}
-.pick-card.on{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
-.pick-photo{display:block;width:100%;aspect-ratio:155/127;background:var(--paper-deep)}
-.pick-photo img{display:block;width:100%;height:100%;object-fit:cover}
-.pick-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px 0 14px;height:46px;flex:none}
-.pick-label{font-size:16px;font-weight:600;letter-spacing:-.2px}
-.pick-go{
-  width:30px;height:30px;flex:none;border-radius:15px;background:var(--navy);
-  display:flex;align-items:center;justify-content:center;
-}
-.pick-card.on .pick-go{background:var(--accent)}
-/* The answer that is not a picture. It is a real answer, so it stays on the
-   screen, but it is not the one being asked for, so it is a link. */
-.pick-skip{margin-top:18px;text-align:center}
-.pick-skip .link{margin-top:0}
 /* The button and the way past it. The account link sits under the button
    rather than beside it: a reader who already has one is not browsing. */
 .hero-dock{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;padding:6px 24px 26px}
@@ -876,7 +1111,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   padding:6px 24px calc(var(--safe-bottom) + 8px);
   font-size:10px;line-height:1.5;color:var(--text-faint);text-align:center;
 }
-.foot a{color:var(--text-muted);text-decoration:none;margin:0 6px}
+/* Three real links, so they carry the 11px floor that the company-number line
+   below them does not. */
+.foot a{font-size:11px;color:var(--text-muted);text-decoration:none;margin:0 6px}
 .foot p{margin:2px 0 0}
 
 @media (max-width:360px){
@@ -903,7 +1140,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .chrome{padding-top:calc(var(--safe-top) + 24px);padding-bottom:10px}
   .dock{padding-top:8px;padding-bottom:calc(var(--safe-bottom) + 10px)}
   .cta-source{margin:8px 0 10px}
-  .foot{padding-top:2px;padding-bottom:calc(var(--safe-bottom) + 2px);font-size:9.5px}
+  /* The strip gives its padding on a short phone, but not its type: 9.5px put
+     three tappable links under the legibility floor. */
+  .foot{padding-top:2px;padding-bottom:calc(var(--safe-bottom) + 2px);font-size:10px}
   .cta{height:52px}
 
   /* type */
@@ -914,6 +1153,9 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
   .step--plan h1.title{font-size:22px}
   .step--account h1.title,.step--email h1.title{font-size:25px}
   .step--about h1.title{font-size:25px;line-height:31px}
+  .step--welcome h1.title{font-size:23px;line-height:30px}
+  .step--welcome .eyebrow{font-size:15px}
+  .welcome-art{margin-top:12px}
   .step--reviews h1.title{font-size:25px;line-height:32px}
   .step--sym h1.title{font-size:24px;line-height:30px}
   .sub{font-size:14px;line-height:20px}
@@ -941,24 +1183,49 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
      instead: at the floor a 64 wide track next to a 68 tall one is a square,
      and a square does not read as a measurement of anything. */
   .bar-track{width:54px}
-  .legend-row{margin-top:6px}
-  .ring-working{margin-top:10px}
+  /* Air first, then the discs the benefits sit on, then the type, which is
+     the last thing on this screen allowed to give anything up. The chart's own
+     height is measured off the viewport in chartHeight, so it is not repeated
+     here; what a short handset saves is the room around it. */
+  .legend-row{margin-top:6px;gap:14px}
+  .legend-row b{font-size:12px}
+  .step--standing h1.title{font-size:21px;line-height:27px}
+  .step--standing .sweep{margin-top:8px}
+  .gain-verdict{font-size:16px;line-height:21px;margin-top:8px}
+  .gain-list{margin-top:10px;gap:7px}
+  .gain-item{gap:11px}
+  .gain-name{font-size:15px;line-height:19px}
+  .gain-sub{font-size:13px;line-height:17px}
+  .gain-proof{margin-top:8px}
+  .gain-join{font-size:13px;margin-top:3px}
   .statrow{gap:12px}
   .statrow b{font-size:46px;line-height:54px;letter-spacing:-1.1px}
-  .statbody{font-size:14px;line-height:20px;margin-top:14px}
   .statworking{margin-top:12px}
-  .caveat{font-size:12.5px;line-height:18px}
   .figure{margin-top:12px}
-  .meal-grid{margin-top:12px}
-  .ref-row{margin-top:14px;padding-top:12px}
   .ref-body{font-size:15px;line-height:21px}
   .ref-bar{margin-top:12px}
   .outcomes{margin-top:8px}
   .bar-value{font-size:22px;margin-bottom:6px}
   .bar-label{min-height:30px;margin-top:7px;font-size:12.5px;line-height:17px}
-  .axis-block{margin-bottom:12px}
-  .axis-track{margin-top:6px}
-  .axis-source{margin-top:6px}
+  .ev{margin-top:12px}
+  /* Both tiers shrink on a phone, and the second tier shrinks harder, so the
+     gap between the two ranks survives once the screen stops giving either of
+     them room. */
+  /* A phone pays for the stack out of the spaces between the marks, not out of
+     the marks: four lockups shrunk to fit are four lockups nobody recognises,
+     which is the one thing this screen cannot afford. */
+  .cred-hero{gap:calc(18px + var(--air) * .7);margin-top:24px}
+  .cred-grid{gap:calc(15px + var(--air) * .5);margin-top:44px}
+  .cred-row{gap:22px}
+  /* The shortest handsets have no air left to spend, so the spacing tightens
+     first and the marks only give back width if that is not enough. Nested here
+     on purpose: the standalone short-screen block sits earlier in this sheet and
+     would lose to the rules above it. */
+  @media (max-height:760px){
+    .cred-hero{gap:13px;margin-top:18px}
+    .cred-grid{gap:11px;margin-top:32px}
+    .cred-row{gap:20px}
+  }
   .flag-card{padding:11px 14px;margin-top:12px}
 
   /* the bread comparison, the reviews, the plan */
@@ -968,15 +1235,20 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
      screen the photographs give up their height first and the modern list stays
      whole rather than ending mid-ingredient. */
   .slab img{flex:1 1 92px;min-height:40px}
-  .proof-row{margin-top:5px}
-  .avatar-cluster{height:58px}
-  .review-card{padding:10px 13px;margin-top:6px;border-radius:17px}
+  .proof-row{margin-top:calc(20px + var(--air) * .55)}
+  /* The laurel's height is an attribute on the img so the two halves cannot
+     drift, so shrinking it here means overriding both and letting the width
+     follow. It gives up more than the text does because it is the decoration
+     and the text is the claim. */
+  .laurel{height:66px;width:auto}
+  .proof-rank{font-size:24px;line-height:29px}
+  .proof-users{font-size:14px;line-height:19px}
+  .review-card{padding:10px 13px;border-radius:17px}
   .review-title{margin-top:6px}
   .review-quote{font-size:13.5px;line-height:18px;margin-top:6px}
   .timeline{margin-top:14px}
   .tl .txt{padding-bottom:7px}
   .tl .txt span{line-height:17px}
-  .plan-sub{margin-top:8px;line-height:20px}
   .values{margin-top:16px;gap:10px}
   .plans{margin-top:12px}
   .plan{padding:11px}
@@ -1004,16 +1276,12 @@ h1.title{font-size:27px;line-height:32px;font-weight:700;letter-spacing:-.5px;ma
 
   /* hero, calibration, done */
   .hero{padding-top:calc(var(--safe-top) + 14px)}
-  .hero-head{padding-left:24px;padding-right:24px}
+  .hero-head{padding-left:24px;padding-right:24px;margin:4px 0 12px}
   .hero h1{font-size:26px;line-height:31px}
   .hero-phone-wrap{padding:14px 0 6px}
   .hero-phone{top:14px;bottom:6px}
   .hero-dock{padding:4px 22px 14px}
   .hero-dock .link{margin-top:8px}
-  .pick-cards{gap:11px;margin-top:22px}
-  .pick-foot{height:42px;padding:0 9px 0 12px}
-  .pick-go{width:27px;height:27px;border-radius:14px}
-  .pick-skip{margin-top:14px}
   .calib-pct{font-size:54px;line-height:62px}
   .calib-bar{margin-top:16px}
   .calib-list{margin-top:18px}
@@ -1186,35 +1454,52 @@ fetch("/api/ip", { cache: "no-store" })
    off the same clock. These are the app's, to the millisecond. */
 const MOTION = { fade: 260, rise: 12, slide: 300, draw: 950, drawDelay: 180, stagger: 55 };
 
-/* The live scoring weights, so the bars on the credibility screen cannot drift
-   out of step with what a scan actually does. Mirrors scoreProduct.ts. */
-const HERO_WEIGHTS = { additives: 0.30, processing: 0.30, nutritional: 0.40 };
-
 const db = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 
-/* ---- glyphs, verbatim from OnboardingIcon.tsx ---------------------- */
+/* ---- glyphs ------------------------------------------------------- */
 const INK = "#1A2238";
+const ACCENT = "#F58A3C";
+/* The app's own glyphs, on the app's own 24x24 grid.
+
+   Solid silhouettes rather than outlines, because a row renders these at
+   twenty-nine pixels beside a line of text and a hairline at that size is a
+   smudge. Mass is what carries a shape that small. Detail is cut out of the
+   mass rather than drawn on top of it, so every glyph is one ink and stays one
+   ink when its row inverts, and any shape holding a counter is written as a
+   single path because the fill rule only subtracts within one path.
+
+   Everything from minus down to seeds is lifted verbatim from the app's
+   OnboardingIcon.tsx. The bowls, the broccoli and the apple are drawn here to
+   the same rule, because the app has no screen that asks for them. */
 const ICON_PATHS = {
+  /* Refusals and unknowns. A struck disc, which is the same shape whether the
+     answer is none, no or not sure. */
   minus: ["M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zM7.4 10.9h9.2v2.2H7.4z"],
-  box: ["M4.6 4.6h14.8A1.6 1.6 0 0 1 21 6.2v13.2a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 19.4V6.2a1.6 1.6 0 0 1 1.6-1.6zM3.6 9.7h16.8v2.2H3.6zM10.9 5.2h2.2v15.4h-2.2z"],
-  cube: [
-    "M13.8 3.4h5.4a1.4 1.4 0 0 1 1.4 1.4v5.4a1.4 1.4 0 0 1-1.4 1.4h-5.4a1.4 1.4 0 0 1-1.4-1.4V4.8a1.4 1.4 0 0 1 1.4-1.4z",
-    "M4.8 12.4h5.4a1.4 1.4 0 0 1 1.4 1.4v5.4a1.4 1.4 0 0 1-1.4 1.4H4.8a1.4 1.4 0 0 1-1.4-1.4v-5.4a1.4 1.4 0 0 1 1.4-1.4z",
+  /* A taped parcel: packaged food, and what an ultra-processed answer is about. */
+  box: [
+    "M4.6 4.6h14.8A1.6 1.6 0 0 1 21 6.2v13.2a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 19.4V6.2a1.6 1.6 0 0 1 1.6-1.6zM3.6 9.7h16.8v2.2H3.6zM10.9 5.2h2.2v15.4h-2.2z",
   ],
-  shaker: [
-    "M12 2.2a4.2 4.2 0 0 0-4.2 4.2V8.4h8.4V6.4A4.2 4.2 0 0 0 12 2.2zM9.7 4.9a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8zM12 4.1a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8zM14.3 4.9a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8z",
-    "M6.5 9.8h11l-1 9.8a1.9 1.9 0 0 1-1.9 1.7H9.4a1.9 1.9 0 0 1-1.9-1.7z",
-  ],
-  flask: ["M9.4 2.4h5.2a1.1 1.1 0 0 1 0 2.2h-.5v4.3l4.75 8.5A2.4 2.4 0 0 1 16.8 21H7.2a2.4 2.4 0 0 1-2.05-3.6L9.9 8.9V4.6h-.5a1.1 1.1 0 0 1 0-2.2z"],
-  droplet: ["M12 2.2s6.6 6.9 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 9.1 12 2.2 12 2.2z"],
+  /* The shopping bag: what a week of meals is carried home in. */
   bag: [
     "M6.2 7.4h11.6l1.2 12.2a1.6 1.6 0 0 1-1.6 1.8H6.6a1.6 1.6 0 0 1-1.6-1.8z",
     "M12 2a3.4 3.4 0 0 0-3.4 3.4V8h2.2V5.4a1.2 1.2 0 0 1 2.4 0V8h2.2V5.4A3.4 3.4 0 0 0 12 2z",
   ],
-  lens: [
-    "M10.8 3.2a7.4 7.4 0 1 0 0 14.8 7.4 7.4 0 0 0 0-14.8zm0 2.4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z",
-    "M15.4 16.7l1.7-1.7 4.4 4.4a1.2 1.2 0 0 1-1.7 1.7z",
+  /* Two sugar cubes, set on the diagonal with a clear gap, so the pair reads
+     as two objects rather than one staircase. */
+  cube: [
+    "M13.8 3.4h5.4a1.4 1.4 0 0 1 1.4 1.4v5.4a1.4 1.4 0 0 1-1.4 1.4h-5.4a1.4 1.4 0 0 1-1.4-1.4V4.8a1.4 1.4 0 0 1 1.4-1.4z",
+    "M4.8 12.4h5.4a1.4 1.4 0 0 1 1.4 1.4v5.4a1.4 1.4 0 0 1-1.4 1.4H4.8a1.4 1.4 0 0 1-1.4-1.4v-5.4a1.4 1.4 0 0 1 1.4-1.4z",
   ],
+  /* Salt. The holes are cut out of the cap, which is what tells it apart from
+     a bottle at this size, so the cap is drawn wide enough to hold them. */
+  shaker: [
+    "M12 2.2a4.2 4.2 0 0 0-4.2 4.2V8.4h8.4V6.4A4.2 4.2 0 0 0 12 2.2zM9.7 4.9a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8zM12 4.1a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8zM14.3 4.9a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8z",
+    "M6.5 9.8h11l-1 9.8a1.9 1.9 0 0 1-1.9 1.7H9.4a1.9 1.9 0 0 1-1.9-1.7z",
+  ],
+  flask: [
+    "M9.4 2.4h5.2a1.1 1.1 0 0 1 0 2.2h-.5v4.3l4.75 8.5A2.4 2.4 0 0 1 16.8 21H7.2a2.4 2.4 0 0 1-2.05-3.6L9.9 8.9V4.6h-.5a1.1 1.1 0 0 1 0-2.2z",
+  ],
+  droplet: ["M12 2.2s6.6 6.9 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 9.1 12 2.2 12 2.2z"],
   calendar: [
     "M5 5.6h14A1.6 1.6 0 0 1 20.6 7.2v12A1.6 1.6 0 0 1 19 20.8H5a1.6 1.6 0 0 1-1.6-1.6v-12A1.6 1.6 0 0 1 5 5.6zM3.4 8.6h17.2v2.2H3.4z",
     "M7.4 2.6h2.2v4.6H7.4z",
@@ -1225,23 +1510,36 @@ const ICON_PATHS = {
     "M7.4 2.6h2.2v4.6H7.4z",
     "M14.4 2.6h2.2v4.6h-2.2z",
   ],
-  clock: ["M12 2.6a9.4 9.4 0 1 0 0 18.8 9.4 9.4 0 0 0 0-18.8zm-1.1 4.2h2.2v5.3l3.5 2-1.1 1.9-4.6-2.6z"],
+  clock: [
+    "M12 2.6a9.4 9.4 0 1 0 0 18.8 9.4 9.4 0 0 0 0-18.8zm-1.1 4.2h2.2v5.3l3.5 2-1.1 1.9-4.6-2.6z",
+  ],
   moon: ["M20.4 15.2A9 9 0 0 1 8.8 3.6a9 9 0 1 0 11.6 11.6z"],
+  /* Halal. A crescent, cut the way the symbol is drawn rather than as a moon. */
   crescent: ["M15.6 3.4a9 9 0 1 0 0 17.2 9.6 9.6 0 0 1 0-17.2z"],
-  star: ["M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z"],
-  hexstar: ["M12 2.6L14.72 7.3L20.14 7.3L17.43 12L20.14 16.7L14.72 16.7L12 21.4L9.28 16.7L3.86 16.7L6.57 12L3.86 7.3L9.28 7.3ZM13.36 9.65L14.72 12L13.36 14.35L10.64 14.35L9.28 12L10.64 9.65Z"],
+  /* Kosher. The six pointed star as one outline with the middle knocked out.
+     Two overlapping solid triangles merge into a blob at this size, so the
+     hole is what makes it read as the mark rather than a generic star. */
+  hexstar: [
+    "M12 2.6L14.72 7.3L20.14 7.3L17.43 12L20.14 16.7L14.72 16.7L12 21.4L9.28 16.7L3.86 16.7L6.57 12L3.86 7.3L9.28 7.3ZM13.36 9.65L14.72 12L13.36 14.35L10.64 14.35L9.28 12L10.64 9.65Z",
+  ],
+  /* All of the above: three of them, stacked. */
   layers: [
     "M12 2.8l9.2 4.3-9.2 4.3-9.2-4.3z",
     "M4.9 11.3L12 14.6l7.1-3.3 2.1 1-9.2 4.3-9.2-4.3z",
     "M4.9 15.8L12 19.1l7.1-3.3 2.1 1-9.2 4.3-9.2-4.3z",
   ],
   leaf: ["M4 20c0-8 6-14 15.4-14 0 9-6 14-15.4 14z"],
+  /* Vegan. A shoot, so it does not read as the same answer as vegetarian. */
   sprout: [
     "M10.8 21.6V11.4h2.4v10.2z",
     "M11.4 13.6C6.8 14 3.2 11 2.2 5.8c4.8-.9 8.6 2.2 9.2 7.8z",
     "M12.6 12.2c.4-4.8 3.8-8.2 8.8-8.2-.4 4.8-3.8 8.2-8.8 8.2z",
   ],
-  fish: ["M2.6 12c2.8-3.9 6.6-5.9 10-5.9 2.5 0 4.6 1 5.9 2.4l3.1-2.3c.6-.4 1.3.1 1.2.8L22 12l.8 5c.1.7-.6 1.2-1.2.8l-3.1-2.3c-1.3 1.4-3.4 2.4-5.9 2.4-3.4 0-7.2-2-10-5.9zM8.9 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"],
+  fish: [
+    "M2.6 12c2.8-3.9 6.6-5.9 10-5.9 2.5 0 4.6 1 5.9 2.4l3.1-2.3c.6-.4 1.3.1 1.2.8L22 12l.8 5c.1.7-.6 1.2-1.2.8l-3.1-2.3c-1.3 1.4-3.4 2.4-5.9 2.4-3.4 0-7.2-2-10-5.9zM8.9 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z",
+  ],
+  /* An ear of wheat. Thicker stem and larger lobes than the shape wants at
+     full size, because a stalk drawn to scale disappears this small. */
   wheat: [
     "M10.9 9h2.2v12.6h-2.2z",
     "M12 2.4c2.4 2 2.7 4.5 1 7.4-2.4-2-2.7-4.5-1-7.4z",
@@ -1251,59 +1549,90 @@ const ICON_PATHS = {
     "M12.9 14c0 3.1 2.1 5 5.9 5.4.6-3.2-1.5-5.4-5.9-5.4z",
   ],
   egg: ["M12 2.6c4 0 6.6 5.9 6.6 10a6.6 6.6 0 0 1-13.2 0c0-4.1 2.6-10 6.6-10z"],
-  milk: ["M9 2.6h6v2.6l1.8 3.6v10.6a1.6 1.6 0 0 1-1.6 1.6H8.8a1.6 1.6 0 0 1-1.6-1.6V8.8L9 5.2zM7.6 10.6h8.8v2.6H7.6z"],
+  milk: [
+    "M9 2.6h6v2.6l1.8 3.6v10.6a1.6 1.6 0 0 1-1.6 1.6H8.8a1.6 1.6 0 0 1-1.6-1.6V8.8L9 5.2zM7.6 10.6h8.8v2.6H7.6z",
+  ],
+  /* Peanuts. Two lobes, the one nut shape everybody reads instantly. */
   peanut: [
     "M9 3.6a5.2 5.2 0 1 0 0 10.4A5.2 5.2 0 0 0 9 3.6z",
     "M14.6 9.4a5.2 5.2 0 1 0 0 10.4 5.2 5.2 0 0 0 0-10.4z",
   ],
+  /* Soy. A pod with the beans read as gaps, so it is not mistaken for peanuts. */
   soy: [
     "M4.6 15.4A5.4 5.4 0 0 1 10 10h4a5.4 5.4 0 0 1 0 10.8h-4a5.4 5.4 0 0 1-5.4-5.4zM9.6 10.4h1.4v10H9.6zM12.9 10.4h1.4v10h-1.4z",
     "M13.6 9.7l3.8-5.3 1.8 1.3-3.8 5.3z",
   ],
+  /* Tree nuts. An acorn: cap and body, distinct from the peanut lobes. */
   acorn: ["M4.6 8.6a7.4 7.4 0 0 1 14.8 0z", "M6.4 10.6h11.2c0 5.4-2.5 9.4-5.6 9.4s-5.6-4-5.6-9.4z"],
-  shell: ["M12 4.4a9.2 9.2 0 0 1 9.2 9.2v.4H2.8v-.4A9.2 9.2 0 0 1 12 4.4zM11.2 6.2h1.6v7.8h-1.6zM7.9 7.4l1.6-.6 1.4 7.2H9.3zM16.1 7.4l-1.6-.6-1.4 7.2h1.6z"],
+  shell: [
+    "M12 4.4a9.2 9.2 0 0 1 9.2 9.2v.4H2.8v-.4A9.2 9.2 0 0 1 12 4.4zM11.2 6.2h1.6v7.8h-1.6zM7.9 7.4l1.6-.6 1.4 7.2H9.3zM16.1 7.4l-1.6-.6-1.4 7.2h1.6z",
+  ],
   seeds: [
     "M6.2 6.8c1.5-.9 3.4-.2 4.2 1.6s.2 3.8-1.3 4.7-3.4.2-4.2-1.6-.2-3.8 1.3-4.7z",
     "M14 5.2c1.6.6 2.3 2.7 1.6 4.6s-2.6 3-4.2 2.4-2.3-2.7-1.6-4.6 2.6-3 4.2-2.4z",
     "M11.6 14.4c1.7 0 3 1.9 3 4.2s-1.3 4.2-3 4.2-3-1.9-3-4.2 1.3-4.2 3-4.2z",
   ],
-  viewfinder: [
-    "M3 7.4V5.4A2.4 2.4 0 0 1 5.4 3h2v2.4H5.4v2zM16.6 3h2A2.4 2.4 0 0 1 21 5.4v2h-2.4v-2h-2zM21 16.6v2a2.4 2.4 0 0 1-2.4 2.4h-2v-2.4h2v-2zM7.4 21h-2A2.4 2.4 0 0 1 3 18.6v-2h2.4v2h2z",
-    "M4.8 10.9h14.4v2.2H4.8z",
-  ],
   gauge: [
     "M12 4.6A9.4 9.4 0 0 0 2.6 14v.6h4.2V14a5.2 5.2 0 0 1 10.4 0v.6h4.2V14A9.4 9.4 0 0 0 12 4.6z",
     "M10.9 15.3l4.3-5.1 1.7 1.4-4 5.4a1.3 1.3 0 1 1-2-1.7z",
   ],
-  sliders: [
-    "M3.4 6.9h17.2v2.2H3.4z",
-    "M3.4 14.9h17.2v2.2H3.4z",
-    "M10.4 4.4h2.9v7.2h-2.9z",
-    "M6.6 12.4h2.9v7.2H6.6z",
+  /* The apple. Whole food, drawn as one mass with the leaf set clear of the
+     stem notch so the notch survives at row size. */
+  apple: [
+    "M12 6.6c1.5-1.2 3.4-1.6 4.9-.7 2.3 1.3 2.9 4.9 1.3 8.4-1.2 2.6-3 4.8-4.4 4.8-.7 0-1.2-.3-1.8-.3s-1.1.3-1.8.3c-1.4 0-3.2-2.2-4.4-4.8C4.2 10.8 4.8 7.2 7.1 5.9c1.5-.9 3.4-.5 4.9.7z",
+    "M12.6 5.7c0-2.1 1.7-3.7 3.9-3.9 0 2.1-1.7 3.7-3.9 3.9z",
   ],
-  shield: ["M12 2.2l8 3.2v6c0 5-3.4 8.6-8 10.4-4.6-1.8-8-5.4-8-10.4v-6z"],
-  bell: [
-    "M12 2.2a6.4 6.4 0 0 0-6.4 6.4c0 3.6-.8 5.4-1.6 6.4a1 1 0 0 0 .8 1.6h14.4a1 1 0 0 0 .8-1.6c-.8-1-1.6-2.8-1.6-6.4A6.4 6.4 0 0 0 12 2.2z",
-    "M9.6 18.2a2.4 2.4 0 0 0 4.8 0z",
+  /* A head of broccoli: one scalloped crown over one thick stalk. */
+  broccoli: [
+    "M6.8 13.2a3.4 3.4 0 0 1-3.4-4.4 3.4 3.4 0 0 1 4-5 3.4 3.4 0 0 1 4.6-1.4 3.4 3.4 0 0 1 4.6 1.4 3.4 3.4 0 0 1 4 5 3.4 3.4 0 0 1-3.4 4.4z",
+    "M9.6 12.8h4.8v6.2a2.4 2.4 0 0 1-4.8 0z",
+  ],
+  /* One bowl, filled with a different number of things. Who you shop for is
+     answered by how much is in it, and the same shape empty is the answer to
+     "none", so the whole family reads as one idea. */
+  bowl0: ["M2.6 10.3h18.8v1a9.4 9.4 0 0 1-18.8 0z"],
+  bowl1: [
+    "M12 5.3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z",
+    "M2.6 10.3h18.8v1a9.4 9.4 0 0 1-18.8 0z",
+  ],
+  bowl2: [
+    "M8.5 5.5a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z",
+    "M15.5 5.5a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z",
+    "M2.6 10.3h18.8v1a9.4 9.4 0 0 1-18.8 0z",
+  ],
+  bowl3: [
+    "M6.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z",
+    "M12 4.6a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4z",
+    "M17.5 7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z",
+    "M2.6 10.3h18.8v1a9.4 9.4 0 0 1-18.8 0z",
+  ],
+  bowlcare: [
+    "M12 11.1 7.85 7.15a2.6 2.6 0 0 1 0-3.7 2.6 2.6 0 0 1 3.7 0l.45.45.45-.45a2.6 2.6 0 0 1 3.7 0 2.6 2.6 0 0 1 0 3.7z",
+    "M2.6 10.3h18.8v1a9.4 9.4 0 0 1-18.8 0z",
   ],
 };
 
 
-/** A glyph: solid, one ink, drawn inside the same optical square. */
+/** A glyph. One ink, filled, no line at all: the shape is the whole drawing,
+    and the even odd rule is what lets a counter cut back out of it. */
 function icon(name, size) {
-  const paths = ICON_PATHS[name] || [];
-  const d = paths.map((p) => `<path d="${p}" fill="${INK}" fill-rule="evenodd"/>`).join("");
-  return `<svg class="ink" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const d = (ICON_PATHS[name] || []).map((p) => `<path d="${p}"/>`).join("");
+  return `<svg class="ink" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${INK}" fill-rule="evenodd" aria-hidden="true">${d}</svg>`;
 }
-/** The white disc a glyph sits on. It stays white when its row inverts.
-    The glyph is 0.52 of the disc, the ratio the app's Disc uses. */
-function disc(name, size) {
+/** The painted version of the same glyph. The screens that ask a reader about
+    themselves rather than measure them keep the colour: diet, allergies, and
+    the two lists of what they want watched. The warmth there is the point. */
+function art(name, size) {
+  return `<img class="ink" src="assets/icons/${name}.png" width="${size}" height="${size}" alt="" aria-hidden="true">`;
+}
+/** The white disc a glyph sits on. It stays white when its row inverts. The
+    third argument paints what sits on it rather than inking it flat. */
+function disc(name, size, painted) {
   const d = size || 40;
-  const g = Math.round(d * 0.52 * 10) / 10;
+  const g = Math.round(d * 0.72 * 10) / 10;
   const style = d === 40 ? "" : ` style="--d:${d}px"`;
-  return `<span class="disc"${style}>${icon(name, g)}</span>`;
+  return `<span class="disc"${style}>${(painted ? art : icon)(name, g)}</span>`;
 }
-const ARROW_RIGHT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M12.5 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHECK = '<svg width="15" height="15" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M1.8 6.2l2.6 2.8L10.2 2.4" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const WARN_TRIANGLE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" stroke="#A86A14" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4" stroke="#A86A14" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.9" fill="#A86A14"/></svg>';
 
@@ -1315,15 +1644,8 @@ const T = {
   "onboarding.hero.cta": "Start quiz",
   "onboarding.hero.haveAccount": "I already have an account",
 
-  "onboarding.sex.title": "Who are we building this for?",
-
   "onboarding.aboutYou.title": "How old are you?",
-  "onboarding.aboutYou.sub": "What you eat costs you different amounts of time at different ages.",
   "onboarding.aboutYou.ageLabel": "Your age",
-  "onboarding.aboutYou.sexLabel": "Your sex",
-  "onboarding.aboutYou.female": "Female",
-  "onboarding.aboutYou.male": "Male",
-  "onboarding.aboutYou.unspecified": "Prefer not to say",
 
   /* Twelve yes or no questions about the body, asked plainly. There is no
      explanatory line under any of them on purpose: a question that arrives
@@ -1346,14 +1668,12 @@ const T = {
   "onboarding.symptoms.weight": "I have gained weight without eating differently",
 
   "onboarding.lightning.title": "Lightning round",
-  "onboarding.lightning.sub": "Answer quick, go with your gut.",
   "onboarding.lightning.counter": "{n} of {total}",
 
   "onboarding.years.title": "Years you could save by eating better.",
   "onboarding.years.unit": "YEARS, ON AVERAGE,\nFOR PEOPLE YOUR AGE",
   "onboarding.years.chartTitle": "Years saved",
   "onboarding.years.chartCaption": "YEARS SAVED · BY AGE WHEN THE DIET CHANGES",
-  "onboarding.years.caveat": "A model of a whole diet, not a prediction about one person. Modelled at 20, 60 and 80; ages in between are interpolated.",
   "onboarding.years.source": "Source: Fadnes LT et al., \u201cEstimating impact of food choices on life expectancy: A modeling study,\u201d PLOS Medicine, 2022.",
 
   "onboarding.feel.lead": "",
@@ -1381,19 +1701,15 @@ const T = {
   "onboarding.badNews.chartCaption": "ONE DOT IS ONE TRIP",
   "onboarding.badNews.chartCaptionItems": "ONE DOT IS ONE PRODUCT, AT {items} A TRIP, {trips} TRIPS",
   "onboarding.badNews.body": "Every one of them is a chance to put something in the basket you would not have picked if the label were readable. Most labels are not written to be read.",
-  "onboarding.badNews.bodyItems": "Every one of them carries a label, and the label is the only thing standing between you and what is in it. Most labels are not written to be read.",
 
   "onboarding.upfFreq.title": "How often do you eat ultra-processed food?",
-  "onboarding.upfFreq.sub": "Packaged food built from ingredients you would not keep in a kitchen. A rough answer is fine.",
 
-  "onboarding.upfShare.title": "Over a year that is a lot of meals.",
+  "onboarding.upfShare.title": "Over a year, this is a lot of meals.",
   "onboarding.upfShare.titleUnsure": "Most people eat more of it than they think.",
-  "onboarding.upfShare.unit": "ULTRA-PROCESSED MEALS A YEAR",
-  /* Legend and working in one line: what the block above counts, and the
-     multiplication that turns it into the figure at the top. */
-  "onboarding.upfShare.working": "{meals} of {total} meals a week · 52 weeks",
-  "onboarding.upfShare.refUs": "of the average American adult's daily calories come from ultra-processed food.",
-  "onboarding.upfShare.refEurope": "of the average European adult's daily calories come from ultra-processed food.",
+  "onboarding.upfShare.unit": "ULTRA-PROCESSED MEALS THIS YEAR",
+  /* Legend and working in one line: what one dot is, and the share that
+     decides how many of them turn red. */
+  "onboarding.upfShare.working": "One dot is one meal · {meals} of the {total} in your week",
   /* When they could not put a number on it there is no count of their own, so
      the published one stops being a footnote and becomes the screen. */
   "onboarding.upfShare.refUnit": "OF DAILY CALORIES",
@@ -1402,25 +1718,36 @@ const T = {
   "onboarding.upfShare.sourceUs": "National Center for Health Statistics, Data Brief, August 2021 to August 2023.",
   "onboarding.upfShare.sourceEurope": "Mertens et al., European Journal of Nutrition 2022, pooled across 22 countries.",
 
-  "onboarding.standing.title": "This is how much you can improve.",
+  /* Said before the drawing rather than after it, so the reader is told what
+     they are about to look at instead of being asked to work it out and then
+     be told. The whole screen is one claim and this is the claim. */
+  "onboarding.standing.lead": "This is how much you can improve",
+  /* What the drawing came to, said as a gain rather than as a measurement: the
+     same two numbers, read the way a reader reads them. It sits under the plot
+     and no longer carries the screen, so it is a verdict, not a headline. */
+  "onboarding.standing.title": "Use Underneath and gain ",
+  "onboarding.standing.titlePoints": "{gain} points",
+  "onboarding.standing.titleTail": " back",
   "onboarding.standing.cta": "Try for free",
-  "onboarding.standing.chartTitle": "Your next {years} years",
+  /* The key to the two lines. "Without" and "With" rather than "Before" and
+     "After", because nothing has happened yet: both lines are models of the
+     same eight years and the key has to say which is which, not imply one
+     already came true. */
+  "onboarding.standing.legendWithout": "Without Underneath",
   "onboarding.standing.legendWith": "With Underneath",
-  "onboarding.standing.legendWithout": "Without",
-  "onboarding.standing.now": "NOW",
-  "onboarding.standing.years": "YEAR {years}",
-  /* Two workings, because the average branch is not drawing the reader. The
-     first says "you", the second cannot and does not. */
-  "onboarding.standing.workingAverage": "An average week there starts at {start}. At the rate you shop, {swaps} better choices a year reach {target} by year {years}, so {gain} points up on that start and {gap} above the same week left alone.",
-  "onboarding.standing.working": "You are at {start} today. At the rate you shop, {swaps} better choices a year reach {target} by year {years}, so {gain} points up on where you stand and {gap} above the same week left alone.",
+  "onboarding.standing.axisNow": "NOW",
+  "onboarding.standing.axisEnd": "YEAR {years}",
   "onboarding.standing.chartCaption": "YOUR HEALTH SCORE, OUT OF 100",
-  "onboarding.standing.captionAverage": "AN AVERAGE HEALTH SCORE, OUT OF 100",
-  "onboarding.standing.note": "Built from how often you eat ultra-processed food, how often you shop and your age. A diet score, not a measurement of your body. Both lines are models.",
-  /* Said plainly, because the number moved on answers about a body and the
-     screen has to own that. Nothing here claims food caused anything. */
-  "onboarding.standing.noneOfThem": "none",
-  "onboarding.standing.noteSymptoms": "Built from how often you eat ultra-processed food, how often you shop, your age, and your answers to the {total} quick questions, {yes} of them a yes. Those answers only nudge the week inside the frequency you picked. Read off what you told us, not off a test. Both lines are models.",
-  "onboarding.standing.source": "Source: JAMA Neurology 2022.",
+  /* Three benefits, drafted. Each names a thing the reader recognises in their
+     own week and leaves the app to be the way out of it, which is why none of
+     them is a feature. */
+  "onboarding.standing.gain1": "Gain your life back.",
+  "onboarding.standing.gain1sub": "Better years, not just more of them.",
+  "onboarding.standing.gain2": "Energy that holds.",
+  "onboarding.standing.gain2sub": "No more crashing an hour after lunch.",
+  "onboarding.standing.gain3": "Know before you buy.",
+  "onboarding.standing.gain3sub": "Two seconds at the shelf, not an hour.",
+  "onboarding.standing.join": "Join 50,000+ users using Underneath",
 
   "onboarding.goals.title": "What do you want to get out of this?",
   "onboarding.goals.hint": "Select all that apply.",
@@ -1465,25 +1792,30 @@ const T = {
   "onboarding.allergies.warning": "Underneath helps you spot ingredients. It is not a substitute for medical advice. Always check packaging and consult a professional for allergies.",
 
   "onboarding.cred.title": "Built on published science, not opinion.",
-  "onboarding.cred.sub": "A score is three things, weighted. Nothing else goes into it.",
-  "onboarding.cred.axis.macros": "Macros",
-  "onboarding.cred.axis.processing": "Processing",
-  "onboarding.cred.axis.additives": "Additives",
-  "onboarding.cred.who": "Sodium, sugar and fat against WHO guidance",
-  "onboarding.cred.nova": "NOVA processing classification",
-  "onboarding.cred.efsa": "EFSA additive safety opinions",
-  "onboarding.cred.chartTitle": "What a score is made of",
-  "onboarding.cred.chartCaption": "HOW EVERY SCORE IS WEIGHTED",
+  "onboarding.cred.nih": "US National Institutes of Health",
+  "onboarding.cred.harvard": "Harvard T.H. Chan School of Public Health",
+  "onboarding.cred.imperial": "Imperial College London",
+  "onboarding.cred.inserm": "Inserm",
+  "onboarding.cred.who": "World Health Organization",
+  "onboarding.cred.efsa": "European Food Safety Authority",
+  "onboarding.cred.fda": "US Food and Drug Administration",
+  "onboarding.cred.cdc": "Centers for Disease Control and Prevention",
+  "onboarding.cred.fao": "Food and Agriculture Organization",
 
 
-  /* The figure comes from the same constant the cluster under it shows, so the
-     headline and the number beneath it can never end up disagreeing. What the
-     help was for finishes the second line, which a bare "people." left almost
-     empty, and it names the outcome the visitor came for rather than the
-     mechanism, which they do not want for its own sake. */
-  "onboarding.reviews.title": "Underneath has helped {users} people fix their nutrition.",
+  /* Addressed to the reader rather than counting them. The headcount is still
+     on the screen, in the laurel lockup directly beneath, so the headline does
+     not have to carry a figure it would then have to defend; it says who the
+     app is for, and the reviews under it are the evidence for the claim. */
+  "onboarding.reviews.title": "Underneath was made for people like you.",
   "onboarding.reviews.ratingValue": "4.9",
-  "onboarding.reviews.rating": "App Store rating",
+  /* The two lines the wreath goes around. There used to be an "App Store
+     rating" caption under the figure and there is not one now: the reference
+     the lockup copies prints the rating bare, and the caption would not fit
+     between the leaves without the whole thing getting taller than the screen
+     can spare. The stars carry what the number is. If that reads as too thin a
+     claim, the caption is the thing to put back, not the wreath to shrink. */
+  "onboarding.reviews.users": "{users} Underneath users",
 
   "onboarding.calib.title": "Setting up your scanner",
   "onboarding.calib.section": "ACTIVATING",
@@ -1526,7 +1858,6 @@ const T = {
   "plan.payCard": "Pay by card",
 
   "paywall.title.neutral": "Subscribe to keep scanning.",
-  "paywall.subtitle": "Subscribe to keep unlimited scans, better alternatives, additive alerts, and full score breakdowns.",
   "paywall.subscribe": "Subscribe",
   "paywall.value.scans": "Unlimited product scans",
   "paywall.value.alternatives": "Better alternative suggestions",
@@ -1537,21 +1868,15 @@ const T = {
   "paywall.legal.trial_other": "Free for {count} days, then {price}. Renews automatically until cancelled.",
 
   "onboarding.auth.createTitle": "Save your progress.",
-  "onboarding.auth.createSub": "Create an account to keep your preferences and scan history.",
   "onboarding.auth.paidTitle": "Your trial has started.",
-  "onboarding.auth.paidSub": "Create an account to use it. Your trial is attached the moment you do.",
   "onboarding.auth.paidTitleNoTrial": "Your subscription is active.",
-  "onboarding.auth.paidSubNoTrial": "Create an account to use it. Your subscription is attached the moment you do.",
   "onboarding.auth.signinTitle": "Welcome back.",
-  "onboarding.auth.signinSub": "Sign in to pick up where you left off.",
   "onboarding.auth.dividerSignUp": "SIGN UP",
   "onboarding.auth.dividerSignIn": "SIGN IN",
   "onboarding.auth.google": "Continue with Google",
   "onboarding.auth.email": "Continue with email",
   "onboarding.auth.alreadyHave": "Already have an account? Sign in",
   "onboarding.auth.noAccount": "Don't have an account? Create one",
-  "onboarding.auth.emailCreateSub": "Enter your email and password.",
-  "onboarding.auth.emailSigninSub": "Sign in with your email.",
   "onboarding.auth.emailLabel": "EMAIL",
   "onboarding.auth.emailPlaceholder": "you@example.com",
   "onboarding.auth.passwordLabel": "PASSWORD",
@@ -1568,7 +1893,6 @@ const T = {
   "onboarding.otp.differentEmail": "Use a different email",
 
   "onboarding.reset.title": "Forgot password?",
-  "onboarding.reset.sub": "Enter your email and we'll send you a code to reset it.",
   "onboarding.reset.send": "Send reset code",
   "onboarding.reset.backToSignIn": "Back to sign in",
   "onboarding.reset.codeTitle": "Reset your password.",
@@ -1578,7 +1902,6 @@ const T = {
   "onboarding.reset.cta": "Reset password",
 
   "onboarding.done.title": "You're all set.",
-  "onboarding.done.sub": "Setup complete. Point the scanner at any label.",
 
   "onboarding.error.invalidEmail": "Please enter a valid email address.",
   "onboarding.error.shortPassword": "Password must be at least 8 characters.",
@@ -1623,10 +1946,10 @@ const GOALS = [
   { key: "Understand seed oils", label: "Understand seed oils", icon: "droplet", group: "less" },
 ];
 const SHOP_FOR = [
-  { key: "me", label: "Just me", icon: "lens" },
-  { key: "family", label: "Me and my partner", icon: "layers" },
-  { key: "kids", label: "My kids too", icon: "star" },
-  { key: "someone", label: "Someone I care for", icon: "shield" },
+  { key: "me", label: "Just me", icon: "bowl1" },
+  { key: "family", label: "Me and my partner", icon: "bowl2" },
+  { key: "kids", label: "My kids too", icon: "bowl3" },
+  { key: "someone", label: "Someone I care for", icon: "bowlcare" },
 ];
 const HABITS = [
   { key: "Daily", label: "Daily", icon: "calendar" },
@@ -1635,10 +1958,10 @@ const HABITS = [
   { key: "Rarely", label: "Rarely", icon: "moon" },
 ];
 const UPF_FREQ = [
-  { key: "Most meals", label: "Most meals", icon: "layers" },
-  { key: "Once a day", label: "Once a day", icon: "calendar" },
-  { key: "A few times a week", label: "A few times a week", icon: "calcheck" },
-  { key: "Rarely", label: "Rarely", icon: "moon" },
+  { key: "Most meals", label: "Most meals", icon: "bag" },
+  { key: "Once a day", label: "Once a day", icon: "clock" },
+  { key: "A few times a week", label: "A few times a week", icon: "calendar" },
+  { key: "Rarely", label: "Rarely", icon: "apple" },
   { key: "Not sure", label: "Not sure", icon: "minus" },
 ];
 const ADDITIVES = [
@@ -1649,8 +1972,8 @@ const ADDITIVES = [
   { key: "All of the above", label: "All of the above", icon: "layers" },
 ];
 const DIET = [
-  { key: "None", label: "None", icon: "minus" },
-  { key: "Vegan", label: "Vegan", icon: "sprout" },
+  { key: "None", label: "None", icon: "bowl0" },
+  { key: "Vegan", label: "Vegan", icon: "broccoli" },
   { key: "Vegetarian", label: "Vegetarian", icon: "leaf" },
   { key: "Pescatarian", label: "Pescatarian", icon: "fish" },
   { key: "Halal", label: "Halal", icon: "crescent" },
@@ -1660,7 +1983,7 @@ const DIET = [
   { key: "Palm-Oil-Free", label: "Palm-Oil-Free", icon: "droplet" },
 ];
 const ALLERGIES = [
-  { key: "None", label: "None", icon: "minus" },
+  { key: "None", label: "None", icon: "bowl0" },
   { key: "Peanuts", label: "Peanuts", icon: "peanut" },
   { key: "Tree Nuts", label: "Tree Nuts", icon: "acorn" },
   { key: "Dairy", label: "Dairy", icon: "milk" },
@@ -1672,12 +1995,6 @@ const ALLERGIES = [
   { key: "Gluten", label: "Gluten", icon: "wheat" },
 ];
 const AGE_BANDS = ["18-29", "30-39", "40-49", "50-59", "60-69", "70+"];
-const SEXES = [
-  { key: "female", labelKey: "onboarding.aboutYou.female" },
-  { key: "male", labelKey: "onboarding.aboutYou.male" },
-  { key: "unspecified", labelKey: "onboarding.aboutYou.unspecified" },
-];
-
 /* The symptom run, in the order a person would scan their own body: energy,
    then gut, then face, then head, then appetite. Grouping them that way is
    what stops twelve identical screens feeling like a list; each pair reads
@@ -1736,6 +2053,9 @@ function interpolate(anchors, age) {
   }
   return last[1];
 }
+/* The funnel does not ask which sex the reader is, so this is always called
+   with nothing and always pools the two curves. The parameter stays because
+   the two curves are real and a later screen may have an answer to give it. */
 function lifeYearsAt(age, sex) {
   const female = interpolate(LIFE_YEARS_ANCHORS.female, age);
   const male = interpolate(LIFE_YEARS_ANCHORS.male, age);
@@ -1766,16 +2086,71 @@ function upfMealsPerWeek(frequency) {
   const n = frequency ? UPF_MEALS_BY_FREQUENCY[frequency] : undefined;
   return n === undefined ? null : n;
 }
-function upfMealsPerYear(mealsPerWeek) { return mealsPerWeek * 52; }
+/* The year the screen counts to. A year, not a lifetime: the reader answered
+   how many meals a day come out of a packet, and a year is the longest run of
+   that answer that is still a count rather than a forecast about how long they
+   live. Nothing downstream reads this. */
+const WEEKS_PER_YEAR = 52;
+/* The clock the week grid runs on. The dots arrive one at a time so the week
+   can be counted, the finished week is left standing for a beat so it reads as
+   a week rather than as an answer already given, and then the same reading
+   order is swept again to sort it. These are gaps between dots and the length
+   of one arrival; the rest of the durations live with the keyframes. */
+const WEEK_DOT_IN_STEP = 22;
+const WEEK_DOT_IN_MS = 260;
+const WEEK_DOT_HOLD = 380;
+const WEEK_DOT_STEP = 30;
+/**
+ * A week as a dot a meal, a column a day, in two states over one lattice.
+ * A week rather than the year above it because a year is a thousand and ninety
+ * two dots, and a thousand dots at any pitch a phone can hold is a texture to
+ * be glanced at; twenty one is a number to be counted, and counting it is the
+ * whole point of drawing it. The first state is the week entire, so the reader
+ * holds the denominator before they are handed the fraction. The second sorts
+ * it: reading order fills the first meal of every day before the second, so
+ * a packet a day is exactly the top row, and what is left standing at the end
+ * is their share sitting in the days it falls on.
+ * A week with none in it skips the second state: there is nothing to sort, and
+ * a grid that only recedes is a drawing that says nothing.
+ */
+function weekGrid(upfMeals) {
+  const on = Math.max(0, Math.min(MEALS_PER_WEEK, Math.round(upfMeals)));
+  const sweep = MOTION.drawDelay + (MEALS_PER_WEEK - 1) * WEEK_DOT_IN_STEP
+    + WEEK_DOT_IN_MS + WEEK_DOT_HOLD;
+  const dots = Array.from({ length: MEALS_PER_WEEK }, (_, i) => {
+    const arrive = MOTION.drawDelay + i * WEEK_DOT_IN_STEP;
+    return on === 0
+      ? `<i style="animation-delay:${arrive}ms"></i>`
+      : `<i class="${i < on ? "on" : "off"}" style="animation-delay:${arrive}ms,${sweep + i * WEEK_DOT_STEP}ms"></i>`;
+  }).join("");
+  return `<div class="week-grid" aria-hidden="true">${dots}</div>`;
+}
 function standingApplies(frequency) { return upfMealsPerWeek(frequency) !== null; }
 
 const PROJECTION_YEARS = 8;
+/* The left-alone run is a projection, not a verdict, and a zero would read as
+   one: nobody eating food scores nothing (user, 2026-09-22). It bottoms out
+   here instead, which is also the truer shape, since the fall should slow as
+   the week runs out of room to get worse rather than stop dead on the axis.
+   Only the declining run needs it; the improving one starts above this floor
+   and only ever climbs. */
+const PROJECTION_FLOOR = 5;
 const UPF_MEAL_WORST = 10;
 const UPF_MEAL_BEST = 45;
 const ORDINARY_MEAL_SCORE = 70;
-const CHOSEN_MEAL_SCORE = 85;
+/* What a meal picked on purpose is worth, and it is the ceiling the improving
+   run climbs toward. Raised from 85 on the user's note that the two runs should
+   part further (2026-09-22): the scoring engine really does hand out low
+   nineties for a plate of whole food, so 92 is a number the product can stand
+   behind rather than one invented to widen a chart. */
+const CHOSEN_MEAL_SCORE = 92;
 const OWN_SCORE_CEILING = 65;
-const DECLINE_PER_YEAR = 1.4;
+/* Points a week that is left alone gives up each year. Raised from 1.4 in the
+   same pass, to 16 points over the eight years rather than 11. This is drift in
+   a score we define, not a clinical rate, which is exactly why it has to stay
+   modest enough to be arguable: the multiplier below is the part with a paper
+   behind it and it is unchanged. */
+const DECLINE_PER_YEAR = 2;
 const UPF_DECLINE_MULTIPLIER = 1.28; // JAMA Neurology 2022, ELSA-Brasil
 const UPF_DECLINE_MIN_MEALS = MEALS_PER_WEEK * 0.2;
 const UPF_DECLINE_AGE_LIMIT = 60;
@@ -1821,9 +2196,6 @@ function symptomLoad(symptoms) {
   if (answered.length === 0) return null;
   return answered.filter((s) => symptoms[s.key] === true).length / answered.length;
 }
-function symptomYesCount(symptoms) {
-  return SYMPTOMS.filter((s) => symptoms[s.key] === true).length;
-}
 /* Centred on half, so an even split moves nothing and the round has to lean
    one way before it counts for anything. */
 function symptomMealShift(load) {
@@ -1853,9 +2225,47 @@ function healthScoreProjection({ upfPerWeek, age, averageUpfPerWeek, swaps = SWA
   const closedPerYear = Math.min(1, swaps / MEALS_PER_WEEK);
   const declining = [];
   const improving = [];
+  /* The improving run parts fast and then levels off (user, 2026-09-22:
+     *"make it increase and decrease faster, and then kind of like a flat line
+     at the end"*). **This reverses the earlier stagnant-then-steep shape**
+     asked for the same evening; the later instruction wins, do not put the
+     late bend back without being asked. It is also the defensible shape here:
+     the run is bounded by how good a chosen meal can be, so most of the move
+     belongs near the start and the last years are the plateau it settles into.
+     `tail` is how much of the run is still linear, which is what stops the
+     plateau going dead level, so year eight is still paying something. */
+  const easeEarly = (t, tail) => tail * t + (1 - tail) * (1 - Math.pow(1 - t, 3));
+  /* The week left alone holds, then gives way, then settles (user, 2026-09-22:
+     *"for the negative habit in the start, being kind of like flatlined and
+     then going down and then flatlined again"*). An S, not the ease-out the
+     improving run uses, and it reads truer: nothing much shows for the first
+     couple of years, the damage lands in the middle, and the tail flattens
+     because the week is running out of room to get worse.
+     `t^3 / (t^3 + (1-t)^3)` is the S itself, exactly 0 and 1 at the two ends
+     and symmetric about the middle; the linear `tail` keeps both plateaus from
+     going dead level. Like the other easing it only decides how the fall is
+     SPENT, never how far it falls, so nothing the copy quotes moves. */
+  const easeMiddle = (t, tail) => {
+    const a = Math.pow(t, 3);
+    const b = Math.pow(1 - t, 3);
+    return tail * t + (1 - tail) * (a + b === 0 ? 0 : a / (a + b));
+  };
+  /* Where the improving run lands is still the saturating model's answer, so
+     the target, the gain and the gap the copy quotes are all untouched. Only
+     the path between the two ends is redrawn, and both ends are exact: the
+     easing returns 0 at year zero and 1 at year eight by construction. */
+  const target = CHOSEN_MEAL_SCORE - (CHOSEN_MEAL_SCORE - start) * Math.pow(1 - closedPerYear, years);
+  /* The whole fall, unless the week does not have that much left to give, in
+     which case it gives what it has and stops at the floor. Spending the room
+     over the full eight years rather than letting the rate run into a hard
+     clamp is what keeps the shape: clamping instead dropped a heavy week onto
+     the floor by year two and left six years of dead level line lying on the
+     axis. */
+  const drop = Math.min(fall * years, Math.max(0, start - PROJECTION_FLOOR));
   for (let y = 0; y <= years; y++) {
-    declining.push(clampScore(start - fall * y));
-    improving.push(clampScore(CHOSEN_MEAL_SCORE - (CHOSEN_MEAL_SCORE - start) * Math.pow(1 - closedPerYear, y)));
+    const t = years ? y / years : 0;
+    declining.push(clampScore(start - drop * easeMiddle(t, 0.08)));
+    improving.push(clampScore(start + (target - start) * easeEarly(t, 0.1)));
   }
   const last = years;
   /* Both readings of "how much you can improve", named rather than left to the
@@ -1886,6 +2296,9 @@ function upfReference(countryCode) {
    typos. The figure under the cluster is downloads across both stores,
    which is why the caption says downloads and not users. */
 const REVIEW_USERS = "50k";
+/** The same figure spelled for a sentence rather than for a disc. One crowd,
+    two shapes, and they have to move together. */
+const REVIEW_USERS_LONG = "50,000+";
 /* The store placing is shown only where it is true, so the wreath never has to
    hold a claim that has gone stale. */
 const REVIEW_RATING = true;
@@ -1911,10 +2324,11 @@ const TRIAL_DAYS = 3;
    A screen is REMOVED from the flow rather than skipped at the call
    site, so forward and back can never disagree about where they are. */
 const S = {
-  HERO: "hero", SEX: "sex", ABOUT: "about", YEARS: "years", FEEL: "feel", SHOPFOR: "shopfor",
+  HERO: "hero", ABOUT: "about", YEARS: "years", FEEL: "feel", SHOPFOR: "shopfor",
   HABITS: "habits", BADNEWS: "badnews", UPFFREQ: "upffreq", UPFSHARE: "upfshare",
   STANDING: "standing", GOALS: "goals", ADDITIVES: "additives", STAKES: "stakes",
   COMPARE: "compare", DIET: "diet", ALLERGIES: "allergies", CRED: "cred",
+  WELCOME: "welcome",
   LIGHTNING: "lightning", REVIEWS: "reviews", CALIB: "calib",
   ACCOUNT: "account", PLAN: "plan", DONE: "done",
 };
@@ -1926,9 +2340,9 @@ const S = {
    screens at the end of a quiz that had already been answered were thirteen
    more chances to close the tab. */
 const FLOW = [
-  S.HERO, S.SEX, S.ABOUT, S.YEARS, S.FEEL, S.SHOPFOR, S.HABITS,
+  S.HERO, S.ABOUT, S.YEARS, S.FEEL, S.SHOPFOR, S.HABITS,
   S.BADNEWS, S.UPFFREQ, S.UPFSHARE, S.GOALS, S.ADDITIVES, S.STAKES, S.COMPARE, S.DIET,
-  S.ALLERGIES, S.CRED, S.REVIEWS, S.CALIB,
+  S.ALLERGIES, S.CRED, S.WELCOME, S.REVIEWS, S.CALIB,
   /* The two lines are the last thing before the price, because they are the
      argument for paying: the gap between them is what the subscription is
      being sold to close. Asked earlier, mid-quiz, they were a fact; asked
@@ -1937,7 +2351,7 @@ const FLOW = [
 ];
 /** What the progress bar counts: the questions. */
 const PROGRESS_STEPS = [
-  S.SEX, S.ABOUT, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
+  S.ABOUT, S.SHOPFOR, S.HABITS, S.UPFFREQ, S.GOALS, S.ADDITIVES,
   S.DIET, S.ALLERGIES,
 ];
 /** No back button, no progress bar. */
@@ -2118,64 +2532,50 @@ function reassure(text, mod) {
  * One five-pointed star, filled with a top-down gold gradient rather than a
  * flat colour, which is what stops a row of five reading as clip art.
  */
-function star(size) {
+function star(size, fill) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L12 17.4l-5.8 3 1.1-6.4L2.6 9.4l6.5-.9z" fill="url(#starGold)"/>
+    <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4L12 17.4l-5.8 3 1.1-6.4L2.6 9.4l6.5-.9z" fill="${fill || "url(#starGold)"}"/>
   </svg>`;
 }
-function starRow(size, gap) {
+function starRow(size, gap, fill) {
   return `<span class="star-row" style="gap:${gap}px" aria-label="5 out of 5">${
-    [0, 1, 2, 3, 4].map(() => star(size)).join("")}</span>`;
+    [0, 1, 2, 3, 4].map(() => star(size, fill)).join("")}</span>`;
 }
 
-const LAUREL_GOLD = "#D9A441";
-/**
- * One leaf, pointed at both ends, growing from (bx, by) at an angle where zero
- * is straight up and a positive angle turns clockwise. Two curves out and back,
- * which is all a laurel leaf is.
- */
-function laurelLeaf(bx, by, deg, len, w) {
-  const r = (deg * Math.PI) / 180;
-  const ax = Math.sin(r), ay = -Math.cos(r);
-  const px = Math.cos(r), py = Math.sin(r);
-  const at = (along, across) =>
-    `${(bx + ax * along + px * across).toFixed(1)} ${(by + ay * along + py * across).toFixed(1)}`;
-  return [
-    `M${bx.toFixed(1)} ${by.toFixed(1)}`,
-    `C${at(len * 0.3, w)} ${at(len * 0.72, w)} ${at(len, 0)}`,
-    `C${at(len * 0.72, -w)} ${at(len * 0.3, -w)} ${bx.toFixed(1)} ${by.toFixed(1)}`,
-  ].join(" ");
-}
-/**
- * Half a wreath, built rather than drawn: one curve for the branch, and at
- * eight points along it a pair of leaves set forty-two degrees either side of
- * the direction the branch is running. That pairing is what makes the chevrons
- * a wreath is read by, and taking the angle off the curve is what keeps them
- * turning with it instead of all pointing the same way. There is no line under
- * the leaves: the bases meet along the curve and the overlap draws the branch.
- */
-const LAUREL_CURVE = [[30, 94], [0, 78], [-2, 28], [26, 2]];
-const LAUREL_PATHS = (() => {
-  const [p0, p1, p2, p3] = LAUREL_CURVE;
-  return [0.05, 0.17, 0.29, 0.41, 0.53, 0.65, 0.77, 0.89].flatMap((tt) => {
-    const u = 1 - tt;
-    const on = (i) => u * u * u * p0[i] + 3 * u * u * tt * p1[i] + 3 * u * tt * tt * p2[i] + tt * tt * tt * p3[i];
-    const d = (i) => 3 * u * u * (p1[i] - p0[i]) + 6 * u * tt * (p2[i] - p1[i]) + 3 * tt * tt * (p3[i] - p2[i]);
-    const deg = (Math.atan2(d(0), -d(1)) * 180) / Math.PI;
-    /* The leaves shorten toward the tip, which is what stops the branch
-       reading as a ladder of identical rungs. */
-    const len = 20 - tt * 6;
-    return [
-      laurelLeaf(on(0), on(1), deg - 42, len, len * 0.3),
-      laurelLeaf(on(0), on(1), deg + 42, len, len * 0.3),
-    ];
-  });
-})();
+/* Half a wreath. This used to be built out of bezier maths: a curve for the
+   branch and a pair of leaves struck at forty-two degrees off its tangent at
+   eight points along it. It is now a traced asset, because the user asked for
+   the laurel in their reference copied exactly rather than approximated
+   (2026-09-22), and a generated wreath is by definition an approximation of
+   somebody else's. assets/laurel.webp is that reference's LEFT half pulled out
+   of the screenshot through its blue channel, so the antialiasing survives, and
+   filled with the brand accent rather than the reference's own near-identical
+   orange. The right half is this same file mirrored by .wreath-flip, which is
+   also how the reference is drawn.
+   The 0.522 is the asset's own 320x613, kept as one number so the two halves
+   cannot drift apart if the height changes. */
+const LAUREL_RATIO = 320 / 613;
 function laurelHalf(height) {
-  const w = (height * 58) / 108;
-  return `<svg width="${w}" height="${height}" viewBox="-17 -8 58 108" aria-hidden="true">${
-    LAUREL_PATHS.map((d) => `<path d="${d}" fill="${LAUREL_GOLD}"/>`).join("")}</svg>`;
+  return `<img class="laurel" src="assets/laurel.webp" alt="" aria-hidden="true"
+    width="${Math.round(height * LAUREL_RATIO)}" height="${height}">`;
 }
+/**
+ * One pass of the review cards, for the marquee that holds two of them.
+ * The second pass is scenery, not content: it is the same three reviews read
+ * out a second time, so it is hidden from anyone listening rather than having
+ * the screen announce every quote twice.
+ */
+function reviewCards(duplicate) {
+  return REVIEWS.slice(0, WEB_REVIEWS).map((r) => `<article class="review-card"${duplicate ? ' aria-hidden="true"' : ""}>
+      <div class="review-head">
+        <span class="review-name">${esc(r.name)}</span>
+        ${starRow(16, 3)}
+      </div>
+      ${r.title ? `<p class="review-title">${esc(r.title)}</p>` : ""}
+      <p class="review-quote${r.title ? " tight" : ""}">${esc(r.quote)}</p>
+    </article>`).join("");
+}
+
 /** The wreath and what it is around: two mirrored halves with the claim between. */
 function wreath(height, inner) {
   return `<span class="wreath">${laurelHalf(height)}<span class="wreath-mid">${inner}</span><span class="wreath-flip">${laurelHalf(height)}</span></span>`;
@@ -2292,51 +2692,103 @@ function lifeYearsChart(curve, markerAge, markerYears) {
 }
 
 /**
- * One week scored out of a hundred, drawn two ways from the same starting
- * score: left alone, and changed one meal at a time. The drawing's only job of
- * its own is to keep a hundred at the top of the axis whatever was answered.
+ * The two eight-year models, drawn as two lines from the same starting score:
+ * the week left alone falling away, the week changed a meal at a time holding
+ * and climbing, and the gap between them opening year by year. Both are read
+ * against one axis out of a hundred, so the distance between the lines is the
+ * claim and the two numbers at the right are only where it ends up.
+ *
+ * Every year, not every other one, because the parting is gradual and a line
+ * sampled coarsely would draw a decision instead of a drift.
  */
-function scoreProjectionChart(declining, improving, labelNow, labelEnd) {
-  const W = chartWidth();
-  const H = chartHeight(118, 248);
-  const padL = 4;
-  /* Room at the right for each line to carry its own end score. */
-  const padR = 50, padT = 14, padB = 26;
-  const plotW = W - padL - padR;
+function scoreProjectionChart(declining, improving, labelNow, labelEnd, scaleLabel) {
+  /* The full width of the column, not the column less its gutters: this is the
+     one drawing in the funnel that is the screen rather than an illustration on
+     it, so it runs to both edges and the type is what sits inside the margins
+     (user, 2026-09-22). */
+  const W = Math.min(window.innerWidth, 420);
+  /* Its own height rule rather than the funnel's shared one. The other charts
+     are figures that have to leave room for the words around them; this one is
+     the screen, so it takes better than half of every pixel a handset has over
+     the 667 floor, where there is nothing to take. */
+  const H = Math.round(Math.min(430, 150 + Math.max(0, window.innerHeight - 667) * 1.1));
+  /* Four real gutters, because this is a graph and not a swoosh (user,
+     2026-09-22). Top carries the axis title, left carries the score values,
+     bottom carries the two year labels, right carries the two end scores.
+     Drawing to the edges instead put every one of those inside the plot, where
+     the declining line ran through the words and, on a week that ends near
+     zero, its own end score printed on top of YEAR 8. */
+  const padT = 22;
+  const padB = 28;
+  const padL = 30;
+  const padR = 40;
   const plotH = H - padT - padB;
+  const plotW = W - padL - padR;
+  const base = padT + plotH;
   const last = declining.length - 1;
   const x = (w) => padL + (w / last) * plotW;
   const y = (score) => padT + (1 - score / 100) * plotH;
-  const decliningPath = smoothPath(declining.map((s, w) => ({ x: x(w), y: y(s) })));
+  /* The axis is the whole scale, zero to a hundred, even when the week being
+     drawn only ever occupies the bottom half of it. Cropping the axis to the
+     data would fill that space and make the gap between the two lines look
+     larger than it is, which is the exact move this app exists to call out.
+     The rules are what make the empty half readable as scale rather than as
+     nothing: half a pixel off the integer so a 1px line lands on one row. */
+  const rule = (v, color) => `<line x1="${padL}" y1="${Math.round(y(v)) + 0.5}" x2="${padL + plotW}" y2="${Math.round(y(v)) + 0.5}" stroke="${color}" stroke-width="1"/>`;
+  const grid = [100, 75, 50, 25].map((v) => rule(v, "#E8E1D3")).join("") + rule(0, "#D6CCB8");
+  const yTicks = [100, 75, 50, 25, 0]
+    .map((v) => `<span class="axis-value" style="top:${y(v) - 5}px;width:${padL - 7}px">${v}</span>`)
+    .join("");
+  const decliningPts = declining.map((s, w) => ({ x: x(w), y: y(s) }));
+  const decliningPath = smoothPath(decliningPts);
   const improvingPath = smoothPath(improving.map((s, w) => ({ x: x(w), y: y(s) })));
-  const base = y(0);
-  const improvingArea = `${improvingPath} L${x(last)} ${base} L${x(0)} ${base} Z`;
-  const decliningArea = `${decliningPath} L${x(last)} ${base} L${x(0)} ${base} Z`;
+  /* Only the ground between the two lines is tinted, not the ground under each
+     of them. Filling both stacked a block of red across the whole lower half of
+     the plot on any week that does not start near the floor, which read as the
+     subject rather than as the backdrop, and buried the one thing the drawing
+     is for. The band is the claim: it starts at nothing, because on day one
+     the two weeks are the same week, and everything it becomes is the gain. */
+  const gapArea = `${improvingPath} ${smoothPath(decliningPts.slice().reverse()).replace(/^M/, "L")} Z`;
+  /* Each end score sits level with the point it reads off, out in the right
+     gutter, so the eye goes straight across from the line to the number. It
+     used to float above its own line end, which on the declining week left the
+     3 hanging in the middle of the green band with nothing under it (user,
+     2026-09-22). Parted only if the two years finish close enough for the
+     numbers to collide, which is what a week already near the floor does: it
+     has nowhere left to fall, so the two ends converge. */
+  const clampLabel = (top) => Math.max(0, Math.min(H - 18, top));
+  const redTop = clampLabel(y(declining[last]) - 9);
+  const greenTop = clampLabel(Math.min(redTop - 20, y(improving[last]) - 9));
   const svg = `<svg width="${W}" height="${H}" aria-hidden="true">
       <defs>
-        <linearGradient id="improveFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#3E9C6D" stop-opacity=".3"/>
-          <stop offset="1" stop-color="#3E9C6D" stop-opacity=".06"/>
-        </linearGradient>
-        <linearGradient id="heldFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#E5564E" stop-opacity=".2"/>
-          <stop offset="1" stop-color="#E5564E" stop-opacity=".05"/>
+        <!-- Tinted along the run rather than down the page: the band is nothing
+             in year one and everything by year eight, so the colour arrives
+             with it instead of sitting at full strength over a gap that has not
+             opened yet. -->
+        <linearGradient id="improveFill" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#3E9C6D" stop-opacity=".08"/>
+          <stop offset=".55" stop-color="#3E9C6D" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#3E9C6D" stop-opacity=".46"/>
         </linearGradient>
       </defs>
-      ${[0, 50, 100].map((g) => `<line x1="${padL}" y1="${y(g)}" x2="${padL + plotW}" y2="${y(g)}" stroke="#ECE6DA" stroke-width="1"/>`).join("")}
-      <path d="${improvingArea}" fill="url(#improveFill)"/>
-      <path d="${decliningArea}" fill="#FFFFFF"/>
-      <path d="${decliningArea}" fill="url(#heldFill)"/>
-      <path d="${decliningPath}" stroke="#E5564E" stroke-width="3.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-      <path d="${improvingPath}" stroke="#3E9C6D" stroke-width="3.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-      <circle cx="${x(0)}" cy="${y(declining[0])}" r="6" fill="#1A2238" stroke="#fff" stroke-width="2.4"/>
-      <circle cx="${x(last)}" cy="${y(declining[last])}" r="6" fill="#C0392F" stroke="#fff" stroke-width="2.4"/>
-      <circle cx="${x(last)}" cy="${y(improving[last])}" r="6" fill="#2E7D52" stroke="#fff" stroke-width="2.4"/>
+      ${grid}
+      <line x1="${padL + 0.5}" y1="${padT}" x2="${padL + 0.5}" y2="${base}" stroke="#D6CCB8" stroke-width="1"/>
+      <path d="${gapArea}" fill="url(#improveFill)"/>
+      <path d="${decliningPath}" stroke="#E5564E" stroke-width="3.9" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="${improvingPath}" stroke="#3E9C6D" stroke-width="3.9" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- A mark where each run finishes, so the number out in the gutter is
+           pinned to a point on the curve instead of floating beside it. Set on
+           the paper, not on the line, or the red dot disappears into the band
+           on a week whose two ends nearly meet. -->
+      <circle cx="${x(last)}" cy="${y(declining[last])}" r="5" fill="var(--bg)" stroke="#E5564E" stroke-width="3.4"/>
+      <circle cx="${x(last)}" cy="${y(improving[last])}" r="5" fill="var(--bg)" stroke="#3E9C6D" stroke-width="3.4"/>
     </svg>
-    <span class="line-end" style="color:#2E7D52;top:${y(improving[last]) - 11}px;right:0">${improving[last]}</span>
-    <span class="line-end" style="color:#C0392F;top:${y(declining[last]) - 11}px;right:0">${declining[last]}</span>
-    <span class="axis-tick" style="left:${padL}px;top:${H - 12}px">${esc(labelNow)}</span>
-    <span class="axis-tick" style="left:0;width:${x(last) + 20}px;top:${H - 12}px;text-align:right">${esc(labelEnd)}</span>`;
+    ${yTicks}
+    <span class="chart-scale" style="left:${padL}px">${esc(scaleLabel)}</span>
+    <span class="line-end" style="color:#2E7D52;top:${greenTop}px">${improving[last]}</span>
+    <span class="line-end" style="color:#C0392F;top:${redTop}px">${declining[last]}</span>
+    <span class="axis-tick" style="left:${padL}px;top:${base + 10}px">${esc(labelNow)}</span>
+    <span class="axis-tick" style="left:0;width:${padL + plotW}px;top:${base + 10}px;text-align:right">${esc(labelEnd)}</span>`;
   return sweep(W, H, svg);
 }
 
@@ -2425,22 +2877,20 @@ function optionRow(o, on, attrs, multi) {
       ${multi ? `<span class="tick">${CHECK}</span>` : ""}
     </button>`;
 }
-function singleScreen(titleKey, subKey, list, field) {
+function singleScreen(titleKey, list, field) {
   const chosen = state[field];
   return {
     html: `<h1 class="title">${esc(t(titleKey))}</h1>
-      ${subKey ? `<p class="sub">${esc(t(subKey))}</p>` : ""}
       <div class="rows" role="radiogroup" aria-label="${esc(t(titleKey))}">
         ${list.map((o) => optionRow(o, chosen === o.key, `data-act="choose" data-field="${field}" data-value="${esc(o.key)}"`, false)).join("")}
       </div>`,
     dock: cta(t("common.continue"), !chosen),
   };
 }
-/** One answer as a chip. The glyph is a bubble on goals, bare ink elsewhere,
-    and bare ink turns white when the chip is selected. */
+/** One answer as a chip. The glyph is a bubble on goals, bare elsewhere. */
 function optionChip(o, on, attrs, bubble) {
   return `<button class="chip${on ? " on" : ""}" type="button" role="checkbox" aria-checked="${on}" ${attrs}>
-      ${bubble ? disc(o.icon, 32) : icon(o.icon, 16)}
+      ${bubble ? disc(o.icon, 32, true) : art(o.icon, 24)}
       <span class="label">${esc(o.label)}</span>
     </button>`;
 }
@@ -2461,7 +2911,7 @@ function checkRow(o, on, attrs) {
   return `<button class="check-row${on ? " on" : ""}" type="button" role="checkbox" aria-checked="${on}" ${attrs}>
       <span class="check-head">
         <span class="checkbox">${CHECK}</span>
-        ${disc(o.icon, 32)}
+        ${disc(o.icon, 32, true)}
         <span class="label">${esc(o.label)}</span>
       </span>
       ${o.sub ? `<span class="check-sub">${esc(o.sub)}</span>` : ""}
@@ -2481,9 +2931,6 @@ Object.assign(SCREENS, {
      the app running under it before a single question is asked. */
   [S.HERO]: () => ({
     html: `<section class="hero">
-        <div class="hero-head">
-          <h1>${esc(t("onboarding.hero.title"))}</h1>
-        </div>
         <div class="hero-phone-wrap">
           <div class="hero-phone">
             <div class="hero-phone-btn l" style="top:17.3%;height:5.9%"></div>
@@ -2498,6 +2945,9 @@ Object.assign(SCREENS, {
             </div>
           </div>
         </div>
+        <div class="hero-head">
+          <h1>${esc(t("onboarding.hero.title"))}</h1>
+        </div>
         <div class="hero-dock">
           ${cta(t("onboarding.hero.cta"))}
           ${link(t("onboarding.hero.haveAccount"), "signin")}
@@ -2505,34 +2955,6 @@ Object.assign(SCREENS, {
       </section>`,
     dock: "",
   }),
-
-  /* Sex, asked as two photographs. A picture is a cheaper thing to answer
-     than a form, and this answer is one the flow needs anyway: it picks the
-     curve the life-years screen reads from. Tapping a card sets it and moves
-     on, so the screen after it has only age left to ask. */
-  [S.SEX]: () => {
-    const card = (key, photo, pos) => `<button class="pick-card${state.sex === key ? " on" : ""}" type="button"
-        data-act="choose" data-field="sex" data-value="${key}">
-        <span class="pick-photo">
-          <img src="assets/${photo}" alt="" style="object-position:${pos}" loading="eager" decoding="async">
-        </span>
-        <span class="pick-foot">
-          <span class="pick-label">${esc(t("onboarding.aboutYou." + key))}</span>
-          <span class="pick-go">${ARROW_RIGHT}</span>
-        </span>
-      </button>`;
-    return {
-      html: `<h1 class="title">${esc(t("onboarding.sex.title"))}</h1>
-        <div class="pick-cards" role="radiogroup" aria-label="${esc(t("onboarding.sex.title"))}">
-          ${card("female", "start-female.webp", "52% center")}
-          ${card("male", "start-male.webp", "44% center")}
-        </div>
-        <div class="pick-skip">
-          ${link(t("onboarding.aboutYou.unspecified"), "choose", 'data-field="sex" data-value="unspecified"')}
-        </div>`,
-      dock: "",
-    };
-  },
 
   /* Years. The line is the model read at every age from twenty to eighty, so
      the figure printed above it can be checked against the shape it came from,
@@ -2546,8 +2968,7 @@ Object.assign(SCREENS, {
           t("onboarding.years.chartTitle"),
           lifeYearsChart(lifeYearsCurve(state.sex), ageForBand(state.ageBand), lifeYearsRegainedRaw(state.ageBand, state.sex)),
           t("onboarding.years.chartCaption"),
-        )}
-        <p class="caveat">${esc(t("onboarding.years.caveat"))}</p>`,
+        )}`,
       dock: cta(t("common.continue"), false, "next", t("onboarding.years.source")),
     };
   },
@@ -2590,11 +3011,11 @@ Object.assign(SCREENS, {
     const trips = shoppingTripsPerYear(state.habit);
     const items = trips * ITEMS_PER_TRIP;
     return {
+      tint: "leaf",
       html: `<h1 class="title">${esc(t("onboarding.badNews.title"))}</h1>
         <p class="statrow"><b style="color:var(--red-text)">${esc(formatCount(items))}</b><span>${esc(t("onboarding.badNews.unitItems"))}</span></p>
         <div class="figure">${fivesBlock(items, 4, itemBlockCols(items))}</div>
-        <p class="chart-caption">${esc(t("onboarding.badNews.chartCaptionItems", { trips: trips, items: ITEMS_PER_TRIP }))}</p>
-        <p class="statbody">${esc(t("onboarding.badNews.bodyItems"))}</p>`,
+        <p class="chart-caption">${esc(t("onboarding.badNews.chartCaptionItems", { trips: trips, items: ITEMS_PER_TRIP }))}</p>`,
       dock: cta(t("common.continue")),
     };
   },
@@ -2605,31 +3026,30 @@ Object.assign(SCREENS, {
     const meals = upfMealsPerWeek(state.upfFrequency);
     const ref = upfReference(state.countryCode);
     const us = ref.region === "us";
-    /* The count above is this screen's number. The published share counts
-       calories where that counts meals, so it is set in its own sentence under
-       a rule rather than stood up as a rival headline in the same size.
-       With nothing above it the rule divides nothing, so on the unsure answer
-       the same figure is promoted to the headline it now has to be. */
-    const refRow = meals === null
-      ? `<p class="statrow"><b style="color:var(--red-text)">${ref.percent}%</b><span>${esc(t("onboarding.upfShare.refUnit"))}</span></p>
-         <div class="ref-bar"><i style="width:${ref.percent}%"></i></div>
-         <p class="ref-body ref-body--lead">${esc(t(us ? "onboarding.upfShare.refLeadUs" : "onboarding.upfShare.refLeadEurope"))}</p>`
-      : `<div class="ref-row">
-        <p class="ref-body"><b>${ref.percent}% </b>${esc(t(us ? "onboarding.upfShare.refUs" : "onboarding.upfShare.refEurope"))}</p>
-        <div class="ref-bar"><i style="width:${ref.percent}%"></i></div>
-      </div>`;
-    /* One working line, not two. The old pair said "7 a week · 52 weeks" over
-       the grid and "7 of 21 meals in one week" under it, which is the same 7
-       explained twice and reads as a caption that has lost its picture. */
+    /* The published share is drawn ONLY when they gave no count of their own.
+       It counts calories where this screen counts meals, so standing it under a
+       real answer put a second number on the screen arguing with the first; with
+       nothing above it, it is the only number there is and carries the screen. */
+    const refRow = meals !== null ? "" :
+      `<p class="statrow"><b style="color:var(--red-text)">${ref.percent}%</b><span>${esc(t("onboarding.upfShare.refUnit"))}</span></p>
+       <div class="ref-bar"><i style="width:${ref.percent}%"></i></div>
+       <p class="ref-body ref-body--lead">${esc(t(us ? "onboarding.upfShare.refLeadUs" : "onboarding.upfShare.refLeadEurope"))}</p>`;
+    /* The year they are on course for, proved on a week of it: the whole week
+       arrives first, then it sorts itself and only their share is left
+       standing. One working line under the block says what a dot is and how
+       many of them were theirs, so nothing on the screen is unexplained. */
+    const perYear = meals === null ? 0 : meals * WEEKS_PER_YEAR;
     const own = meals === null ? "" :
-      `<p class="statrow"><b style="color:var(--red-text)">${esc(formatCount(upfMealsPerYear(meals)))}</b><span>${esc(t("onboarding.upfShare.unit"))}</span></p>
-       <div class="meal-grid">${Array.from({ length: MEALS_PER_WEEK }, (_, k) => `<i${k < meals ? ' class="on"' : ""}></i>`).join("")}</div>
+      `<p class="statrow"><b style="color:var(--${perYear > 0 ? "red" : "green"}-text)">${esc(formatCount(perYear))}</b><span>${esc(t("onboarding.upfShare.unit"))}</span></p>
+       <div class="figure">${weekGrid(meals)}</div>
        <p class="statworking">${esc(t("onboarding.upfShare.working", { meals: meals, total: MEALS_PER_WEEK }))}</p>`;
     return {
+      tint: "cool",
       html: `<h1 class="title">${esc(t(meals === null ? "onboarding.upfShare.titleUnsure" : "onboarding.upfShare.title"))}</h1>
         ${own}
         ${refRow}`,
-      dock: cta(t("common.continue"), false, "next", t(us ? "onboarding.upfShare.sourceUs" : "onboarding.upfShare.sourceEurope")),
+      dock: cta(t("common.continue"), false, "next",
+        meals === null ? t(us ? "onboarding.upfShare.sourceUs" : "onboarding.upfShare.sourceEurope") : ""),
     };
   },
 
@@ -2645,37 +3065,41 @@ Object.assign(SCREENS, {
       swaps: swapsPerYear(state.habit),
       mealShift: symptomMealShift(load),
     });
-    /* The note names what the number was read off. When the round was run it
-       says so and counts it, so the reader can see their own answers in the
-       figure instead of being handed one that moved for reasons it will not
-       name. */
-    const note = load === null
-      ? t("onboarding.standing.note")
-      : t("onboarding.standing.noteSymptoms", {
-          /* Counted in words at zero, because "0 of them a yes" is not how a
-             person says it. */
-          yes: symptomYesCount(state.symptoms) || t("onboarding.standing.noneOfThem"),
-          total: SYMPTOMS.length,
-        });
-    /* The key names two lines, so it waits until there are two lines. */
-    const legend = `<div class="legend-row">
-        <i style="background:var(--green)"></i><span>${esc(t("onboarding.standing.legendWith"))}</span>
-        <i style="background:var(--red);margin-left:18px"></i><span>${esc(t("onboarding.standing.legendWithout"))}</span>
-      </div>`;
+    /* Not features. Each row names something the reader already recognises in
+       their own week, and leaves the app to be the way out of it. */
+    const benefits = [
+      ["sprout", "onboarding.standing.gain1", "onboarding.standing.gain1sub"],
+      ["apple", "onboarding.standing.gain2", "onboarding.standing.gain2sub"],
+      ["box", "onboarding.standing.gain3", "onboarding.standing.gain3sub"],
+    ];
     return {
-      html: `<h1 class="title">${esc(t("onboarding.standing.title"))}</h1>
-        ${chartCard(
-          t("onboarding.standing.chartTitle", { years: PROJECTION_YEARS }),
-          scoreProjectionChart(
-            p.declining, p.improving,
-            t("onboarding.standing.now"),
-            t("onboarding.standing.years", { years: PROJECTION_YEARS }),
-          ) + legend +
-          `<p class="ring-working">${esc(t(p.average ? "onboarding.standing.workingAverage" : "onboarding.standing.working", { start: p.start, target: p.target, gain: p.gain, gap: p.gap, swaps: p.swaps, years: PROJECTION_YEARS }))}</p>`,
-          t(p.average ? "onboarding.standing.captionAverage" : "onboarding.standing.chartCaption"),
+      html: `<h1 class="title">${esc(t("onboarding.standing.lead"))}</h1>
+        ${scoreProjectionChart(
+          p.declining,
+          p.improving,
+          t("onboarding.standing.axisNow"),
+          t("onboarding.standing.axisEnd", { years: PROJECTION_YEARS }),
+          t("onboarding.standing.chartCaption"),
         )}
-        <p class="caveat" style="margin-top:18px">${esc(note)}</p>`,
-      dock: cta(t("onboarding.standing.cta"), false, "next", t("onboarding.standing.source")),
+        <div class="legend-row">
+          <b><i style="background:#E5564E"></i>${esc(t("onboarding.standing.legendWithout"))}</b>
+          <b><i style="background:#3E9C6D"></i>${esc(t("onboarding.standing.legendWith"))}</b>
+        </div>
+        <p class="gain-verdict">${esc(t("onboarding.standing.title"))}<span class="hl">${
+          esc(t("onboarding.standing.titlePoints", { gain: p.gain }))}</span>${
+          esc(t("onboarding.standing.titleTail"))}</p>
+        <div class="gain-list">${benefits.map(([art, name, sub]) => `<div class="gain-item">
+            ${disc(art)}
+            <div>
+              <p class="gain-name">${esc(t(name))}</p>
+              <p class="gain-sub">${esc(t(sub))}</p>
+            </div>
+          </div>`).join("")}</div>
+        <div class="gain-proof">
+          ${starRow(17, 3)}
+          <p class="gain-join">${esc(t("onboarding.standing.join"))}</p>
+        </div>`,
+      dock: cta(t("onboarding.standing.cta"), false, "next"),
     };
   },
 
@@ -2741,66 +3165,88 @@ Object.assign(SCREENS, {
     };
   },
 
-  /* What a score is, in the weights the engine actually uses. Each axis names
-     the body whose guidance it follows, so the weight and its authority are
-     read together rather than the number standing on its own. */
+  /* The evidence behind the score, led by the one study that isolates the
+     variable this product is built on. The NIH trial is the only entry that is
+     a randomised controlled trial rather than a cohort: it fed people two diets
+     matched for calories, sugar, fat, salt and fibre and changed nothing but
+     processing, which is exactly the claim the engine makes when it weights
+     processing on its own. The three cohorts underneath carry the scale the
+     trial cannot.
+
+     These institutions are named, not crested. Publishing work we read creates
+     no relationship with us, and a borrowed crest would assert one, which is
+     the same halo the app exists to take off other people's packs. EFSA and
+     IARC are separated out in the last line because they supply thresholds
+     rather than findings, and the screen must not imply anyone checked our
+     numbers. */
   [S.CRED]: () => {
-    const axes = [
-      ["onboarding.cred.axis.macros", HERO_WEIGHTS.nutritional, "WHO", "onboarding.cred.who"],
-      ["onboarding.cred.axis.processing", HERO_WEIGHTS.processing, "NOVA", "onboarding.cred.nova"],
-      ["onboarding.cred.axis.additives", HERO_WEIGHTS.additives, "EFSA", "onboarding.cred.efsa"],
+    // Each width is a percentage of the column, tuned per mark so a row or a
+    // stack reads as one size. They cannot share a number: the FAO lockup is
+    // five times wider than tall where the NIH one is barely wider than square,
+    // so an equal width would leave NIH towering over everything beside it.
+    const hero = [
+      ["who", 66, "onboarding.cred.who"],
+      ["harvard", 66, "onboarding.cred.harvard"],
+      ["imperial", 59, "onboarding.cred.imperial"],
     ];
+    // The second tier splits by shape, not by rank. FDA, NIH and CDC publish
+    // their names stacked under the mark, so those three run compact and group
+    // together; the two wide lockups would dwarf them on the same line.
+    const restA = [
+      ["fda", 20, "onboarding.cred.fda"],
+      ["nih", 13, "onboarding.cred.nih"],
+      ["cdc", 14, "onboarding.cred.cdc"],
+      ["inserm", 18, "onboarding.cred.inserm"],
+    ];
+    const restB = [
+      ["efsa", 32, "onboarding.cred.efsa"],
+      ["fao", 38, "onboarding.cred.fao"],
+    ];
+    const mark = (delay) => ([file, w, name], i) =>
+      `<img class="cred-logo" src="assets/logos/${file}.webp" alt="${esc(t(name))}" style="--w:${w};animation-delay:${delay + i * MOTION.stagger}ms" loading="lazy">`;
     return {
       html: `<h1 class="title">${esc(t("onboarding.cred.title"))}</h1>
-        <p class="sub">${esc(t("onboarding.cred.sub"))}</p>
-        ${chartCard(
-          t("onboarding.cred.chartTitle"),
-          axes.map(([name, weight, body, note], i) => `<div class="axis-block">
-              <div class="axis-header">
-                <span class="axis-name">${esc(t(name))}</span>
-                <span class="axis-weight">${Math.round(weight * 100)}%</span>
-              </div>
-              <div class="axis-track">
-                <i class="axis-fill" style="width:${(weight * 100).toFixed(0)}%;animation-delay:${MOTION.drawDelay + i * MOTION.stagger}ms"></i>
-              </div>
-              <div class="axis-source">
-                <span class="axis-badge">${esc(body)}</span>
-                <span class="axis-source-text">${esc(t(note))}</span>
-              </div>
-            </div>`).join(""),
-          t("onboarding.cred.chartCaption"),
-        )}`,
+        <div class="cred-hero">${hero.map(mark(120)).join("")}</div>
+        <div class="cred-grid">
+          <div class="cred-row">${restA.map(mark(280)).join("")}</div>
+          <div class="cred-row">${restB.map(mark(340)).join("")}</div>
+        </div>`,
       dock: cta(t("common.continue")),
     };
   },
 
-  /* Real reviews, real figures, no dates. Two proofs above them: what the
-     store says, and how many people have downloaded it. A number nobody framed
+  /* A beat between the evidence and the proof. The reader has just been shown
+     who wrote the rules and is about to be shown what other readers said; in
+     between, one screen that argues nothing and only says there are a lot of
+     them and they came here for the same reason. The room warms for it and
+     cools again on the way out, which is the whole of why it is a screen
+     rather than a line on the one after. */
+  [S.WELCOME]: () => ({
+    tint: "warm",
+    html: `<p class="eyebrow">${esc(t("onboarding.welcome.eyebrow"))}</p>
+      <h1 class="title">${esc(t("onboarding.welcome.lead"))}<span class="hl">${esc(REVIEW_USERS_LONG)}</span>${esc(t("onboarding.welcome.tail"))}</h1>
+      <div class="welcome-art"><img src="assets/shot-03.webp" alt="" aria-hidden="true"></div>`,
+    dock: cta(t("common.continue")),
+  }),
+
+  /* Real reviews, real figures, no dates. ONE proof above them rather than the
+     two that used to stand side by side (user, 2026-09-22, with a reference
+     showing a single laurel lockup): the placing and the headcount now share a
+     wreath, which is closer to what they are. They were never two claims, they
+     were one claim and the size of the crowd making it. A number nobody framed
      is a number, and a number in a wreath is a placing. */
   [S.REVIEWS]: () => ({
     html: `<h1 class="title">${esc(t("onboarding.reviews.title", { users: REVIEW_USERS }))}</h1>
-      <div class="proof-row">
-        ${REVIEW_RATING ? `<div class="proof-col">
-            ${wreath(58, `<span class="proof-rank">${esc(t("onboarding.reviews.ratingValue"))}</span>`)}
-            <p class="proof-caption">${esc(t("onboarding.reviews.rating"))}</p>
-          </div>` : ""}
-        <div class="proof-col">
-          <div class="avatar-cluster">
-            ${REVIEWS.slice(0, 2).map((r) =>
-              `<span class="cluster-disc">${esc(r.name.slice(0, 1).toUpperCase())}</span>`).join("")}
-            <span class="cluster-disc cluster-count"><span class="proof-rank">${esc(REVIEW_USERS)}</span></span>
-          </div>
-        </div>
+      <div class="review-marquee">
+        <div class="review-track">${reviewCards()}${reviewCards(true)}</div>
       </div>
-      ${REVIEWS.slice(0, WEB_REVIEWS).map((r) => `<article class="review-card">
-          <div class="review-head">
-            <span class="review-avatar">${esc(r.name.slice(0, 1).toUpperCase())}</span>
-            <span class="review-name">${esc(r.name)}</span>
-            ${starRow(16, 3)}
-          </div>
-          ${r.title ? `<p class="review-title">${esc(r.title)}</p>` : ""}
-          <p class="review-quote${r.title ? " tight" : ""}">${esc(r.quote)}</p>
-        </article>`).join("")}`,
+      <div class="proof-row">
+        ${wreath(78, `${REVIEW_RATING ? `<span class="proof-top">
+              <span class="proof-rank">${esc(t("onboarding.reviews.ratingValue"))}</span>
+              ${starRow(19, 2, "var(--accent)")}
+            </span>` : ""}
+          <span class="proof-users">${esc(t("onboarding.reviews.users", { users: REVIEW_USERS_LONG }))}</span>`)}
+      </div>`,
     dock: cta(t("common.continue")),
   }),
 });
@@ -2819,15 +3265,16 @@ Object.assign(SCREENS, {
    to the nearest penny, and the term it divides is printed directly below,
    which is where anyone checking the arithmetic would look anyway. */
 T["plan.perDayEquivalent"] = "{price}/day";
+/* The welcome screen is the funnel's own, so its copy is too. Split in three
+   because the count is coloured, which is the same shape as the feel and
+   stakes headlines. */
+T["onboarding.welcome.eyebrow"] = "You're in the right place.";
+T["onboarding.welcome.lead"] = "Join ";
+T["onboarding.welcome.tail"] = " people who use Underneath to support them on their health journey.";
 T["onboarding.done.iosSmall"] = "Download on the";
 T["onboarding.done.iosStore"] = "App Store";
 T["onboarding.done.androidSmall"] = "Get it on";
 T["onboarding.done.androidStore"] = "Google Play";
-/* The app is where the thing they paid for actually happens, and it only
-   knows them by the account made a screen ago. Saying so here is the
-   difference between a paid trial and a paid trial someone uses. */
-T["onboarding.done.sub"] = "Download the app and sign in with the account you just made. Your trial is already on it.";
-T["onboarding.done.subNoTrial"] = "Download the app and sign in with the account you just made. Your subscription is already on it.";
 T["onboarding.done.signInWith"] = "Sign in with";
 const IOS_URL = "https://apps.apple.com/app/id6785015345";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.underneath.v2";
@@ -2867,7 +3314,7 @@ const ICON_MAIL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#1A2238
 const ICON_MAIL_SENT = '<svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="#2FA35C" stroke-width="1.8"/><path d="M3.5 7l8.5 6 8.5-6" stroke="#2FA35C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CALIB_ROWS = [
   ["additives", "flask"], ["nova", "box"], ["diet", "leaf"],
-  ["allergens", "bell"], ["engine", "gauge"],
+  ["allergens", "peanut"], ["engine", "gauge"],
 ];
 
 /* The rating, under the loader, the way Rise puts it under theirs. A wait is
@@ -2992,13 +3439,12 @@ SYMPTOMS.forEach((s, n) => {
 });
 
 Object.assign(SCREENS, {
-  /* Age. Sex is already answered on the landing, so the one input left gets
-     the whole screen: six boxes, one question, and the tap that answers it is
-     also the tap that moves on. A Continue button under a single-answer
-     question is a second tap that decides nothing. */
+  /* Age, and the first thing the funnel asks. One question gets the whole
+     screen: six boxes, and the tap that answers it is also the tap that moves
+     on. A Continue button under a single-answer question is a second tap that
+     decides nothing. */
   [S.ABOUT]: () => ({
     html: `<h1 class="title">${esc(t("onboarding.aboutYou.title"))}</h1>
-      <p class="sub">${esc(t("onboarding.aboutYou.sub"))}</p>
       <div class="rows rows--plain" role="radiogroup" aria-label="${esc(t("onboarding.aboutYou.ageLabel"))}">
         ${AGE_BANDS.map((b) => `<button class="row${state.ageBand === b ? " on" : ""}" type="button"
             role="radio" aria-checked="${state.ageBand === b}"
@@ -3007,9 +3453,9 @@ Object.assign(SCREENS, {
     dock: "",
   }),
 
-  [S.SHOPFOR]: () => singleScreen("onboarding.shopFor.title", null, SHOP_FOR, "shopFor"),
-  [S.HABITS]: () => singleScreen("onboarding.habits.title", null, HABITS, "habit"),
-  [S.UPFFREQ]: () => singleScreen("onboarding.upfFreq.title", "onboarding.upfFreq.sub", UPF_FREQ, "upfFrequency"),
+  [S.SHOPFOR]: () => singleScreen("onboarding.shopFor.title", SHOP_FOR, "shopFor"),
+  [S.HABITS]: () => singleScreen("onboarding.habits.title", HABITS, "habit"),
+  [S.UPFFREQ]: () => singleScreen("onboarding.upfFreq.title", UPF_FREQ, "upfFrequency"),
 
   /* Goals are the one multi-select the app splits into two headed
      groups, because "more protein" and "less sugar" are not the same
@@ -3048,7 +3494,6 @@ Object.assign(SCREENS, {
     return {
       html: `<div class="lightning">
           <h1 class="title">${esc(t("onboarding.lightning.title"))}</h1>
-          <p class="sub">${esc(t("onboarding.lightning.sub"))}</p>
           <div class="count-ring" aria-hidden="true">
             <span class="count-num">${ui.countdown}</span>
           </div>
@@ -3100,10 +3545,6 @@ Object.assign(SCREENS, {
       ? "onboarding.auth.signinTitle"
       : paid ? (trialed ? "onboarding.auth.paidTitle" : "onboarding.auth.paidTitleNoTrial")
       : "onboarding.auth.createTitle";
-    const headSub = signin
-      ? "onboarding.auth.signinSub"
-      : paid ? (trialed ? "onboarding.auth.paidSub" : "onboarding.auth.paidSubNoTrial")
-      : "onboarding.auth.createSub";
 
     /** The six boxes, and the one real input lying invisible across them. */
     const otpBoxes = (label) => {
@@ -3158,7 +3599,6 @@ Object.assign(SCREENS, {
       return {
         cls: "email resetting",
         html: `<h1 class="title">${esc(t("onboarding.reset.title"))}</h1>
-          <p class="sub">${esc(t("onboarding.reset.sub"))}</p>
           ${msgHtml()}
           <form id="resetform" novalidate>
             <div class="fields">
@@ -3199,7 +3639,6 @@ Object.assign(SCREENS, {
       return {
         cls: "email",
         html: `<h1 class="title">${esc(t(headTitle))}</h1>
-          <p class="sub">${esc(t(signin ? "onboarding.auth.emailSigninSub" : paid ? "onboarding.auth.paidSub" : "onboarding.auth.emailCreateSub"))}</p>
           ${msgHtml()}
           <form id="authform" novalidate>
             <div class="fields">
@@ -3230,7 +3669,6 @@ Object.assign(SCREENS, {
     /* The way in. Two buttons, one shape, no field asked for yet. */
     return {
       html: `<h1 class="title">${esc(t(headTitle))}</h1>
-        <p class="sub">${esc(t(headSub))}</p>
         <div class="divider"><i></i><span>${esc(t(signin ? "onboarding.auth.dividerSignIn" : "onboarding.auth.dividerSignUp"))}</span><i></i></div>
         ${msgHtml()}
         <div class="auth-stack">
@@ -3302,8 +3740,7 @@ Object.assign(SCREENS, {
             <span class="txt"><b>${esc(head)}</b><span>${esc(desc)}</span></span>
           </div>`).join("")}
         </div>`
-      : `<p class="plan-sub">${esc(t("paywall.subtitle"))}</p>
-        <div class="values">
+      : `<div class="values">
           ${["scans", "alternatives", "alerts", "receipts"].map((k) =>
             `<div><i>${tick}</i><span>${esc(t("paywall.value." + k))}</span></div>`).join("")}
         </div>`;
@@ -3341,7 +3778,6 @@ Object.assign(SCREENS, {
           </svg>
         </div>
         <h1 class="title">${esc(t("onboarding.done.title"))}</h1>
-        <p class="sub">${esc(t(state.purchasedTrial === false ? "onboarding.done.subNoTrial" : "onboarding.done.sub"))}</p>
         ${currentUser && currentUser.email ? `<div class="done-acct">
           <span class="done-acct-label">${esc(t("onboarding.done.signInWith"))}</span>
           <span class="done-acct-email">${esc(currentUser.email)}</span>
@@ -3426,6 +3862,10 @@ function render() {
 
   /* A screen may name its own class: the account screen is four screens
      in the app, and each wants the app's own title size and padding. */
+  /* A screen may warm the whole room, and the room is the body: the chrome
+     and the dock are outside .step. Cleared on every other screen, so the
+     wash lasts exactly as long as the screen that asked for it. */
+  document.body.dataset.tint = screen.tint || "";
   stepEl.className = "step step--" + (screen.cls || id) + (bare ? " chromeless" : "");
   stepEl.innerHTML = screen.html;
   dockBodyEl.innerHTML = screen.dock || "";
