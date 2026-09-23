@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Scoring Methodology | Underneath</title>
-<meta name="description" content="The full Underneath scoring methodology: the three axes, the exact weights, the ultra-processed anchor, every cap, and the version history." />
+<meta name="description" content="The full Underneath scoring methodology: the three axes, the exact weights, the ultra-processed anchor, every cap, how to challenge a score, and the version history." />
 <meta name="theme-color" content="#86A36E" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://tryunderneath.com/methodology" />
@@ -110,7 +110,7 @@
       <h1>Scoring Methodology</h1>
       <p class="meta">
         <strong>Scoring engine version:</strong> 50<br />
-        <strong>Last updated:</strong> September 5, 2026
+        <strong>Last updated:</strong> September 8, 2026
       </p>
 
       <p>This page describes exactly how Underneath turns a product label into a number from 0 to 100. It is published so that anyone, including the brand being scored, can take the data on a package and arrive at the same figure the app shows.</p>
@@ -221,10 +221,10 @@
           <thead><tr><th>Cap</th><th>Applies when</th></tr></thead>
           <tbody>
             <tr><td class="n">49</td><td>Any additive with a penalty worse than 5 points. Caps the additives axis, not the final score.</td></tr>
-            <tr><td class="n">49</td><td>Only one of the three axes had usable data.</td></tr>
+            <tr><td class="n">No score</td><td>Only one of the three axes had usable data. The internal ceiling is 49, which displays as Poor, so the number is withheld rather than shown: an absence of data is not a finding about the food.</td></tr>
             <tr><td class="n">74</td><td>Only two of the three axes had usable data.</td></tr>
             <tr><td class="n">74</td><td>The nutrition panel is missing sugar or sodium.</td></tr>
-            <tr><td class="n">74</td><td>Every scored axis came from a different barcode's record, matched on product name.</td></tr>
+            <tr><td class="n">No score</td><td>Every scored axis came from a different barcode's record, matched on product name. Nothing in that record was read off the package in the reader's hand.</td></tr>
             <tr><td class="n">85</td><td>Clean label NOVA 4, described above.</td></tr>
             <tr><td class="n">85</td><td>The ingredient list was estimated rather than read, described in section 6.</td></tr>
             <tr><td class="n">70</td><td>NOVA 3 or above, at least 450 kcal per 100 g, and low protein and fibre per calorie.</td></tr>
@@ -232,15 +232,12 @@
             <tr><td class="n">45, or 50 organic</td><td>The above, where the product category is a deep fried one such as crisps, corn chips or fries.</td></tr>
             <tr><td class="n">35</td><td>A processed drink, NOVA 3 or above, carrying 8 g of sugar or more per 100 ml.</td></tr>
             <tr><td class="n">50</td><td>A processed drink, NOVA 3 or above, carrying 5 g of sugar or more per 100 ml.</td></tr>
-            <tr><td class="n">5</td><td>Clear spirits.</td></tr>
-            <tr><td class="n">4</td><td>Wine, champagne, sake.</td></tr>
-            <tr><td class="n">3</td><td>Beer, cider, aged spirits, and any alcohol not otherwise classified.</td></tr>
-            <tr><td class="n">1</td><td>Liqueurs, cocktails, alcopops, fortified dessert wines.</td></tr>
+            <tr><td class="n">3</td><td>Any alcoholic drink.</td></tr>
           </tbody>
         </table>
       </div>
       <p class="note">The two sugary drink caps are restricted to processed drinks so that milk, whose lactose runs to about 4.8 g per 100 ml, and juice that is only fruit, are never caught by them. Sugar that was already in the food is not treated as sugar that was added to it.</p>
-      <p class="note">Alcohol is a Group 1 carcinogen under IARC with no established safe intake, so the whole alcohol band sits deep in the Poor range and the differences between tiers are deliberately small.</p>
+      <p class="note">Alcohol is a Group 1 carcinogen under IARC with no established safe intake. The classification covers alcoholic beverages as a class and draws no distinction between a spirit, a wine and a beer, so neither does this cap. One number applies to all of them.</p>
 
       <hr />
 
@@ -267,6 +264,7 @@
         <li><strong>Estimated ingredients.</strong> Where a product is known by name and category but has no ingredient list at all, a typical list may be estimated in order to give any answer. Estimated scores are labelled as such in the app, are capped at 85, and never raise an additive alert.</li>
       </ul>
       <p>Product data can be wrong, out of date, or entered for a different market's version of the same package. The label on the product is always the authority.</p>
+      <p>A declared nutrition figure is an average, not a measurement of the pack in your hand. EU law requires it to be an average and allows a tolerance around it, which for sugars and fat in an ordinary food runs to about 2 g per 100 g at low levels and about 20 per cent at higher ones. Every threshold in section 4 reads the declared number and nothing else. Where two products sit either side of a threshold by less than that tolerance, the gap between their scores is not evidence that one is better than the other.</p>
 
       <hr />
 
@@ -275,19 +273,125 @@
       <ul>
         <li>The ingredient list cannot be recognised well enough to score. A list that cannot be read is not evidence of a bad product.</li>
         <li>No ingredient data exists and none could be estimated.</li>
-        <li>A score is under review following a challenge. In that case the ingredients and the breakdown still display, but no number does.</li>
+        <li>A score is under review following a challenge, or has been suspended because a defect was found. In that case the ingredients and the breakdown still display, but no number does. Section 9 sets out when this happens and how it ends.</li>
       </ul>
 
       <hr />
 
       <h2>8. Challenging a score</h2>
-      <p>Any brand or person may ask for the full working behind a specific score: the data used, its source, the additives matched, the NOVA classification, and the arithmetic. That will be provided.</p>
-      <p>Where a score rests on wrong data, it is corrected. Where a score is disputed and the dispute is not obviously unfounded, the number is withheld while it is examined.</p>
+      <p>Anyone may challenge a score. There is no standing requirement and no need to be the brand. A shopper who thinks a number is wrong raises it the same way a manufacturer does, and it is examined the same way.</p>
+
+      <h3>What to send</h3>
+      <p>A score can only be examined properly if the product can be identified and its label read, so a challenge needs:</p>
+      <ul>
+        <li>the barcode;</li>
+        <li>the country the product was bought in, because the same barcode carries different formulations in different markets;</li>
+        <li>a photograph of the ingredient list and the nutrition panel as printed on the pack sold in that market;</li>
+        <li>which part of the score is disputed: the number itself, a specific additive match, the processing classification, a cap, or a line of the breakdown.</li>
+      </ul>
+      <p class="note">A challenge missing some of these is not rejected. It is acknowledged, and the missing part is requested once.</p>
+
+      <h3>What happens, and by when</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Stage</th><th>Time</th></tr></thead>
+          <tbody>
+            <tr><td>Written acknowledgement, giving a reference for the file</td><td class="n">3 working days</td></tr>
+            <tr><td>Substantive answer</td><td class="n">20 working days</td></tr>
+            <tr><td>If the examination will take longer, notice of that with a reason and a date</td><td class="n">Before day 20</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The substantive answer contains the full working: the product data used and where it came from, every additive matched and the reference row that matched it, the NOVA classification and what drove it, every cap that applied, and the arithmetic from the three pillar scores to the number displayed. That is provided whether or not the challenge succeeds.</p>
+
+      <h3>What is recorded</h3>
+      <p>One file per challenge, holding the date received and from whom, the barcode and market, what was disputed, the score and engine version in force at the time, the label data relied on, whether the number was suspended and when, the finding, what changed as a result, and the date the file closed. Kept for six years from closure.</p>
+      <p>A correction with no record of why it happened is indistinguishable from a number that moved on its own, which is why the record exists.</p>
+
+      <h3>What can and cannot be reproduced later</h3>
+      <p>The scoring rules are kept permanently, at every version they have ever had, along with the reason for every change to an additive's points, its stated ground or its citation. So the question of why a given ingredient cost a given number of points on a given date is answerable for any date.</p>
+      <p>An individual score is a different matter and it would be false to claim otherwise. The stored data behind a particular scan is kept for 45 days, and product data can change under a barcode at any time because the source database is community maintained. What survives without limit is the arithmetic, not the inputs. A challenge raised later is therefore answered by recomputing the score from the label data supplied with it, which is exactly what the app does on every scan.</p>
+
       <p><strong>Contact:</strong> <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a></p>
 
       <hr />
 
-      <h2>9. Version history</h2>
+      <h2>9. Suspending and correcting a score</h2>
+
+      <h3>When a number is suspended</h3>
+      <p>A displayed number is withheld when a challenge is raised that is not obviously unfounded and goes to the substance of the score, or when a defect is found that could have produced a wrong number for a class of products, whether or not anyone complained.</p>
+      <p>Not obviously unfounded is deliberately a low bar. Disagreeing with the result is not enough. Pointing at a specific input, match, classification or step is.</p>
+      <p>While a score is suspended the ingredients and the breakdown still display and the number does not. No substitute number is shown, no estimate replaces it, and nothing implies the product scored badly. It is the same behaviour as every other case in section 7 where a number is withheld rather than guessed.</p>
+
+      <h3>How a suspension ends</h3>
+      <p>Only in one of two ways, and both are recorded. Either the score is corrected and the corrected number is displayed, or the original score is confirmed with reasons given to whoever raised it and the original number is restored. A suspension is never lifted silently, and never lifted merely because time passed.</p>
+
+      <h3>Three kinds of wrong</h3>
+      <ul>
+        <li><strong>Wrong product data.</strong> The label says something the database did not. The data is refreshed and the score recomputes on the next scan. No rule changes.</li>
+        <li><strong>Wrong rule application.</strong> The rules were right and were applied wrongly. A code fix, with a test that fails before it and passes after.</li>
+        <li><strong>Wrong rule.</strong> The penalty, the stated ground or the citation does not hold. The rule itself changes, carrying a written record of what was wrong and what the evidence actually supports, and this page and its version history are updated in the same pass.</li>
+      </ul>
+      <p>A correction of the third kind changes every product carrying that ingredient, not only the one that was disputed. That is the point. The rule was wrong, so every score that relied on it was wrong.</p>
+
+      <hr />
+
+      <h2>10. Published comparisons</h2>
+      <p>The scoring system is published and open to challenge. A video or a post is not covered by any of that unless the same discipline is applied to it, and a claim made in a caption can do as much damage as a number in the app. Every one of the following has to hold before anything naming another brand's product is published, and the check is recorded alongside it.</p>
+      <ul>
+        <li>Every factual claim traces to a source recorded before publication. A claim about what is in a product traces to that product's own current label. A claim about an authority's view names the authority, the document and its date.</li>
+        <li>No claim that a named product is unsafe, harmful or unlawful unless a named authority has said so. Where one has, it is quoted as what that authority said, on what date, in which jurisdiction, and not restated as a general fact.</li>
+        <li>A comparison is like for like: the same measure on both sides, per the same quantity, from current label data for both, with the date the data was read.</li>
+        <li>A comparison rests only on rules published on this page. Nothing is implied about a product that the published rules do not actually charge it for.</li>
+        <li>The comparison is verifiable by the person watching it, with barcodes or product names specific enough to buy and repeat.</li>
+        <li>No claim about how a product is made, sourced or farmed unless the label or a cited source says it. This is the same rule that removed the farming practice caveats from the scoring engine in version 50, applied to content.</li>
+      </ul>
+      <p>Where a named brand or anyone else shows that a published claim is wrong or cannot be supported, the item comes down within 5 working days, and where the original had meaningful reach a correction is published rather than the item merely disappearing. An item is taken down when the claim cannot be supported. It is not taken down merely because a brand objects to being named, and the two are recorded differently.</p>
+
+      <hr />
+
+      <h2>11. Suggested alternatives</h2>
+      <p><strong>Nobody pays to appear here.</strong> No product, brand, retailer or other party pays to be suggested as an alternative, to be ranked higher among the suggestions, or to be kept out of them. There is no advertising placement, no affiliate link and no sponsorship in this feature. The rule below is the whole rule.</p>
+      <p>After a product is scored, the app may suggest better products in the same category. A recommendation is a stronger statement than a rating, so the rule is published in full.</p>
+      <ol>
+        <li><strong>Category.</strong> Candidates come from the most specific category the scanned product carries that returns anything at all. Categories too broad to mean anything, such as "beverages and beverage preparations", are excluded outright. If nothing exists in the right category, nothing is shown. There is no topping up from a different category.</li>
+        <li><strong>Market.</strong> Where the country is known, candidates come only from that country. A product that cannot be bought is not an alternative.</li>
+        <li><strong>Shortlist.</strong> The search asks Open Food Facts for products graded A or B on Nutri-Score, and only A where the scanned product is not already Poor. At most 8 are kept. Nutri-Score is a third party grade and it decides one thing only: which 8 products are worth the cost of scoring. It does not enter the Underneath score, does not decide what is shown, and does not decide the order.</li>
+        <li><strong>Scoring.</strong> All 8 are scored by the engine described on this page, on the same rules and the same data as any other product.</li>
+        <li><strong>Filter.</strong> A candidate is shown only if it scores higher than the scanned product and either reaches 70 or beats it by at least 5 points. Where the scanned product has no score, a candidate must reach 50.</li>
+        <li><strong>Floor.</strong> Nothing scoring below 50 is ever suggested, under any condition. The app does not recommend a product it rates Poor.</li>
+        <li><strong>Order.</strong> Survivors are ordered by Underneath score, highest first, and at most 5 are displayed.</li>
+      </ol>
+      <p>Because step 3 asks only for Nutri-Score A and B, a product this system would rate well but Nutri-Score rates C or worse is never scored and so never suggested. The two systems weigh different things, so this will happen. Scoring every product in a category on every scan is not affordable, and the honest consequence is that these are suggestions of better products found, not a claim to have found the best one available. The app does not say otherwise.</p>
+
+      <hr />
+
+      <h2>12. Product images</h2>
+      <p>Photographs and packaging images shown next to a product are not Underneath's. They come from Open Food Facts, whose photographs are contributed by its community and licensed for reuse, and in some markets from retailer or manufacturer product listings, where the image is displayed to identify the product being discussed and nothing more. No image is presented as Underneath's own work and no ownership of any brand's packaging, artwork or trade mark is claimed.</p>
+      <p>A rights holder who does not want a particular image shown does not need to argue the point. Write to the address in section 8 identifying the image and the product, and it is removed within 5 working days, with no requirement to establish anything first. The product itself remains scannable and scored; only the image goes. Where an image was wrongly attributed or wrongly sourced, that is recorded the same way a scoring correction is.</p>
+
+      <hr />
+
+      <h2>13. Version history</h2>
+
+      <h3>September 8, 2026, third entry</h3>
+      <p>Two changes about what a thin record is allowed to say.</p>
+      <p><strong>A product scored on only one axis no longer shows a number.</strong> The ceiling in that case is 49, and 49 displays as Poor, so a record too thin to judge reached the reader in the words reserved for a product that scored badly on evidence. The ceiling still governs the arithmetic. The number is now withheld, the product reads N/A, and the receipt says that only one of the three axes could be scored. No product got worse. Some products that read Poor now read as unscored, which is what they were.</p>
+      <p><strong>An undeclared protein or fibre row no longer counts as zero.</strong> The test that decides which energy density cap a product falls to divides protein and fibre by calories. It treated a row the panel never printed as a zero, so a label that simply said less scored worse than a fuller one. Both figures must now be declared before that test can apply at all. A few energy dense products with incomplete panels gain points.</p>
+
+      <h3>September 8, 2026, second entry</h3>
+      <p>Four scoring changes, each of which moves real numbers.</p>
+      <p><strong>Alcohol is now one cap, not four.</strong> The cap was tiered by drink type: 5 for clear spirits, 4 for wine, 3 for beer and aged spirits, 1 for liqueurs and alcopops. The reason given for all four was the IARC Group 1 classification, which covers alcoholic beverages as a class and makes no such distinction. A tiered penalty on an untiered ground published, in a number, that a gin is better for you than a beer. All alcoholic drinks now cap at 3. Spirits and wine go down, liqueurs and cocktails go up.</p>
+      <p><strong>Saturated fat, sodium and calorie density are no longer charged twice.</strong> Those figures are printed on the pack and charged against the product's own numbers by the macros axis. Fifteen ingredient caveats repeated the same point using a typical figure instead, so a butter was charged for its fat and then charged again for being butter. Those caveats are still shown. They now cost points only where the panel did not declare the figure, or where a rule waived the panel penalty. Butter, cheese, cream, milk, yoghurt and similar products gain a few points.</p>
+      <p><strong>Honey, syrups and fruit juice no longer get the intrinsic sugar allowance.</strong> Unprocessed products have their sugar penalty capped, because the sugar in an orange or in milk is not added sugar. Honey, syrup and juice are unprocessed by that classification and the WHO guideline the rule cites counts their sugars in full, naming them specifically. The cap is now withheld from them. Those products lose points.</p>
+      <p><strong>The additive cap line now says which axis it capped.</strong> It read "Score capped at 49", which is a ceiling on the additives axis rather than on the final score. It now reads "Additives score capped at 49". No score moved.</p>
+      <p>Section 6 also now states that a declared nutrition figure is a legal average with a tolerance around it, and that a small gap between two products across a threshold is not evidence of a real difference.</p>
+
+      <h3>September 8, 2026</h3>
+      <p>Published two things that were previously only internal. Section 11 sets out how suggested alternatives are chosen, including that the shortlist is drawn using Nutri-Score, a third party grade, and that this decides only which products get scored and never what is shown or in what order. It also states in terms that no one pays to appear there. Section 12 sets out where product images come from and how a rights holder has one removed. Neither changes a score.</p>
+
+      <p>Published the procedure around the scores rather than the scores themselves: what a challenge has to contain and how long an answer takes, what is recorded and for how long, when a number is suspended and how a suspension ends, and the rules a published comparison naming another brand has to satisfy. Sections 8, 9 and 10 above. No rule changed and no score changed. What changed is that the process is now written down and can be held to.</p>
+      <p>Section 8 also states plainly what can and cannot be reproduced after the fact. The rules are kept permanently. The stored data behind an individual scan is not, and a late challenge is answered by recomputing from the label rather than from an archived number.</p>
 
       <h3>Version 50, September 2026</h3>
       <p>Ingredient caveats that describe farming practice rather than label content no longer cost points. Conventional dairy and conventional poultry previously carried a small deduction for possible pesticide, hormone or antibiotic residues. None of that is stated on a label, so no product could be shown why it had lost the points. Those notes are still displayed, and now cost nothing. Conventional dairy products gain about 1 point. Plain chicken and turkey lose their only such caveat, so they now carry no ingredient deduction at all.</p>

@@ -1,10 +1,14 @@
 {
   "rewrites": [
     { "source": "/r/:code", "destination": "/r.html" },
+    { "source": "/start", "destination": "/start.html" },
+    { "source": "/quiz", "destination": "/start.html" },
     { "source": "/get", "destination": "/get.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/methodology", "destination": "/methodology.html" }
+    { "source": "/methodology", "destination": "/methodology.html" },
+    { "source": "/product", "destination": "/product.html" },
+    { "source": "/proof", "destination": "/proof.html" }
   ],
   "headers": [
     {

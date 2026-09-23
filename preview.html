@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Funnel preview</title>
+<style>
+  :root { --ink: #1a1a1a; --line: #e3ddd2; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 24px 60px;
+    background: #4a4a4a; color: #fff;
+    font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 0 16px; margin: -20px -24px 20px; padding-left: 24px; padding-right: 24px;
+    background: #4a4a4a; border-bottom: 1px solid #5e5e5e;
+  }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .spacer { flex: 1 1 auto; }
+  label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    background: #fff; color: var(--ink); border: 0;
+    padding: 7px 14px; border-radius: 8px;
+  }
+  button:hover { background: #f0ece4; }
+  .note { font-size: 12.5px; color: #c9c9c9; }
+  .grid { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 12.5px; font-weight: 600; padding: 0 2px 7px;
+  }
+  figcaption .n { color: #a8a8a8; font-weight: 500; font-variant-numeric: tabular-nums; }
+  figcaption a { color: #9ec7ff; font-weight: 500; text-decoration: none; margin-left: auto; }
+  figcaption a:hover { text-decoration: underline; }
+  iframe {
+    width: 430px; height: 932px; border: 0; display: block;
+    border-radius: 14px; background: #faf5ec;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.34);
+  }
+  body.tall iframe { height: 1500px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Underneath funnel</h1>
+  <label><input type="checkbox" id="tall" /> Full height</label>
+  <label><input type="checkbox" id="filled" checked /> Sample answers</label>
+  <span class="spacer"></span>
+  <span class="note" id="count"></span>
+  <button id="reload">Reload all</button>
+</header>
+<div class="grid" id="grid"></div>
+
+<script>
+  // Every screen in funnel order. Keep in sync with STEPS in start.html.
+  var STEPS = [
+    "hero", "worry", "bread", "relate", "stat", "quiz",
+    "goals", "habit", "additives", "diet", "allergies", "calibrate",
+    "how", "cred",
+    "account", "code", "timeline", "anchor", "plan", "done",
+  ];
+
+  var STATE_KEY = "underneath_funnel_v2";
+
+  // start.html reads saved answers but ignores the saved step when ?step= is set,
+  // and stops writing to localStorage, so all the frames can differ safely.
+  var FILLED = {
+    worry: "The front and the back disagree",
+    relate: { buyAnyway: true, googledAisle: true },
+    quizGuess: "poptarts",
+    goals: { "Avoid ultra-processed foods": true, "Cut hidden sugar": true },
+    habit: "A few times a week",
+    additives: { "Seed oils": true, "Artificial additives": true },
+    diet: { Vegan: true },
+    allergies: { Peanuts: true, Dairy: true },
+    flagUltraProcessed: true,
+    email: "you@example.com",
+    authMode: "signup",
+    prefsSaved: true,
+    purchased: false,
+    plan: "annual",
+  };
+  var EMPTY = {
+    worry: null, relate: {}, quizGuess: null,
+    goals: {}, habit: null, additives: {}, diet: {}, allergies: {},
+    flagUltraProcessed: false,
+    email: "", authMode: "signup",
+    prefsSaved: false, purchased: false, plan: "annual",
+  };
+
+  var grid = document.getElementById("grid");
+  var tall = document.getElementById("tall");
+  var filled = document.getElementById("filled");
+
+  function seed() {
+    var base = filled.checked ? FILLED : EMPTY;
+    // step is irrelevant here, each frame overrides it with ?step=
+    localStorage.setItem(STATE_KEY, JSON.stringify(Object.assign({ step: "hero" }, base)));
+  }
+
+  function build() {
+    seed();
+    var stamp = Date.now(); // busts the iframe cache so edits show on reload
+    grid.innerHTML = STEPS.map(function (name, i) {
+      var src = "start.html?step=" + name + "&t=" + stamp;
+      return '<figure>' +
+        '<figcaption><span class="n">' + (i + 1) + '</span>' + name +
+        '<a href="' + src + '" target="_blank">open</a></figcaption>' +
+        '<iframe src="' + src + '" loading="lazy" title="' + name + '"></iframe>' +
+        '</figure>';
+    }).join("");
+    document.getElementById("count").textContent = STEPS.length + " screens";
+  }
+
+  tall.addEventListener("change", function () { document.body.classList.toggle("tall", tall.checked); });
+  filled.addEventListener("change", build);
+  document.getElementById("reload").addEventListener("click", build);
+  build();
+</script>
+</body>
+</html>

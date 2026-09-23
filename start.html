@@ -1754,8 +1754,14 @@ const T = {
   /* When they could not put a number on it there is no count of their own, so
      the published one stops being a footnote and becomes the screen. */
   "onboarding.upfShare.refUnit": "OF DAILY CALORIES",
-  "onboarding.upfShare.refLeadUs": "That is the average American adult. With no count of your own, it is the number to go on.",
-  "onboarding.upfShare.refLeadEurope": "That is the average European adult. With no count of your own, it is the number to go on.",
+  /* Attribution, and nothing past it. The second sentence used to say "With no
+     count of your own, it is the number to go on", which announced to the
+     reader that they were being handed a substitute (cut 2026-09-23, user).
+     What stays is the part that has to stay: whose figure this is. A published
+     population share printed bare would read as the reader's own, and that is
+     the deception this app exists to call out. */
+  "onboarding.upfShare.refLeadUs": "That is the average American adult.",
+  "onboarding.upfShare.refLeadEurope": "That is the average European adult.",
   "onboarding.upfShare.sourceUs": "National Center for Health Statistics, Data Brief, August 2021 to August 2023.",
   "onboarding.upfShare.sourceEurope": "Mertens et al., European Journal of Nutrition 2022, pooled across 22 countries.",
 
@@ -2121,8 +2127,10 @@ function lifeYearsCurve(sex) {
 
 const MEALS_PER_WEEK = 21;
 const UPF_MEALS_BY_FREQUENCY = { "Most meals": 15, "Once a day": 7, "A few times a week": 3, "Rarely": 1 };
-/* "Not sure" is absent on purpose: it yields null, and the standing
-   screen is then dropped from the flow rather than shown on a guess. */
+/* "Not sure" is absent on purpose: it yields null, and every screen that
+   reads this decides for itself what to do with nothing. The two that care
+   both fall back to the published average for the reader's region, which is
+   a real figure rather than a guess dressed as one. */
 function upfMealsPerWeek(frequency) {
   const n = frequency ? UPF_MEALS_BY_FREQUENCY[frequency] : undefined;
   return n === undefined ? null : n;
@@ -2166,8 +2174,6 @@ function weekGrid(upfMeals) {
   }).join("");
   return `<div class="week-grid" aria-hidden="true">${dots}</div>`;
 }
-function standingApplies(frequency) { return upfMealsPerWeek(frequency) !== null; }
-
 const PROJECTION_YEARS = 8;
 /* The left-alone run is a projection, not a verdict, and a zero would read as
    one: nobody eating food scores nothing (user, 2026-09-22). It bottoms out
@@ -2524,10 +2530,16 @@ function save() {
   try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
 }
 
-/** STANDING is dropped whole when the answer was "Not sure": the model
-    returns null there rather than guessing, so there is nothing to draw. */
+/** Every screen, every time. STANDING used to be filtered out when the
+    frequency answer was "Not sure", on the grounds that a projection needs a
+    count to project from. It does, and it has one: the published average for
+    the reader's region, the same figure the share screen already stands on.
+    Dropping the screen cost the reader the only picture of what any of this
+    is for, and cost it worst to the reader least certain about their own week
+    (user, 2026-09-23). Keep this returning FLOW whole. If a screen ever has
+    nothing to say again, give it something to say. */
 function flow() {
-  return FLOW.filter((id) => id !== S.STANDING || standingApplies(state.upfFrequency));
+  return FLOW;
 }
 
 const stageEl = document.getElementById("stage");

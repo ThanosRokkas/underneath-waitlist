@@ -1,2 +1,11 @@
 .vercel
 .env*.local
+
+# Avantt is licensed from Displaay. This repo is public, so committing the
+# binaries here would be redistributing them. Ignored until the repo is
+# private, or the fonts are served from somewhere that is not a public git
+# host. See assets/fonts/README.md.
+assets/fonts/*.woff2
+assets/fonts/*.woff
+assets/fonts/*.otf
+assets/fonts/*.ttf
