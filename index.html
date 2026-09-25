@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Underneath | Know what's really in your food</title>
 <meta name="description" content="Scan any barcode and get one honest score, 0 to 100, based on how processed a food really is. Underneath reads the additives behind the label and shows you cleaner swaps. Free to try on iPhone and Android." />
-<meta name="theme-color" content="#FFFFFF" />
+<meta name="theme-color" content="#CFE6EE" />
 <!-- Proves the domain to Meta. Required before iOS event reporting can be
      configured at all, and Meta only ever reads it from the root page. -->
 <meta name="facebook-domain-verification" content="hdkg4uou3c3i9nskg5dea2s5cssdqa" />
@@ -21,238 +21,572 @@
 <link rel="apple-touch-icon" href="icon.png" />
 <link rel="preconnect" href="https://api.fontshare.com" />
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-<!-- The hero handset is the largest paint on the page, so it is asked for
-     before the stylesheet finishes. -->
-<link rel="preload" as="image" href="assets/shot-02.webp" fetchpriority="high" />
-<!-- Avantt is the page's face. It is a licensed Displaay webfont, so the files
-     are not in the repo, see assets/fonts/README.md. Drop them in and this
-     preload starts paying for itself, leave them out and Switzer holds the
-     line. Nothing else has to change either way. -->
+<!-- The painting is the page. It is asked for before anything else. -->
+<link rel="preload" as="image" href="assets/meadow.webp" fetchpriority="high" />
+<!-- Avantt is a licensed Displaay webfont, see assets/fonts/README.md. If the
+     files are missing these rules resolve to nothing and Switzer holds the
+     line, so the page never ships broken. -->
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Avantt-Medium.woff2" crossorigin />
-<!-- Switzer is the fallback, not the choice: nearest free neo-grotesque to
-     Avantt on letterform and fit, and the only one whose advance widths track
-     it closely enough that the layout does not move when Avantt arrives. -->
 <link href="https://api.fontshare.com/v2/css?f%5B%5D=switzer@400,500,600,700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
-<!-- The landing page's own arrangement. Every other page stops at styles.css. -->
-<link rel="stylesheet" href="home.css" />
+
+<style>
+/* ==================================================================
+   Underneath, one page.
+
+   A watercolour meadow you land in, three things the app does, what
+   people said, and the two buttons. Nothing else, no navigation, no
+   footer columns. Everything on this page is in this file.
+   ================================================================== */
+
+@font-face {
+  font-family: "Avantt";
+  src: url("assets/fonts/Avantt-Medium.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Avantt";
+  src: url("assets/fonts/Avantt-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --ink:      #252427;   /* every word, every button */
+  --ink-soft: #5B5A5E;
+  --page:     #FFFFFF;
+  --panel:    #FAF7F2;   /* warm card, pulled from the paper in the painting */
+  --line:     #E8E2D8;
+  --sky:      #CFE6EE;   /* the painting's sky, used before the image lands */
+
+  --good:    #2F7D55;
+  --caution: #C8901A;
+  --poor:    #BE4238;
+
+  --font: "Avantt", "Switzer", system-ui, -apple-system, sans-serif;
+
+  --t-hero:    clamp(40px, 5.6vw, 76px);
+  --t-section: clamp(32px, 4.4vw, 58px);
+  --t-lead:    clamp(17px, 1.55vw, 21px);
+  --t-body:    16px;
+
+  --pad-x: clamp(20px, 5vw, 72px);
+  --band:  clamp(72px, 9vw, 140px);
+  --wrap:  1240px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 500;
+  font-size: var(--t-body);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+
+p { margin: 0; }
+
+img { display: block; max-width: 100%; height: auto; }
+
+a { color: inherit; }
+
+.wrap { width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: var(--pad-x); }
+
+/* ---------- The store buttons, the only thing on the page to press ---------- */
+
+.stores { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.store-btn {
+  display: inline-flex; align-items: center; gap: 11px;
+  padding: 13px 22px 13px 19px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  text-decoration: none;
+  transition: transform .22s cubic-bezier(.2,.7,.3,1), box-shadow .22s;
+  box-shadow: 0 6px 20px rgba(37,36,39,.18);
+}
+.store-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,36,39,.26); }
+.store-btn:active { transform: translateY(0); }
+.store-btn svg { width: 20px; height: 22px; fill: currentColor; flex: none; }
+.store-btn .txt { display: grid; line-height: 1.12; text-align: left; }
+.store-btn small { font-size: 10.5px; opacity: .72; letter-spacing: .02em; }
+.store-btn strong { font-size: 16px; font-weight: 500; letter-spacing: -0.02em; }
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  /* Top aligned, not centred. Centring pushed the whole hero into the lower
+     half of tall viewports and left a dead band under the logo. */
+  justify-content: flex-start;
+  overflow: hidden;
+  padding-block: clamp(40px, 5.5vh, 72px) clamp(44px, 6vh, 84px);
+  background: var(--sky);
+}
+
+/* The painting. Its own layer so it can be nudged and faded without
+   touching anything that sits on it. */
+.hero::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: url("assets/meadow.webp") center 62% / cover no-repeat;
+  /* A breath of white over the sky so the headline never fights the
+     clouds, and a fade at the foot so the meadow dissolves into the
+     page instead of stopping at a seam. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 99%);
+          mask-image: linear-gradient(to bottom, #000 72%, transparent 99%);
+}
+.hero::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,.58) 0%, rgba(255,255,255,.12) 38%, rgba(255,255,255,0) 60%),
+    linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 22%);
+  pointer-events: none;
+}
+
+/* The mark sits in the corner of the painting, its own row above the copy,
+   so it reads as the page's signature rather than the first line of the
+   headline block. */
+.hero-head {
+  position: relative; z-index: 1;
+  width: 100%; max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+  margin-bottom: clamp(24px, 4vh, 52px);
+}
+
+.hero-inner {
+  position: relative; z-index: 1;
+  width: 100%; max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+  display: grid;
+  gap: clamp(28px, 4vw, 56px);
+  /* Takes the rest of the hero and centres its rows in it, so pulling the
+     logo out of the copy column does not leave a dead band at the foot. */
+  flex: 1;
+  align-content: center;
+  align-items: center;
+}
+
+.hero-mark {
+  width: clamp(132px, 13vw, 176px);
+  height: auto;
+}
+
+.rating {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 7px 15px 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(37,36,39,.09);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+}
+.rating .stars { color: var(--caution); letter-spacing: .06em; font-size: 12px; }
+
+.hero h1 { font-size: var(--t-hero); }
+.hero h1 span { display: block; }
+
+.hero-lede {
+  margin-top: clamp(18px, 2.2vw, 26px);
+  max-width: 34ch;
+  font-size: var(--t-lead);
+  line-height: 1.45;
+  /* Darker than the rest of the page's secondary text. This one sits on a
+     painting, not on white, and has to win that fight. */
+  color: #3D3C40;
+}
+
+.hero .stores { margin-top: clamp(26px, 3.2vw, 38px); }
+
+/* The handset stands in the meadow, whole. Nothing crops it. */
+.hero-shot {
+  position: relative;
+  justify-self: center;
+  width: min(228px, 52vw);
+  filter: drop-shadow(0 26px 44px rgba(37,36,39,.22));
+}
+
+@media (min-width: 900px) {
+  .hero-inner { grid-template-columns: 1.1fr .9fr; }
+  .hero-shot { width: min(288px, 26vw); justify-self: end; }
+
+  /* Wide enough that the copy column now lands on the meadow rather than
+     the sky. A wash anchored to the left keeps every word on light paper
+     without flattening the painting on the side the handset stands. */
+  .hero::after {
+    background:
+      linear-gradient(to right, rgba(255,255,255,.8) 0%, rgba(255,255,255,.62) 30%, rgba(255,255,255,0) 60%),
+      linear-gradient(to bottom, rgba(255,255,255,.42) 0%, rgba(255,255,255,.08) 40%, rgba(255,255,255,0) 62%),
+      linear-gradient(to top, #fff 0%, rgba(255,255,255,0) 22%);
+  }
+}
+
+/* ---------- The three things ---------- */
+
+.steps { padding-block: var(--band); }
+
+/* The measure belongs on the element that carries the big font size. Put a
+   ch width on the wrapper instead and it resolves against 16px body text,
+   which crushes a 58px heading into a column six words tall. */
+.steps-head { margin-bottom: clamp(44px, 5vw, 76px); }
+.steps-head h2 { font-size: var(--t-section); max-width: 15ch; }
+.steps-head p {
+  margin-top: 20px; max-width: 48ch;
+  font-size: var(--t-lead); color: var(--ink-soft); line-height: 1.45;
+}
+
+.step-grid {
+  display: grid;
+  gap: clamp(20px, 2.6vw, 32px);
+  grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+}
+
+.step {
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--panel);
+  padding: clamp(26px, 2.6vw, 34px) clamp(24px, 2.4vw, 32px) clamp(30px, 3vw, 40px);
+  display: flex; flex-direction: column;
+}
+
+.step-n {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.step h3 { font-size: clamp(24px, 2.1vw, 30px); margin-top: 10px; }
+.step p {
+  margin-top: 12px; color: var(--ink-soft); line-height: 1.5;
+  /* Holds the minimum air above the screenshot while margin-top:auto on the
+     image pushes all three screenshots onto the same baseline, whatever the
+     copy above them does. */
+  margin-bottom: clamp(26px, 2.6vw, 36px);
+}
+
+/* The handset stands in the card, whole. Nothing crops it. */
+.step img {
+  width: min(232px, 74%);
+  margin: auto auto 0;
+}
+
+/* ---------- What people said ---------- */
+
+.voices { padding-block: 0 var(--band); }
+
+.voices-head { margin-bottom: clamp(36px, 4vw, 56px); }
+.voices-head h2 { font-size: var(--t-section); max-width: 14ch; }
+.voices-head p { margin-top: 18px; max-width: 44ch; color: var(--ink-soft); font-size: var(--t-lead); }
+
+/* The reviews drift to the right, off one edge and back on from the other.
+   Full bleed, because a moving row that stops at a container margin looks
+   like a bug rather than a decision. */
+.voice-row {
+  --voice-gap: clamp(16px, 1.8vw, 22px);
+  position: relative;
+  overflow: hidden;
+  /* Softens both ends so cards fade out rather than being guillotined by
+     the viewport edge. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: drift 52s linear infinite;
+}
+.marquee-group { display: flex; }
+
+/* The gap lives on the card, not on the flex container. With no gap between
+   the two groups the track is exactly twice one group wide, so -50% lands
+   the copy precisely where the original started and the loop has no seam. */
+.voice { margin-right: var(--voice-gap); }
+
+@keyframes drift {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.voice-row:hover .marquee { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee { animation: none; transform: none; }
+  .voice-row { overflow-x: auto; scrollbar-width: none; }
+  .voice-row::-webkit-scrollbar { display: none; }
+}
+
+.voice {
+  flex: none;
+  width: clamp(268px, 25vw, 340px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: clamp(22px, 2.2vw, 28px);
+  background: #fff;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.voice .stars { color: var(--caution); font-size: 13px; letter-spacing: .1em; }
+.voice p { line-height: 1.5; }
+.voice .who { margin-top: auto; font-size: 13.5px; color: var(--ink-soft); }
+
+/* ---------- The close ---------- */
+
+.close {
+  position: relative;
+  padding-block: clamp(110px, 14vw, 190px) clamp(40px, 5vw, 64px);
+  overflow: hidden;
+  text-align: center;
+  background: var(--sky);
+}
+/* The same painting, flipped, so the page ends where it began. */
+.close::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: url("assets/meadow.webp") center 46% / cover no-repeat;
+  transform: scaleX(-1);
+}
+.close::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, #fff 0%, rgba(255,255,255,.2) 26%, rgba(255,255,255,.34) 62%, rgba(255,255,255,.86) 100%);
+  pointer-events: none;
+}
+.close .wrap { position: relative; z-index: 1; }
+
+.close h2 { font-size: var(--t-section); }
+.close h2 span { display: block; }
+.close .stores { justify-content: center; margin-top: clamp(28px, 3vw, 40px); }
+
+.legal {
+  margin-top: clamp(64px, 8vw, 104px);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.legal a { text-decoration: none; border-bottom: 1px solid rgba(37,36,39,.22); }
+.legal a:hover { border-bottom-color: var(--ink); }
+.legal .sep { opacity: .4; padding-inline: 7px; }
+
+/* ---------- Arrival ---------- */
+
+.rise { opacity: 0; transform: translateY(20px); }
+.js .rise { transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1); }
+.rise.in { opacity: 1; transform: none; }
+html:not(.js) .rise { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .rise.in { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+</style>
 </head>
 <body>
 <script>document.documentElement.className += " js";</script>
 
-<!-- NAV -->
-<nav class="site-nav">
-  <a href="index.html" class="brand" aria-label="Underneath home">
-    <img src="assets/logo.png" alt="Underneath" width="1063" height="160" />
-  </a>
-
-  <ul class="nav-links">
-    <li><a href="product.html">Product</a></li>
-    <li><a href="methodology.html">The score</a></li>
-    <li><a href="proof.html">Proof</a></li>
-  </ul>
-
-  <div class="nav-cta store-row">
-    <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
-      <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-      <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
-    </a>
-    <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
-      <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
-      <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
-    </a>
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="hero-head">
+    <img class="hero-mark" src="assets/logo.png" width="1063" height="160" alt="Underneath" fetchpriority="high" />
   </div>
-</nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-copy">
-    <p class="hero-pill">
-      <span class="hero-pill-stars" aria-hidden="true">★★★★★</span>
-      Loved by 50,000+ people with a 4.9 rating
-    </p>
+  <div class="hero-inner">
+    <div>
+      <p class="rating">
+        <span class="stars" aria-hidden="true">★★★★★</span>
+        4.9 from 50,000+ people
+      </p>
 
-    <h1 class="hero-title">
-      <span>Underneath</span>
-      <span>Know what is really</span>
-      <span>in your food</span>
-    </h1>
+      <h1>
+        <span>Know what is</span>
+        <span>really in your food</span>
+      </h1>
 
-    <p class="hero-sub">Scan any barcode and get one honest number out of 100, weighted by how processed a food really is. Not by the claims on the front of the pack.</p>
+      <p class="hero-lede">Scan any barcode and get one honest number out of 100, weighted by how processed a food really is. Not by the claims on the front of the pack.</p>
 
-    <div class="hero-cta store-row">
-      <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
-        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
-      </a>
-      <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
-        <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
-        <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
-      </a>
+      <div class="stores">
+        <a class="store-btn" href="https://apps.apple.com/app/id6785015345">
+          <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+        </a>
+        <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+          <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+          <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+        </a>
+      </div>
     </div>
-  </div>
 
-  <div class="hero-shots">
-    <img class="hero-phone hero-phone-a" src="assets/shot-02.webp" width="600" height="1087" loading="eager" fetchpriority="high" alt="The Underneath app showing a scanned chocolate digestive scored 8 out of 100, with its processing, macro and additive breakdown" />
-    <img class="hero-phone hero-phone-b" src="assets/shot-05.webp" width="600" height="1087" loading="eager" alt="The Underneath app showing a strawberry jam scored 70 out of 100 with its nutrition facts" />
-
-    <!-- The reference draws the eye from the scan to the verdict. Same job,
-         same direction, in one stroke. -->
-    <svg class="hero-arrow" viewBox="0 0 120 80" fill="none" aria-hidden="true">
-      <path d="M4 18c28-16 52-6 58 14 4 13-6 22-14 18-9-4-6-18 8-24 18-8 42-2 58 24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-      <path d="M100 48l14 6-3 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    <img class="hero-shot" src="assets/shot-dig.webp" width="586" height="1240" fetchpriority="high"
+         alt="The Underneath app showing a dark chocolate digestive scored 8 out of 100 and marked Poor, with processing 30, macros 18 and additives 40" />
   </div>
-</section>
+</header>
 
-<!-- ABOUT + STATS -->
-<section class="about">
-  <div class="about-copy rise">
-    <p>Nobody reads an ingredients list in an aisle. The front of the pack knows that, which is why the claims live there and the truth lives on the back in six point type.</p>
-    <p>Underneath reads the back for you. The same score, calculated the same way for every product, with nothing a brand can pay to move.</p>
-  </div>
-  <div class="stats rise">
-    <div class="stat">
-      <div class="stat-num">4.9</div>
-      <div class="stat-label">App Store Rating</div>
+<!-- ================= THE THREE THINGS ================= -->
+<section class="steps">
+  <div class="wrap">
+    <div class="steps-head rise">
+      <h2>Everything the front of the pack leaves out.</h2>
+      <p>Nobody reads an ingredients list in an aisle. The claims live on the front, the truth lives on the back in six point type. Underneath reads the back for you.</p>
     </div>
-    <div class="stat">
-      <div class="stat-num">50K+</div>
-      <div class="stat-label">People Scanning</div>
+
+    <div class="step-grid">
+      <article class="step rise">
+        <span class="step-n">01</span>
+        <h3>Scan it</h3>
+        <p>Point the camera at a barcode. The number comes back before the thing is in your trolley. No barcode match? Photograph the panel and it gets read, translated and scored anyway.</p>
+        <img src="assets/shot-jam.webp" width="586" height="1240" loading="lazy" decoding="async"
+             alt="A jar of Bonne Maman strawberry jam scored 70 out of 100 and marked Moderate, with two ingredients flagged" />
+      </article>
+
+      <article class="step rise">
+        <span class="step-n">02</span>
+        <h3>Read the number</h3>
+        <p>Processing, macros and additives, each scored on its own line, and every flagged ingredient named. The same maths for every product, with nothing a brand can pay to move.</p>
+        <img src="assets/shot-rx.webp" width="586" height="1240" loading="lazy" decoding="async"
+             alt="An RX Bar Chocolate Sea Salt scored 76 out of 100 and marked Moderate, with processing 55, macros 76 and additives 97 broken out, and natural flavors flagged" />
+      </article>
+
+      <article class="step rise">
+        <span class="step-n">03</span>
+        <h3>Find better</h3>
+        <p>A cleaner product from the same shelf, with its own score beside it, so the swap is a decision you can make standing there.</p>
+        <img src="assets/shot-fage.webp" width="586" height="1240" loading="lazy" decoding="async"
+             alt="FAGE Total 2% yogurt scored 90 out of 100 and marked Good, with processing 100, macros 75 and additives 100" />
+      </article>
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="features-head rise">
-    <h2>Everything the front<br>of the pack leaves out.</h2>
-    <p>Scan it, read the breakdown, and walk out with something better. Four things the app does at the shelf.</p>
-  </div>
-
-  <div class="features-body">
-    <ul class="feature-list">
-      <li class="feature-item rise">
-        <h3>Scan</h3>
-        <p>Point the camera at a barcode. The number comes back before the thing is in your trolley.</p>
-      </li>
-      <li class="feature-item rise">
-        <h3>Breakdown</h3>
-        <p>Macros, processing and additives, each scored on its own line.</p>
-      </li>
-      <li class="feature-item rise">
-        <h3>Swaps</h3>
-        <p>A cleaner product from the same shelf, with its own score beside it.</p>
-      </li>
-      <li class="feature-item rise">
-        <h3>Label rescue</h3>
-        <p>No barcode match? Photograph the panel and it gets read, translated and scored anyway.</p>
-      </li>
-    </ul>
-
-    <div class="feature-phones rise">
-      <img class="phone phone-1" src="assets/shot-03.webp" width="600" height="1087" loading="lazy" decoding="async" alt="A strained yogurt scored 90 out of 100 and marked Good, with its own breakdown and nutrition facts" />
-      <img class="phone phone-2" src="assets/shot-05.webp" width="600" height="1087" loading="lazy" decoding="async" alt="A strawberry jam scored 70 out of 100, with processing 70, macros 47 and additives 100 shown as separate bars" />
-      <img class="phone phone-3" src="assets/shot-04.webp" width="600" height="1087" loading="lazy" decoding="async" alt="A protein bar scored 76 out of 100 and marked Moderate, with natural flavors flagged underneath" />
+<!-- ================= WHAT PEOPLE SAID ================= -->
+<section class="voices">
+  <div class="wrap">
+    <div class="voices-head rise">
+      <h2>50,000+ people at the shelf.</h2>
+      <p>Left on the App Store and Google Play, quoted as written.</p>
     </div>
-  </div>
-</section>
 
-<!-- TESTIMONIALS -->
-<section class="testimonials">
-  <div class="testimonials-head rise">
-    <h2>Join 50,000+<br>people at the shelf.</h2>
-    <p>Left on the App Store and Google Play, quoted as written.</p>
   </div>
 
-  <div class="testimonials-row rise">
-    <div class="marquee-track">
+  <div class="voice-row rise">
+    <div class="marquee">
       <div class="marquee-group">
-        <article class="review">
+        <article class="voice">
           <div class="stars" aria-label="Five out of five stars">★★★★★</div>
           <p>Really good app! The scanner works very well and gives you useful information about what's in your food. The interface is clean and easy to use, and everything feels quick and straightforward. Definitely recommend it!</p>
-          <div class="reviewer">georgem04</div>
+          <div class="who">georgem04</div>
         </article>
-        <article class="review">
+        <article class="voice">
           <div class="stars" aria-label="Five out of five stars">★★★★★</div>
           <p>Took it to the supermarket and it works really well. A lot of the products I bought were not as healthy as I thought... thankfully through the app I found better alternatives</p>
-          <div class="reviewer">YanRok17</div>
+          <div class="who">YanRok17</div>
         </article>
-        <article class="review">
+        <article class="voice">
           <div class="stars" aria-label="Five out of five stars">★★★★★</div>
           <p>This app really works! It made me realize that i was not eating as healthy as I thought. In a couple of weeks I changed my eating habits for the better. try it!</p>
-          <div class="reviewer">Paikos Costis</div>
+          <div class="who">Paikos Costis</div>
         </article>
-        <article class="review">
+        <article class="voice">
           <div class="stars" aria-label="Five out of five stars">★★★★★</div>
           <p>Very helpful app. Started using it 2 weeks ago and my diet changed instanlty, now its a habit to always check the products i buy with the underneath foos scanning app.</p>
-          <div class="reviewer">mm sap</div>
+          <div class="who">mm sap</div>
+        </article>
+      </div>
+
+      <!-- The same four again, so the track can loop without a gap. Hidden
+           from assistive tech, which should hear each review once. -->
+      <div class="marquee-group" aria-hidden="true">
+        <article class="voice">
+          <div class="stars">★★★★★</div>
+          <p>Really good app! The scanner works very well and gives you useful information about what's in your food. The interface is clean and easy to use, and everything feels quick and straightforward. Definitely recommend it!</p>
+          <div class="who">georgem04</div>
+        </article>
+        <article class="voice">
+          <div class="stars">★★★★★</div>
+          <p>Took it to the supermarket and it works really well. A lot of the products I bought were not as healthy as I thought... thankfully through the app I found better alternatives</p>
+          <div class="who">YanRok17</div>
+        </article>
+        <article class="voice">
+          <div class="stars">★★★★★</div>
+          <p>This app really works! It made me realize that i was not eating as healthy as I thought. In a couple of weeks I changed my eating habits for the better. try it!</p>
+          <div class="who">Paikos Costis</div>
+        </article>
+        <article class="voice">
+          <div class="stars">★★★★★</div>
+          <p>Very helpful app. Started using it 2 weeks ago and my diet changed instanlty, now its a habit to always check the products i buy with the underneath foos scanning app.</p>
+          <div class="who">mm sap</div>
         </article>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA + FOOTER -->
-<section class="cta" id="download">
-  <div class="cta-inner rise">
-    <h2><span>Enough guessing.</span><span>Scan it instead.</span></h2>
-    <div class="cta-button store-row">
-      <a class="store-btn for-ios" href="https://apps.apple.com/app/id6785015345">
+<!-- ================= THE CLOSE ================= -->
+<section class="close">
+  <div class="wrap">
+    <h2 class="rise"><span>Enough guessing.</span><span>Scan it instead.</span></h2>
+
+    <div class="stores rise">
+      <a class="store-btn" href="https://apps.apple.com/app/id6785015345">
         <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
         <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
       </a>
-      <a class="store-btn for-android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+      <a class="store-btn" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
         <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
         <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
       </a>
     </div>
+
+    <p class="legal">
+      <a href="privacy.html">Privacy</a><span class="sep">·</span><a href="terms.html">Terms</a><span class="sep">·</span><a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a><br />
+      &copy; <span id="year">2026</span> Underneath Ltd. Company number 17312263. Registered office 128 City Road, London, EC1V 2NX, United Kingdom.
+    </p>
   </div>
-
-  <div class="footer-cols">
-    <div class="footer-col">
-      <h4>App</h4>
-      <a href="product.html#how">How it works</a>
-      <a href="product.html#screens">What it does</a>
-      <a href="proof.html#faq">FAQ</a>
-    </div>
-    <div class="footer-col">
-      <h4>The score</h4>
-      <a href="methodology.html">Methodology</a>
-      <a href="proof.html#score">How it is built</a>
-      <a href="proof.html#verdicts">Real scans</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="proof.html#company">About</a>
-      <a href="mailto:tryunderneath@gmail.com">Contact</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="terms.html">Terms</a>
-    </div>
-  </div>
-
-  <img class="cta-wordmark" src="assets/logo.png" alt="" aria-hidden="true" width="1063" height="160" />
-
-  <p class="copyright">
-    &copy; <span id="year">2026</span> Underneath Ltd. All rights reserved.<br />
-    UNDERNEATH LTD &middot; Company number 17312263 &middot; Registered office: 128 City Road, London, EC1V 2NX, United Kingdom &middot;
-    <a href="mailto:tryunderneath@gmail.com">tryunderneath@gmail.com</a>
-  </p>
 </section>
 
-<!-- Sticky download bar, phones only -->
-<div class="dock" id="dock">
-  <div class="dock-inner">
-    <img src="icon.png" alt="" width="40" height="40" />
-    <div class="meta">
-      <b>Underneath</b>
-      <span>Free to try</span>
-    </div>
-    <a class="btn" id="dockBtn" href="#download">Get it</a>
-  </div>
-</div>
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
 
-<script src="site.js"></script>
+/* Sections arrive once, on the way down, and are never taken away again. */
+var items = document.querySelectorAll(".rise");
+if (!("IntersectionObserver" in window)) {
+  items.forEach(function (el) { el.classList.add("in"); });
+} else {
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("in");
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
+
+  items.forEach(function (el, i) {
+    el.style.transitionDelay = (i % 4) * 70 + "ms";
+    io.observe(el);
+  });
+}
+</script>
 
 </body>
 </html>
