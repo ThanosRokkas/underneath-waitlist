@@ -78,6 +78,14 @@ async function report(req) {
   if (typeof body.fbc === 'string' && FB_ID_RE.test(body.fbc)) userData.fbc = body.fbc;
   if (typeof body.fbp === 'string' && FB_ID_RE.test(body.fbp)) userData.fbp = body.fbp;
 
+  /* The page's own device id, hashed the same way the purchase webhook hashes
+   * it, so Meta reads the quiz and the sale as one person rather than two. It
+   * is the only identifier we have here: the email does not exist until after
+   * the card has cleared. */
+  if (typeof body.externalId === 'string' && body.externalId.length <= 64) {
+    userData.external_id = [createHash('sha256').update(body.externalId.trim()).digest('hex')];
+  }
+
   // Meta only credits this pair when both halves are present, so one without
   // the other describes the visitor for no return.
   const ip = clientAddress(req);
@@ -90,14 +98,22 @@ async function report(req) {
   // Meta rejects an event carrying no way to identify a person.
   if (Object.keys(userData).length === 0) return;
 
-  /* Keyed on the device rather than the moment, so the same person reaching
-   * the same checkpoint twice is counted once even if their browser forgot
-   * it had been there. Hashed because it is ours and Meta has no use for the
-   * raw value. */
-  const eventId =
-    typeof body.eventId === 'string' && body.eventId.length <= 200
-      ? createHash('sha256').update(body.eventId).digest('hex')
-      : `${event}_${Date.now()}`;
+  /* The page now sends an opaque id it also gave to the pixel, so the two
+   * copies of one checkpoint arrive under the same name and Meta drops the
+   * second. Passed through untouched for that reason: hashing it here would
+   * break the match with the copy the browser sent.
+   *
+   * Older pages send `<device id>:<event>` instead, which is ours and carries
+   * something Meta has no use for, so that shape is still hashed. Both are
+   * stable per device, so a reader who reaches the same checkpoint twice is
+   * still counted once. */
+  const OPAQUE_ID_RE = /^[a-f0-9]{16,64}$/;
+  const raw = typeof body.eventId === 'string' && body.eventId.length <= 200 ? body.eventId : '';
+  const eventId = !raw
+    ? `${event}_${Date.now()}`
+    : OPAQUE_ID_RE.test(raw)
+      ? raw
+      : createHash('sha256').update(raw).digest('hex');
 
   const payload = {
     data: [

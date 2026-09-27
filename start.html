@@ -1400,6 +1400,49 @@ try {
   if (fbclid) localStorage.setItem(FBC_KEY, "fb.1." + Date.now() + "." + fbclid);
 } catch (e) { /* private mode, the cookie may still carry it */ }
 
+/* ---- which ad, by name --------------------------------------------
+   The click id says that a click happened, not which ad produced it. Meta can
+   split its own report by creative, but the funnel table is ours, so without
+   this there is no way to ask whether the readers who leave on the first
+   screen came from one ad or from all of them.
+
+   Meta fills the placeholders in the ad's URL parameters at click time, so
+   the names arrive in the query string. Kept for the rest of the visit,
+   because the sale is a reload and twenty screens away from the arrival that
+   carried them. */
+const ATTR_KEY = "underneath_attr";
+const ATTR_MAX = 60;
+
+/* Ad names are typed by hand in Ads Manager, so they are free text. Anything
+   outside plain label characters is dropped rather than escaped: this value is
+   written to our database and read back in reports, never rendered anywhere. */
+function cleanTag(v) {
+  if (typeof v !== "string") return null;
+  const s = v.replace(/[^A-Za-z0-9 _|.,:+-]/g, " ").replace(/\s+/g, " ").trim().slice(0, ATTR_MAX);
+  return s || null;
+}
+
+/* The query string wins when it carries anything, so a second click on a
+   different ad re-attributes the visit rather than being swallowed by the
+   first. */
+function readAttribution() {
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem(ATTR_KEY) || "{}"); } catch (e) { /* ignore */ }
+  try {
+    const q = new URLSearchParams(location.search);
+    const fresh = {
+      campaign: cleanTag(q.get("utm_campaign")),
+      adset: cleanTag(q.get("utm_term")),
+      ad: cleanTag(q.get("utm_content")),
+    };
+    if (fresh.campaign || fresh.adset || fresh.ad) {
+      try { localStorage.setItem(ATTR_KEY, JSON.stringify(fresh)); } catch (e) { /* private mode */ }
+      return fresh;
+    }
+  } catch (e) { /* ignore */ }
+  return stored;
+}
+
 function fbClickId() {
   const cookie = readCookie("_fbc");
   if (cookie) return cookie;
@@ -2439,8 +2482,26 @@ function reportCheckpoint(screenId) {
   let seen = {};
   try { seen = JSON.parse(localStorage.getItem(CHECKPOINT_KEY) || "{}"); } catch (e) { /* ignore */ }
   if (seen[event]) return;
-  seen[event] = true;
+
+  /* Both copies of this checkpoint carry the same id, which is what lets Meta
+     count them once. Opaque and made here rather than derived from the device
+     id, because the id travels to Meta through the browser as well as through
+     us and there is nothing of ours worth handing over with it. */
+  const eventId = (crypto.randomUUID
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(16).slice(2)).replace(/-/g, "");
+  seen[event] = eventId;
   try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(seen)); } catch (e) { /* private mode */ }
+
+  /* Sent twice on purpose. The server copy below is the one that survives an
+     ad blocker, and is why it was the only copy until now. The browser copy
+     is the one that arrives with the cookies Meta set itself, so it matches
+     people the server copy can only describe. Meta keeps whichever reaches it
+     first and drops the other on the shared id. */
+  try {
+    if (typeof fbq === "function") fbq("track", event, {}, { eventID: eventId });
+  } catch (e) { /* the pixel is optional, the checkpoint is not */ }
+
   try {
     fetch("/api/funnel", {
       method: "POST",
@@ -2451,7 +2512,10 @@ function reportCheckpoint(screenId) {
       keepalive: true,
       body: JSON.stringify({
         event,
-        eventId: deviceId() + ":" + event,
+        eventId,
+        /* The same value the purchase will carry, so Meta can see the reader
+           who answered the quiz and the customer who paid as one person. */
+        externalId: deviceId(),
         fbc: fbClickId(),
         fbp: fbBrowserId(),
       }),
@@ -2487,7 +2551,14 @@ function reportStep(screenId, position) {
       /* The next tap may close this page before the request lands, and the
          readers who leave are the entire point of the measurement. */
       keepalive: true,
-      body: JSON.stringify({ deviceId: deviceId(), screen: screenId, position }),
+      body: JSON.stringify({
+        deviceId: deviceId(),
+        screen: screenId,
+        position,
+        /* Carried on every step so the curve can be read per ad. Without it
+           the table can say where readers leave but not who sent them. */
+        ...readAttribution(),
+      }),
     }).catch(() => { /* measuring the funnel is not the funnel */ });
   } catch (e) { /* ignore */ }
 }
@@ -4532,7 +4603,16 @@ async function setAttribution(purchases) {
       fb_browser_id: fbBrowserId(),
       client_ip: clientIp,
       client_user_agent: navigator.userAgent,
+      /* The id the two mid funnel checkpoints were reported under. RevenueCat
+         hands it back on the purchase webhook, which is the only place the
+         reader who answered the quiz and the customer who paid can be joined:
+         the customer id here is anonymous and changes when they sign in. */
+      web_device_id: deviceId(),
     };
+    const sentBy = readAttribution();
+    if (sentBy.campaign) attrs.fb_campaign = sentBy.campaign;
+    if (sentBy.adset) attrs.fb_adset = sentBy.adset;
+    if (sentBy.ad) attrs.fb_ad = sentBy.ad;
     if (currentUser && currentUser.email) attrs["$email"] = currentUser.email;
     await purchases.setAttributes(attrs);
   } catch (e) { /* attribution is best effort, the sale is not */ }
