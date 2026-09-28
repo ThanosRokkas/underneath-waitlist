@@ -1390,13 +1390,37 @@ const FBP_KEY = "underneath_fbp";
    click id is written down here by hand as well. Whatever survives to
    checkout is handed to RevenueCat, comes back on the purchase webhook, and
    is the only thing that can tell Meta which ad produced the trial. */
+/* Decoding is attempted but never allowed to lose the value. A cookie holding
+   a lone '%' makes decodeURIComponent throw, and this function is how both the
+   click id and the browser id are read, so one stray character used to cost
+   both of them. */
 function readCookie(name) {
   const hit = document.cookie.split("; ").find((c) => c.startsWith(name + "="));
-  return hit ? decodeURIComponent(hit.slice(name.length + 1)) : null;
+  if (!hit) return null;
+  const raw = hit.slice(name.length + 1);
+  try { return decodeURIComponent(raw); } catch (e) { return raw; }
+}
+
+/* Read out of the query string by hand, without decoding.
+ *
+ * Meta compares the click id we send back against the one it issued and
+ * reports a mismatch as a modified value. URLSearchParams decodes what it
+ * returns, which turns a '+' into a space and a '%41' into an 'A', so any
+ * click id carrying either would have been changed here and then blamed on
+ * the network. Every one of the 23 distinct ids we have stored is made only
+ * of letters, digits, '-' and '_', which decoding leaves alone, so this has
+ * not bitten yet. Taking the substring verbatim means it cannot. */
+function rawQueryParam(name) {
+  const q = location.search.slice(1);
+  for (const pair of q.split("&")) {
+    const eq = pair.indexOf("=");
+    if (eq > -1 && pair.slice(0, eq) === name) return pair.slice(eq + 1);
+  }
+  return null;
 }
 
 try {
-  const fbclid = new URLSearchParams(location.search).get("fbclid");
+  const fbclid = rawQueryParam("fbclid");
   if (fbclid) localStorage.setItem(FBC_KEY, "fb.1." + Date.now() + "." + fbclid);
 } catch (e) { /* private mode, the cookie may still carry it */ }
 
