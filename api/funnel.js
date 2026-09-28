@@ -82,8 +82,12 @@ async function report(req) {
    * it, so Meta reads the quiz and the sale as one person rather than two. It
    * is the only identifier we have here: the email does not exist until after
    * the card has cleared. */
-  if (typeof body.externalId === 'string' && body.externalId.length <= 64) {
-    userData.external_id = [createHash('sha256').update(body.externalId.trim()).digest('hex')];
+  const deviceId =
+    typeof body.externalId === 'string' && body.externalId.length <= 64
+      ? body.externalId.trim()
+      : '';
+  if (deviceId) {
+    userData.external_id = [createHash('sha256').update(deviceId).digest('hex')];
   }
 
   // Meta only credits this pair when both halves are present, so one without
@@ -109,18 +113,30 @@ async function report(req) {
    * still counted once. */
   const OPAQUE_ID_RE = /^[a-f0-9]{16,64}$/;
   const raw = typeof body.eventId === 'string' && body.eventId.length <= 200 ? body.eventId : '';
-  const eventId = !raw
-    ? `${event}_${Date.now()}`
-    : OPAQUE_ID_RE.test(raw)
-      ? raw
-      : createHash('sha256').update(raw).digest('hex');
+  /* A page that sent no id at all used to be given `<event>_<now>`, which reads
+   * like a key and is none: the clock is ours alone, so it could never match
+   * the browser's copy, and the same reader reaching the same checkpoint twice
+   * got two different ids and was counted twice. The device id is the one thing
+   * here that both sides hold and that does not move, so it is what the id is
+   * built from, in exactly the `<device id>:<event>` shape the older pages send,
+   * so that a page mid-rollout and a page that never sends one agree.
+   *
+   * With no device id there is nothing stable to name the event by, and the
+   * field is left off rather than filled. Meta cannot dedup either way; an
+   * absent key says so, and an invented one does not. */
+  const key = raw || (deviceId ? `${deviceId}:${event}` : '');
+  const eventId = !key
+    ? null
+    : OPAQUE_ID_RE.test(key)
+      ? key
+      : createHash('sha256').update(key).digest('hex');
 
   const payload = {
     data: [
       {
         event_name: event,
         event_time: Math.floor(Date.now() / 1000),
-        event_id: eventId,
+        ...(eventId ? { event_id: eventId } : {}),
         action_source: 'website',
         event_source_url: 'https://tryunderneath.com/start.html',
         user_data: userData,
