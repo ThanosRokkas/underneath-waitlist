@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/r/:code", "destination": "/r.html" },
+    { "source": "/open", "destination": "/open.html" },
+    { "source": "/open/:lang", "destination": "/open.html" },
     { "source": "/start", "destination": "/start.html" },
     { "source": "/quiz", "destination": "/start.html" },
     { "source": "/get", "destination": "/get.html" },

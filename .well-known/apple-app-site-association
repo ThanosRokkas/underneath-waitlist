@@ -4,7 +4,9 @@
       {
         "appIDs": ["4GDBCJQZA4.com.underneath.v2"],
         "components": [
-          { "/": "/r/*", "comment": "referral invite links" }
+          { "/": "/r/*", "comment": "referral invite links" },
+          { "/": "/open", "comment": "funnel Open Underneath button" },
+          { "/": "/open/*", "comment": "funnel Open Underneath button, /open/<lang>" }
         ]
       }
     ]

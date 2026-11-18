@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Open Underneath</title>
+<meta name="description" content="Open the Underneath app, or get it from the App Store or Google Play." />
+<meta name="theme-color" content="#faf5ec" />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/icon.png" />
+<link rel="apple-touch-icon" href="/icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!--
+  /open/<lang> is the button on the funnel's last screen. With the app
+  installed, iOS and Android open the app itself and this page is never
+  drawn (apple-app-site-association and assetlinks.json list /open/*). It is
+  drawn only when the app is not there yet, or when the link was opened
+  somewhere that does not hand links to apps (some in-app browsers). So it
+  sends the reader to the store for their phone, and offers a plain "open the
+  app" link for the second case.
+-->
+<style>
+  :root {
+    --cream: #faf5ec;
+    --ink: #211d17;
+    --muted: #6f675a;
+    --line: #e9e0d0;
+    --shadow: 0 10px 40px rgba(33, 29, 23, 0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px 44px;
+  }
+  a { color: inherit; }
+  .wrap { width: 100%; max-width: 420px; text-align: center; }
+  .app-icon { width: 78px; height: 78px; border-radius: 20px; margin: 0 auto 20px; box-shadow: var(--shadow); display: block; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.2; }
+  .lead { margin-top: 10px; font-size: 16px; color: var(--muted); }
+
+  .store-row { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .store-btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    min-height: 56px; padding: 12px 24px;
+    border-radius: 14px;
+    background: var(--ink); color: #fff; text-decoration: none;
+    transition: opacity .15s, transform .05s;
+  }
+  .store-btn:hover { opacity: .88; }
+  .store-btn:active { transform: translateY(1px); }
+  .store-btn svg { width: 26px; height: 26px; flex: none; fill: currentColor; }
+  .store-btn .txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+  .store-btn .txt small { font-size: 11px; font-weight: 500; opacity: .78; letter-spacing: .2px; }
+  .store-btn .txt strong { font-size: 17px; font-weight: 600; letter-spacing: -.2px; }
+  body.plat-ios .store-btn.for-android,
+  body.plat-android .store-btn.for-ios { display: none; }
+
+  .have-app { margin-top: 24px; font-size: 15px; color: var(--muted); }
+  .have-app a { color: var(--ink); font-weight: 600; text-underline-offset: 3px; }
+  .foot { margin-top: 30px; font-size: 13px; color: var(--muted); }
+  .foot a { text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="app-icon" src="/icon.png" alt="" width="78" height="78" />
+    <h1 id="title">Open Underneath</h1>
+    <p class="lead" id="lead">Install the app, then sign in with the same email, Apple or Google you used on our website.</p>
+
+    <div class="store-row">
+      <a class="store-btn for-ios" id="ios" href="https://apps.apple.com/app/id6785015345">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span class="txt"><small>Download on the</small><strong>App Store</strong></span>
+      </a>
+      <a class="store-btn for-android" id="android" href="https://play.google.com/store/apps/details?id=com.underneath.v2">
+        <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M325.3 234.3 104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6-58.9-34.1-65.7 65.5 65.7 65.5 60.1-34.1c18-14.3 18-46.5-1.2-62.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+        <span class="txt"><small>Get it on</small><strong>Google Play</strong></span>
+      </a>
+    </div>
+
+    <p class="have-app"><span id="haveLabel">Already installed?</span> <a id="openApp" href="underneathv2://open">Open the app</a></p>
+
+    <p class="foot"><a href="/">tryunderneath.com</a></p>
+  </div>
+
+  <script>
+    (function () {
+      // The language is the last segment of /open/<lang>. Vercel rewrites every
+      // such path to this one file, so the address bar is the only source.
+      var raw = decodeURIComponent(location.pathname).split("/").filter(Boolean);
+      var tag = (raw[0] === "open" ? raw[1] : "") || "";
+      tag = tag.split(/[_-]/)[0].toLowerCase();
+      if (tag === "no" || tag === "nn") tag = "nb";
+
+      // title, lead, already installed, open the app
+      var T = {
+        en: ["Open Underneath", "Install the app, then sign in with the same email, Apple or Google you used on our website.", "Already installed?", "Open the app"],
+        da: ["Åbn Underneath", "Installer appen, og log ind med den samme e-mail, Apple eller Google, som du brugte på vores hjemmeside.", "Allerede installeret?", "Åbn appen"],
+        de: ["Underneath öffnen", "Installiere die App und melde dich mit derselben E-Mail, Apple oder Google an wie auf unserer Website.", "Schon installiert?", "App öffnen"],
+        el: ["Άνοιξε το Underneath", "Εγκατάστησε την εφαρμογή και συνδέσου με το ίδιο email, Apple ή Google που χρησιμοποίησες στην ιστοσελίδα μας.", "Την έχεις ήδη;", "Άνοιξε την εφαρμογή"],
+        es: ["Abre Underneath", "Instala la app e inicia sesión con el mismo correo, Apple o Google que usaste en nuestra web.", "¿Ya la tienes?", "Abrir la app"],
+        fr: ["Ouvrir Underneath", "Installe l'app, puis connecte toi avec le même e-mail, Apple ou Google que sur notre site.", "Déjà installée ?", "Ouvrir l'app"],
+        it: ["Apri Underneath", "Installa l'app e accedi con la stessa email, Apple o Google che hai usato sul nostro sito.", "Già installata?", "Apri l'app"],
+        nb: ["Åpne Underneath", "Installer appen, og logg inn med samme e-post, Apple eller Google som du brukte på nettsiden vår.", "Allerede installert?", "Åpne appen"],
+        pl: ["Otwórz Underneath", "Zainstaluj aplikację i zaloguj się tym samym adresem e-mail, kontem Apple lub Google co na naszej stronie.", "Masz już aplikację?", "Otwórz aplikację"],
+        pt: ["Abrir o Underneath", "Instala a app e inicia sessão com o mesmo email, Apple ou Google que usaste no nosso site.", "Já tens a app?", "Abrir a app"],
+        ro: ["Deschide Underneath", "Instalează aplicația și conectează te cu același email, cont Apple sau Google folosit pe site ul nostru.", "Ai instalat o deja?", "Deschide aplicația"],
+        sv: ["Öppna Underneath", "Installera appen och logga in med samma e-post, Apple eller Google som du använde på vår webbplats.", "Redan installerad?", "Öppna appen"],
+        tr: ["Underneath'i aç", "Uygulamayı yükle, ardından web sitemizde kullandığın e-posta, Apple ya da Google hesabıyla giriş yap.", "Zaten yüklü mü?", "Uygulamayı aç"]
+      };
+      var lang = T[tag] ? tag : "en";
+      var s = T[lang];
+      document.documentElement.lang = lang;
+      document.title = s[0];
+      document.getElementById("title").textContent = s[0];
+      document.getElementById("lead").textContent = s[1];
+      document.getElementById("haveLabel").textContent = s[2];
+
+      // Only a language the app ships goes on to it; anything else opens the
+      // app in the language it would have started in anyway.
+      var suffix = T[tag] ? "/" + tag : "";
+      var openApp = document.getElementById("openApp");
+      openApp.textContent = s[3];
+      openApp.href = "underneathv2://open" + suffix;
+
+      var ua = navigator.userAgent || "";
+      var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                  (/Macintosh/.test(ua) && typeof document.ontouchend !== "undefined");
+      var isAndroid = /Android/.test(ua);
+      var play = "https://play.google.com/store/apps/details?id=com.underneath.v2";
+
+      if (isAndroid) {
+        document.body.classList.add("plat-android");
+        // Chrome opens the app when it is installed and goes to Play when it
+        // is not, in one step, with nothing for the reader to choose.
+        var intent = "intent://open" + suffix + "#Intent;scheme=underneathv2;package=com.underneath.v2;S.browser_fallback_url=" +
+          encodeURIComponent(play) + ";end";
+        openApp.href = intent;
+        location.replace(intent);
+      } else if (isIOS) {
+        document.body.classList.add("plat-ios");
+        // Reaching this page on an iPhone almost always means the app is not
+        // installed yet (with it installed, iOS opens the app instead). The App
+        // Store page has an Open button for the rare case it already is.
+        setTimeout(function () { location.href = "https://apps.apple.com/app/id6785015345"; }, 600);
+      }
+    })();
+  </script>
+</body>
+</html>
