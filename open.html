@@ -20,6 +20,13 @@
   somewhere that does not hand links to apps (some in-app browsers). So it
   sends the reader to the store for their phone, and offers a plain "open the
   app" link for the second case.
+
+  The sign in email links here too, as /open/<lang>#login=<token>. When that
+  page is drawn in a browser, the token is handed on to the app's own scheme
+  as underneathv2://open/<lang>?login=<token>, so the app can still sign the
+  reader in. It goes in the query there because an Android intent address
+  keeps its fragment for itself. The token never reaches this server: a
+  fragment is not sent with the request.
 -->
 <style>
   :root {
@@ -130,9 +137,23 @@
       // Only a language the app ships goes on to it; anything else opens the
       // app in the language it would have started in anyway.
       var suffix = T[tag] ? "/" + tag : "";
+
+      // The sign in link's token, when this is the page of a sign in email.
+      // Same shape the app accepts, so a mangled one is not passed on.
+      var login = "";
+      try {
+        var t = new URLSearchParams(location.hash.slice(1)).get("login") || "";
+        if (/^[a-f0-9]{20,128}$/i.test(t)) login = t;
+      } catch (x) {}
+      if (login) {
+        // Off the address bar, so it is not kept in the browser's history.
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (x) {}
+      }
+      var query = login ? "?login=" + encodeURIComponent(login) : "";
+
       var openApp = document.getElementById("openApp");
       openApp.textContent = s[3];
-      openApp.href = "underneathv2://open" + suffix;
+      openApp.href = "underneathv2://open" + suffix + query;
 
       var ua = navigator.userAgent || "";
       var isIOS = /iPad|iPhone|iPod/.test(ua) ||
@@ -144,7 +165,7 @@
         document.body.classList.add("plat-android");
         // Chrome opens the app when it is installed and goes to Play when it
         // is not, in one step, with nothing for the reader to choose.
-        var intent = "intent://open" + suffix + "#Intent;scheme=underneathv2;package=com.underneath.v2;S.browser_fallback_url=" +
+        var intent = "intent://open" + suffix + query + "#Intent;scheme=underneathv2;package=com.underneath.v2;S.browser_fallback_url=" +
           encodeURIComponent(play) + ";end";
         openApp.href = intent;
         location.replace(intent);
@@ -153,7 +174,19 @@
         // Reaching this page on an iPhone almost always means the app is not
         // installed yet (with it installed, iOS opens the app instead). The App
         // Store page has an Open button for the rare case it already is.
-        setTimeout(function () { location.href = "https://apps.apple.com/app/id6785015345"; }, 600);
+        //
+        // A sign in link is different: it was most likely opened in a mail
+        // app's own browser, which does not hand links to apps, and the app is
+        // most likely there. So the app is tried first, and the App Store only
+        // follows when the page is still in front a moment later.
+        if (login) {
+          location.href = openApp.href;
+          setTimeout(function () {
+            if (!document.hidden) location.href = "https://apps.apple.com/app/id6785015345";
+          }, 1500);
+        } else {
+          setTimeout(function () { location.href = "https://apps.apple.com/app/id6785015345"; }, 600);
+        }
       }
     })();
   </script>
