@@ -145,11 +145,25 @@
         var t = new URLSearchParams(location.hash.slice(1)).get("login") || "";
         if (/^[a-f0-9]{20,128}$/i.test(t)) login = t;
       } catch (x) {}
-      if (login) {
+      // The web funnel's install sign in token, on its Open Underneath button
+      // (/open/<lang>?k=<token>, or #k=). The app spends it for a session with
+      // no email and no code. Only the exact shape counts (32 characters,
+      // Crockford base32), as in the app. An app older than 2.0.10 ignores it
+      // and opens on the sign in screen, as before.
+      var k = "";
+      try {
+        var kq = (new URLSearchParams(location.search).get("k") ||
+                  new URLSearchParams(location.hash.slice(1)).get("k") || "").trim().toUpperCase();
+        if (/^[0-9A-HJKMNP-TV-Z]{32}$/.test(kq)) k = kq;
+      } catch (x) {}
+      if (login || k) {
         // Off the address bar, so it is not kept in the browser's history.
-        try { history.replaceState(null, "", location.pathname + location.search); } catch (x) {}
+        try { history.replaceState(null, "", location.pathname); } catch (x) {}
       }
-      var query = login ? "?login=" + encodeURIComponent(login) : "";
+      var params = [];
+      if (login) params.push("login=" + encodeURIComponent(login));
+      if (k) params.push("k=" + encodeURIComponent(k));
+      var query = params.length ? "?" + params.join("&") : "";
 
       var openApp = document.getElementById("openApp");
       openApp.textContent = s[3];
@@ -179,7 +193,9 @@
         // app's own browser, which does not hand links to apps, and the app is
         // most likely there. So the app is tried first, and the App Store only
         // follows when the page is still in front a moment later.
-        if (login) {
+        // The funnel's Open Underneath button with a token is the same case:
+        // the buyer has just installed the app and come back to tap it.
+        if (login || k) {
           location.href = openApp.href;
           setTimeout(function () {
             if (!document.hidden) location.href = "https://apps.apple.com/app/id6785015345";
